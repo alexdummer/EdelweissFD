@@ -171,7 +171,7 @@ defaultPanel = Panel()
 #: as it develops, so that would confound refinement with loading. Four was too far: with the
 #: volumetric averaging in place the band localises sharply enough that 30 x 60 cells stalls at
 #: 96 percent of it, close to exhausting the material inside the band.
-shorteningFactor = 3.0
+shorteningFactor = 2.9
 
 #: How far past the closed form onset of yielding the *displacement controlled* part goes when the
 #: arc length solver takes over afterwards. It only has to pass yielding, so that the plastic
@@ -787,8 +787,25 @@ def convergenceOfWidth(spacings, widths) -> dict:
     )
 
     coefficient = firstDifference / (h1**order - h2**order)
+    extrapolated = float(w3 - coefficient * h3**order)
 
-    return dict(order=order, extrapolated=float(w3 - coefficient * h3**order), diagnosis="")
+    # An order below one is below the formal order of the difference operators, and an
+    # extrapolated width of zero or less is not a width at all. Either says the widths are still
+    # falling too fast to have a limit in view: they are consistent with a band that keeps
+    # narrowing under refinement, which is what an unresolved internal length looks like. Reporting
+    # the fit anyway would dress that up as a convergence statement.
+    if order < 1.0 or extrapolated <= 0.0:
+        return dict(
+            notConverged,
+            diagnosis=(
+                "the widths still fall steeply -- fitting them gives an order of {:.2f} and a limit "
+                "of {:.2f}, i.e. below the formal order of the operators and not a positive width. "
+                "The band is still narrowing with every refinement, so its width is not yet set by "
+                "the internal length alone"
+            ).format(order, extrapolated),
+        )
+
+    return dict(order=order, extrapolated=extrapolated, diagnosis="")
 
 
 def main():
