@@ -615,8 +615,9 @@ class FDSimulation:
         for cellIndex in grid.cellIndices():
             stencil = stencilClass(self._nextStencilNumber, grid.spacings, **stencilOptions)
 
-            nodes = grid.cellCornerNodes(cellIndex, stencil.cornerOffsets)
-            stencil.setNodes(nodes)
+            # setCell rather than setNodes, so that a stencil needing more than the corners of
+            # its cell -- a Laplacian reaches one grid point further -- can widen its molecule
+            stencil.setCell(grid, cellIndex)
 
             if materialFactory is not None:
                 stencil.setMaterial(materialFactory(stencil.getCoordinatesAtCenter()))

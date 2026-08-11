@@ -48,6 +48,7 @@ import numpy as np
 from edelweissfe.points.node import Node
 from edelweissfe.sets.nodeset import NodeSet
 
+
 #: The node set name of the lower and the upper boundary per direction.
 #:
 #: The naming follows the ``planeRectQuad`` and ``boxGen`` generators of EdelweissFE, which
@@ -331,6 +332,70 @@ class StructuredGrid:
         base = np.asarray(cellIndex, dtype=int)
 
         return [self._nodeGrid[tuple(base + offset)] for offset in cornerOffsets]
+
+    def laplacianAt(self, node: Node) -> dict:
+        """The compact finite difference Laplacian centred at a grid point.
+
+        The Laplacian is the sum over all directions of the symmetric three point second
+        difference quotient
+
+        .. math::
+            \\left. \\frac{\\partial^2 u}{\\partial x_d^2} \\right|_i
+            = \\frac{u_{i-1} - 2 u_i + u_{i+1}}{h_d^2}
+
+        Being able to write this down is the reason EdelweissFD needs no auxiliary field for
+        the gradient of a nonlocal variable: a difference operator is not restricted to first
+        derivatives the way a C0 finite element shape function is, so no penalty and no extra
+        unknowns are required.
+
+        At a boundary the missing neighbour is a **ghost node** outside the grid. It is
+        eliminated by the homogeneous Neumann condition
+
+        .. math::
+            \\frac{\\partial u}{\\partial n} = 0
+            \\quad \\Longrightarrow \\quad
+            u_{ghost} = u_{i+1}
+
+        i.e. by mirroring across the boundary grid point, which turns the quotient there into
+        :math:`2 (u_{i+1} - u_i) / h_d^2`. The coefficients always sum to zero, so a constant
+        field has a vanishing Laplacian on the boundary just as in the interior.
+
+        Parameters
+        ----------
+        node
+            The grid point the Laplacian is centred at.
+
+        Returns
+        -------
+        dict
+            The coefficient of the Laplacian per contributing grid point.
+        """
+
+        centreIndex = self.gridIndexOf(node)
+
+        coefficients = dict()
+
+        def contribute(contributor, weight):
+            coefficients[contributor] = coefficients.get(contributor, 0.0) + weight
+
+        for direction in range(self.nDim):
+            inverseSquaredSpacing = 1.0 / self.spacings[direction] ** 2
+
+            for offset in (-1, 1):
+                index = list(centreIndex)
+                index[direction] += offset
+
+                if not 0 <= index[direction] < self.shape[direction]:
+                    # the neighbour is a ghost node; the homogeneous Neumann condition mirrors
+                    # it onto the grid point on the opposite side of the centre
+                    index = list(centreIndex)
+                    index[direction] -= offset
+
+                contribute(self._nodeGrid[tuple(index)], inverseSquaredSpacing)
+
+            contribute(node, -2.0 * inverseSquaredSpacing)
+
+        return coefficients
 
     @property
     def cellVolume(self) -> float:

@@ -84,6 +84,29 @@ class BaseStencil(BaseNodeCouplingEntity, VIJEntityBase):
             The material instance.
         """
 
+    def setCell(self, grid, cellIndex):
+        """Attach this stencil to a cell of a grid.
+
+        The default implementation couples exactly the corner grid points of the cell, which
+        is all a stencil built from first derivatives needs. A stencil which also needs second
+        derivatives -- a Laplacian, say -- overrides this to widen its molecule beyond the
+        cell, asking the grid for the additional grid points and coefficients.
+
+        Parameters
+        ----------
+        grid
+            The :class:`~edelweissfd.grids.structuredgrid.StructuredGrid` the cell belongs to.
+        cellIndex
+            The grid index of the cell's lower left corner.
+        """
+
+        self.setNodes(grid.cellCornerNodes(cellIndex, self.cornerOffsets))
+
+    @property
+    @abstractmethod
+    def cornerOffsets(self) -> np.ndarray:
+        """The corner offsets of the cell this stencil sits on."""
+
     @abstractmethod
     def initializeStencil(self):
         """Prepare the stencil for computing, once its nodes and material are known."""

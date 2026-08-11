@@ -11,3 +11,4 @@ doc/build/
 esExport/
 *.case
 *.sta
+*.png
