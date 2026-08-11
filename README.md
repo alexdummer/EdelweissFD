@@ -1,3 +1,8 @@
+[![Run tests](https://github.com/alexdummer/EdelweissFD/actions/workflows/run_tests_with_marmot.yml/badge.svg)](https://github.com/alexdummer/EdelweissFD/actions/workflows/run_tests_with_marmot.yml)
+[![Run tests without Marmot](https://github.com/alexdummer/EdelweissFD/actions/workflows/run_tests_without_marmot.yml/badge.svg)](https://github.com/alexdummer/EdelweissFD/actions/workflows/run_tests_without_marmot.yml)
+[![format](https://github.com/alexdummer/EdelweissFD/actions/workflows/format.yml/badge.svg)](https://github.com/alexdummer/EdelweissFD/actions/workflows/format.yml)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+
 # EdelweissFD
 
 EdelweissFD is a light-weight finite difference framework for **multifield** (coupled
