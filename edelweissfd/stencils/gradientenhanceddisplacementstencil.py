@@ -255,6 +255,8 @@ class GradientEnhancedDisplacementStencil(BaseStencil, NumericalTangentMixin):
         material
             A material with a single nonlocal variable, honoring
             :mod:`edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial`.
+            The instance must belong to this stencil alone, see
+            :mod:`edelweissfd.materials.provider`.
         """
 
         if material.nNonlocalVariables != 1:

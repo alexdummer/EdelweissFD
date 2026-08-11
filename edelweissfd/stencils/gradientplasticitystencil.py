@@ -328,6 +328,8 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         material
             A material with a single yield surface, honoring
             :mod:`edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial`.
+            The instance must belong to this stencil alone, see
+            :mod:`edelweissfd.materials.provider`.
         """
 
         if material.nYieldSurfaces != 1:

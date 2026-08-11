@@ -74,6 +74,7 @@ from edelweissfe.utils.exceptions import StepFailed
 from edelweissfe.utils.fieldoutput import FieldOutputController
 
 from edelweissfd.grids.structuredgrid import StructuredGrid, boundarySetNames
+from edelweissfd.materials.provider import MaterialProvider, materialInstanceFrom
 from edelweissfd.models.fdmodel import FDModel
 from edelweissfd.sets.stencilset import StencilSet
 from edelweissfd.stepactions import tractionnodalload
@@ -553,8 +554,8 @@ class FDSimulation:
         materialProperties,
         provider: str = "marmotmaterialpoint",
         baseClass: str = "hypoelastic",
-    ):
-        """Create a material.
+    ) -> MaterialProvider:
+        """Describe a material, to be instantiated once per stencil.
 
         Parameters
         ----------
@@ -567,12 +568,15 @@ class FDSimulation:
             ``marmotmaterialpoint`` for a Marmot material evaluated point-wise, or
             ``edelweiss`` for a native EdelweissFE material.
         baseClass
-            For ``marmotmaterialpoint``, the Marmot material base class, i.e.
-            ``hypoelastic`` or ``gradientEnhancedHypoElastic``.
+            For ``marmotmaterialpoint``, the Marmot material base class, i.e. ``hypoelastic``,
+            ``gradientEnhancedHypoElastic`` or ``gradientPlasticityHypoElastic``.
 
         Returns
         -------
-        The material instance.
+        MaterialProvider
+            A description of the material, not a material itself. See
+            :class:`~edelweissfd.materials.provider.MaterialProvider` for why every stencil needs
+            an instance of its own.
         """
 
         materialProperties = np.asarray(materialProperties, dtype=float)
@@ -580,11 +584,11 @@ class FDSimulation:
         if provider == "marmotmaterialpoint":
             materialClass = getMaterialClass(baseClass, provider)
 
-            return materialClass(materialName.upper(), materialProperties)
+            return MaterialProvider(materialClass, (materialName.upper(), materialProperties))
 
         materialClass = getMaterialClass(materialName, provider)
 
-        return materialClass(materialProperties)
+        return MaterialProvider(materialClass, (materialProperties,))
 
     def assignStencils(self, stencilClass, grid: StructuredGrid, material, **stencilOptions) -> list:
         """Place one stencil on every cell of a grid.
@@ -597,8 +601,12 @@ class FDSimulation:
         grid
             The grid to be covered.
         material
-            The material, or a callable taking the cell centre coordinates and returning a
-            material. The callable form allows a spatially varying material.
+            A :class:`~edelweissfd.materials.provider.MaterialProvider`, or a callable taking the
+            cell centre coordinates and returning one. The callable form allows a spatially
+            varying material. Every stencil is given an instance of its own, because a material
+            carries the state variable storage it operates on as mutable state and the solvers
+            distribute stencils over threads -- see
+            :mod:`edelweissfd.materials.provider` for the failure this avoids.
         stencilOptions
             Further keyword arguments passed on to the stencil constructor.
 
@@ -610,6 +618,7 @@ class FDSimulation:
 
         stencils = []
 
+        # a MaterialProvider is not callable, so the two forms cannot be confused
         materialFactory = material if callable(material) else None
 
         for cellIndex in grid.cellIndices():
@@ -620,9 +629,12 @@ class FDSimulation:
             stencil.setCell(grid, cellIndex)
 
             if materialFactory is not None:
-                stencil.setMaterial(materialFactory(stencil.getCoordinatesAtCenter()))
+                provider = materialFactory(stencil.getCoordinatesAtCenter())
             else:
-                stencil.setMaterial(material)
+                provider = material
+
+            # a fresh instance per stencil, never a shared one
+            stencil.setMaterial(materialInstanceFrom(provider))
 
             self.model.addStencil(stencil)
 

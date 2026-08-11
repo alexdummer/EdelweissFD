@@ -245,8 +245,10 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
         material
             A material honoring
             :class:`~edelweissfe.materials.base.basehypoelasticmaterial.BaseHypoElasticMaterial`.
-            The very same instance may be shared by all stencils, since the state variables
-            are handed over before every evaluation.
+            The instance must belong to this stencil alone: it is re-pointed at the state
+            variables of each material point during evaluation, so sharing it with another
+            stencil is a data race as soon as the solver computes stencils on several threads.
+            See :mod:`edelweissfd.materials.provider`.
         """
 
         self._material = material
