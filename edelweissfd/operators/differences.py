@@ -381,3 +381,64 @@ def cellStrainOperator(gradient: np.ndarray) -> np.ndarray:
                 strainOperator[v, corner * nDim + j] += gradient[i, corner]
 
     return strainOperator
+
+
+def volumetricallyAveragedStrainOperators(strainOperators, weights=None) -> list:
+    """Replace the volumetric part of each strain operator by the average over the cell.
+
+    The corner sampled strain operators of a cell are the bilinear ones evaluated at the cell's
+    vertices, so they constrain the volumetric strain at every corner separately: one constraint
+    per corner against, in the limit, one displacement degree of freedom per grid point. As
+    Poisson's ratio approaches one half that over-constrains the cell and it locks -- the cell
+    can no longer deform at constant volume, which is exactly what a shear band has to do, so the
+    band does not form and the response comes out too stiff instead.
+
+    Averaging the volumetric part over the cell, the classical B-bar or mean dilatation treatment,
+    leaves one volumetric constraint per cell and cures it. The deviatoric part stays sampled at
+    the corners, so the hourglass mode is still controlled -- see
+    :func:`cellCornerGradientOperators` for why that sampling is used in the first place.
+
+    Writing ``m`` for the Voigt trace vector, the volumetric part of an operator is
+    ``B_vol = m m^T B / 3`` and
+
+    .. math::
+        \\bar{\\boldsymbol B}_p = \\boldsymbol B_p - \\boldsymbol B_{vol,p}
+                                 + \\sum_q w_q \\boldsymbol B_{vol,q}
+
+    Note that the trace has to be taken over all three normal components even in two dimensions:
+    under plane strain ``eps_33`` vanishes and the third row of the operator is zero, so it drops
+    out of the sum by itself, and the volumetric strain is still ``eps_11 + eps_22``.
+
+    Parameters
+    ----------
+    strainOperators
+        The strain operators of the cell's material points, each of shape
+        ``(6, nCorners * nDim)``.
+    weights
+        The weights to average with, one per material point. Defaults to equal weights, which is
+        what equal material point volumes call for.
+
+    Returns
+    -------
+    list
+        The averaged strain operators, same shapes as the input.
+    """
+
+    strainOperators = [np.asarray(B, dtype=float) for B in strainOperators]
+
+    if weights is None:
+        weights = np.full(len(strainOperators), 1.0 / len(strainOperators))
+    else:
+        weights = np.asarray(weights, dtype=float)
+        weights = weights / weights.sum()
+
+    # the Voigt trace vector: the first three components are the normal ones
+    trace = np.zeros(nVoigtComponents)
+    trace[:3] = 1.0
+
+    def volumetricPart(B):
+        return np.outer(trace, trace @ B) / 3.0
+
+    averaged = sum(weight * volumetricPart(B) for weight, B in zip(weights, strainOperators))
+
+    return [B - volumetricPart(B) + averaged for B in strainOperators]

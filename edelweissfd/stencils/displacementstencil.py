@@ -67,6 +67,7 @@ from edelweissfd.operators.differences import (
     cellGradientOperator,
     cellStrainOperator,
     nVoigtComponents,
+    volumetricallyAveragedStrainOperators,
 )
 from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
@@ -99,6 +100,13 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
         the material routine and hence which components are condensed out by the material.
     thickness
         An out-of-plane thickness, only meaningful for the two dimensional stress states.
+    volumetricAveraging
+        Average the volumetric part of the strain operator over the cell, the classical B-bar or
+        mean dilatation treatment, see
+        :func:`~edelweissfd.operators.differences.volumetricallyAveragedStrainOperators`. Corner
+        sampling constrains the volumetric strain once per corner, which over-constrains the cell
+        as Poisson's ratio approaches one half, so the cell can no longer deform at constant
+        volume and locks.
     """
 
     def __init__(
@@ -107,6 +115,7 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
         spacings,
         stressState: str = "plane strain",
         thickness: float = 1.0,
+        volumetricAveraging: bool = False,
     ):
         if stressState not in stressStates:
             raise ValueError(
@@ -139,6 +148,18 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
         self._materialRoutineName = stressStates[stressState]["materialRoutine"]
 
         self._strainOperators = [cellStrainOperator(gradient) for gradient in self._gradients]
+
+        # Off by default here, unlike in the gradient plasticity stencil: it changes the answer for
+        # any inhomogeneous deformation, and the benchmarks of this stencil were established
+        # without it. Turn it on for nearly incompressible problems -- a Poisson's ratio close to
+        # one half, or well developed J2 plastic flow, which is itself incompressible.
+        self._volumetricAveraging = volumetricAveraging
+
+        if volumetricAveraging:
+            self._strainOperators = volumetricallyAveragedStrainOperators(
+                self._strainOperators, self._materialPointVolumes
+            )
+
         self._activeStrainOperators = [
             np.ascontiguousarray(B[self._activeVoigtIndices, :]) for B in self._strainOperators
         ]

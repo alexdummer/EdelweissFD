@@ -84,6 +84,7 @@ from edelweissfd.operators.differences import (
     cellGradientOperator,
     cellStrainOperator,
     nVoigtComponents,
+    volumetricallyAveragedStrainOperators,
 )
 from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
@@ -109,6 +110,14 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         One of ``3d``, ``plane strain`` or ``plane stress``.
     thickness
         An out-of-plane thickness, only meaningful for the two dimensional stress states.
+    volumetricAveraging
+        Average the volumetric part of the strain operator over the cell, the classical B-bar or
+        mean dilatation treatment, see
+        :func:`~edelweissfd.operators.differences.volumetricallyAveragedStrainOperators`. On by
+        default: corner sampling constrains the volumetric strain once per corner, which
+        over-constrains the cell as Poisson's ratio approaches one half, and a shear band deforms
+        at constant volume, so without it the band simply does not form. Turn it off only to
+        reproduce that.
     """
 
     def __init__(
@@ -117,6 +126,7 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         spacings,
         stressState: str = "plane strain",
         thickness: float = 1.0,
+        volumetricAveraging: bool = True,
     ):
         if stressState not in stressStates:
             raise ValueError(
@@ -150,6 +160,17 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         self._materialPointVolumes = [cellVolume / self._nMaterialPoints] * self._nMaterialPoints
 
         self._strainOperators = [cellStrainOperator(gradient) for gradient in self._gradients]
+
+        # Without this the cell locks volumetrically as Poisson's ratio approaches one half, and a
+        # shear band -- which deforms at constant volume -- cannot form at all. On by default,
+        # because a gradient plasticity computation is localisation at nearly incompressible
+        # plastic flow, i.e. exactly the case that locks.
+        self._volumetricAveraging = volumetricAveraging
+
+        if volumetricAveraging:
+            self._strainOperators = volumetricallyAveragedStrainOperators(
+                self._strainOperators, self._materialPointVolumes
+            )
 
         self._materialRoutineName = stressStates[stressState]
 
