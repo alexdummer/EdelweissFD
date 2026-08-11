@@ -1,0 +1,161 @@
+name: Run tests
+
+# The full test suite, which needs the constitutive models of Marmot and therefore the whole
+# chain Eigen -> autodiff -> Fastor -> Marmot -> EdelweissFE -> EdelweissFD.
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Mambaforge
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          use-mamba: true
+          miniforge-variant: Miniforge3
+          miniforge-version: latest
+          activate-environment: anaconda-client-env
+
+      - name: Clone EdelweissFE
+        shell: bash -l {0}
+        run: |
+          # Use github.base_ref (target of PR). If this is not a PR, fall back to the shared
+          # development branch rather than to the default branch of the dependency, since an
+          # EdelweissFD branch name essentially never matches one over there and silently
+          # building against a stale, possibly API incompatible revision is worse than failing.
+          TARGET_BRANCH="${{ github.base_ref || 'next_v26.11' }}"
+
+          echo "EdelweissFE and Marmot branch is: $TARGET_BRANCH"
+          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
+
+          cd ..
+          git clone https://github.com/EdelweissFE/EdelweissFE.git
+          cd EdelweissFE
+
+          if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
+            git checkout $TARGET_BRANCH
+          else
+            echo "::error::Branch $TARGET_BRANCH not found in EdelweissFE, and there is no safe default to fall back to."
+            exit 1
+          fi
+
+      - name: Install conda packages
+        shell: bash -l {0}
+        run: |
+          mamba install --file ../EdelweissFE/conda_requirements.txt
+
+      - name: Install pip packages
+        shell: bash -l {0}
+        run: |
+          pip install -r ../EdelweissFE/pip_requirements.txt
+
+      - name: Install Eigen
+        shell: bash -l {0}
+        run: |
+          cd ..
+          git clone --branch 3.4.0 https://gitlab.com/libeigen/eigen.git
+          cd eigen
+          mkdir build
+          cd build
+          cmake -DBUILD_TESTING=OFF -DINCLUDE_INSTALL_DIR=$CONDA_PREFIX/include -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
+          make install
+          cd ../..
+
+      - name: Install Autodiff
+        shell: bash -l {0}
+        run: |
+          cd ..
+          git clone --branch v1.1.0 https://github.com/autodiff/autodiff.git
+          cd autodiff
+          mkdir build
+          cd build
+          cmake -DAUTODIFF_BUILD_TESTS=OFF \
+            -DAUTODIFF_BUILD_PYTHON=OFF \
+            -DAUTODIFF_BUILD_EXAMPLES=OFF \
+            -DAUTODIFF_BUILD_DOCS=OFF \
+            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
+            ..
+          make install
+          cd ../..
+
+      - name: Install Fastor
+        shell: bash -l {0}
+        run: |
+          cd ..
+          git clone https://github.com/romeric/Fastor.git
+          cd Fastor
+          mkdir build
+          cd build
+          cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
+          make install
+          cd ../..
+
+      - name: Install Marmot
+        shell: bash -l {0}
+        run: |
+          cd ..
+          git clone --recurse-submodules https://github.com/MAteRialMOdelingToolbox/Marmot/
+          cd Marmot
+
+          if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
+            git checkout $TARGET_BRANCH
+          else
+            echo "::error::Branch $TARGET_BRANCH not found in Marmot, and there is no safe default to fall back to."
+            exit 1
+          fi
+
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
+          make install
+          cd ../..
+
+      - name: Build EdelweissFE
+        shell: bash -l {0}
+        run: |
+          # Eigen was installed straight into $CONDA_PREFIX/include above, not into an eigen3
+          # subdirectory, so point EdelweissFE at it explicitly.
+          EIGEN_INCLUDE_DIR=$CONDA_PREFIX/include pip install -v ../EdelweissFE
+
+      - name: Check that the Marmot material interfaces were built
+        shell: bash -l {0}
+        run: |
+          # setup.py of EdelweissFE tolerates failing extensions on purpose, so a missing
+          # material interface would otherwise only surface as silently skipped tests.
+          python - <<'PY'
+          import sys
+
+          from edelweissfe.utils.misc import checkSuccessfulExtension
+
+          required = [
+              "edelweissfe.materials.marmot.marmothypoelastic",
+              "edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic",
+          ]
+
+          missing = [name for name in required if not checkSuccessfulExtension(name)]
+
+          for name in missing:
+              print("::error::the extension {:} was not built".format(name))
+
+          sys.exit(1 if missing else 0)
+          PY
+
+      - name: Build EdelweissFD
+        shell: bash -l {0}
+        run: |
+          pip install '.[test]'
+
+      - name: Run tests
+        shell: bash -l {0}
+        run: |
+          pytest -v
+
+      - name: Run examples
+        shell: bash -l {0}
+        run: |
+          python examples/TensionBar1D/run.py
+          python examples/SimpleBeam2D/run.py

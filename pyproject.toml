@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "EdelweissFD"
+version = "26.11"
+description = "EdelweissFD: A light-weight finite difference framework for multifield problems, built on EdelweissFE."
+readme = "README.md"
+authors = [
+    { name = "Alexander Dummer", email = "alexander.dummer@uibk.ac.at" }
+]
+license = "LGPL-2.1"
+license-files = ["LICENSE.md"]
+urls = { Homepage = "https://github.com/EdelweissFE/EdelweissFD" }
+requires-python = ">=3.14"
+dependencies = [
+    "EdelweissFE",
+    "numpy",
+    "scipy",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+doc = ["sphinx", "sphinx-rtd-theme", "numpydoc"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["edelweissfd*"]
+
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+
+[tool.isort]
+profile = "black"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "marmot: requires the compiled Marmot material interfaces of EdelweissFE",
+]
