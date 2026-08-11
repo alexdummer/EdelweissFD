@@ -392,6 +392,13 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
             self._stateVarsTemp[p, self._nStateVarsOverhead :] for p in range(self._nMaterialPoints)
         ]
 
+        # the same storage seen as one block over all material points, so that the bookkeeping
+        # around the material evaluations is a handful of array operations rather than one per point
+        self._previousStresses = self._stateVarsTemp[:, 0:nVoigtComponents]
+        self._strainStates = self._stateVarsTemp[:, nVoigtComponents : 2 * nVoigtComponents]
+        self._multiplierStates = self._stateVarsTemp[:, 2 * nVoigtComponents : 2 * nVoigtComponents + 1]
+        self._yieldStates = self._stateVarsTemp[:, 2 * nVoigtComponents + 1 : 2 * nVoigtComponents + 2]
+
         for p in range(self._nMaterialPoints):
             self._material.assignCurrentStateVars(self._materialStateVars[p])
 
@@ -399,6 +406,115 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
                 self._material.initializeYourself()
 
         self.acceptLastState()
+
+        self._allocateKernelBuffers()
+
+    def _allocateKernelBuffers(self):
+        """Allocate everything :meth:`computeKernels` needs, once, and stacked over material points.
+
+        The blocks involved are tiny -- a six by six tangent, operators of six by twelve -- so a
+        numpy call costs far more in dispatch than in arithmetic. Measured on a two dimensional
+        cell, the Marmot material evaluation is 4.2 of the 37 microseconds spent per material point
+        even when it is yielding; the remaining 89 percent is the overhead of some twenty small
+        numpy operations per point. Making each operation faster cannot help much, so the algebra is
+        instead done for all material points of the cell at once, in a handful of batched calls.
+
+        For that to cost nothing in copying, the material writes its results *directly* into the
+        stacked storage: the response and tangent objects handed to material point ``p`` have their
+        entries as views into row ``p`` of arrays shaped ``(nMaterialPoints, ...)``. A row of a C
+        contiguous array is itself C contiguous, which is what the Cython materials require.
+        """
+
+        nMaterialPoints = self._nMaterialPoints
+        nDisplacementDofs = self._displacementDofs.size
+        nMultiplierDofs = self._multiplierDofs.size
+
+        self._PDisplacement = np.zeros(nDisplacementDofs)
+        self._PMultiplier = np.zeros(nMultiplierDofs)
+
+        self._KUU = np.zeros((nDisplacementDofs, nDisplacementDofs))
+        self._KUL = np.zeros((nDisplacementDofs, nMultiplierDofs))
+        self._KLU = np.zeros((nMultiplierDofs, nDisplacementDofs))
+        self._KLL = np.zeros((nMultiplierDofs, nMultiplierDofs))
+
+        # the corner each material point sits on, and its volume
+        self._materialPointNodes = np.array([self._materialPointNode(p) for p in range(nMaterialPoints)], dtype=int)
+        volumes = np.asarray(self._materialPointVolumes, dtype=float)
+        self._materialPointVolumeArray = volumes
+
+        # the strain operators stacked, and their transposes already scaled by the material point
+        # volume, since every place the transpose appears it is multiplied by that volume
+        self._strainOperatorStack = np.ascontiguousarray(np.stack(self._strainOperators))
+        self._weightedTransposedStack = np.ascontiguousarray(
+            np.stack([B.T * volume for B, volume in zip(self._strainOperators, volumes)])
+        )
+        self._weightedLaplacianStack = np.ascontiguousarray(self._laplacianCoefficients * volumes[:, None])
+
+        # the stacked increment, response and tangent storage the materials write into
+        self._dStrainStack = np.zeros((nMaterialPoints, nVoigtComponents))
+        self._dLambdaStack = np.zeros((nMaterialPoints, 1))
+        self._laplaceDLambdaStack = np.zeros((nMaterialPoints, 1))
+
+        # The stress is both an input and an output of a rate form material, and the yield value is
+        # an output, so the response points straight at the state variable slots that hold them.
+        # That removes the copies in and out entirely; the reset at the top of computeKernels
+        # restores the last converged stress, which is exactly what the material expects to read.
+        self._stressStack = self._previousStresses
+        self._yieldStack = self._yieldStates
+
+        self._tangentStacks = dict(
+            dStress_dStrain=np.zeros((nMaterialPoints, nVoigtComponents, nVoigtComponents)),
+            dStress_dLambda=np.zeros((nMaterialPoints, nVoigtComponents, 1)),
+            dStress_dLaplacian=np.zeros((nMaterialPoints, nVoigtComponents, 1)),
+            dF_dStrain=np.zeros((nMaterialPoints, 1, nVoigtComponents)),
+            dF_dLambda=np.zeros((nMaterialPoints, 1, 1)),
+            dF_dLaplacian=np.zeros((nMaterialPoints, 1, 1)),
+        )
+
+        self._increments = [
+            GradientPlasticityIncrement(
+                dStrain=self._dStrainStack[p],
+                dLambda=self._dLambdaStack[p],
+                laplaceDLambda=self._laplaceDLambdaStack[p],
+            )
+            for p in range(nMaterialPoints)
+        ]
+        self._responses = [
+            GradientPlasticityResponse(stress=self._stressStack[p], f=self._yieldStack[p])
+            for p in range(nMaterialPoints)
+        ]
+        self._tangentsPerPoint = [
+            GradientPlasticityTangents(**{name: stack[p] for name, stack in self._tangentStacks.items()})
+            for p in range(nMaterialPoints)
+        ]
+
+        # scratch for the batched products
+        self._weightedTimesTangent = np.zeros((nMaterialPoints, nDisplacementDofs, nVoigtComponents))
+        self._displacementBlocks = np.zeros((nMaterialPoints, nDisplacementDofs, nDisplacementDofs))
+        self._stressCouplings = np.zeros((nMaterialPoints, nDisplacementDofs, 1))
+        self._laplacianCouplings = np.zeros((nMaterialPoints, nDisplacementDofs, 1))
+        self._yieldRows = np.zeros((nMaterialPoints, 1, nDisplacementDofs))
+
+        # The four blocks live as views in the quadrants of one local matrix, in field grouped
+        # order, so that the whole cell contribution reaches the global matrix in a single indexed
+        # assignment. Four separate ones cost 12 microseconds against 4.3 for this one, because
+        # indexed assignment on the global array is expensive per call and nearly free per entry.
+        nDof = self._nDof
+        nD = nDisplacementDofs
+
+        self._localTangent = np.zeros((nDof, nDof))
+        self._localFlux = np.zeros(nDof)
+
+        self._localKUU = self._localTangent[:nD, :nD]
+        self._localKUL = self._localTangent[:nD, nD:]
+        self._localKLU = self._localTangent[nD:, :nD]
+        self._localKLL = self._localTangent[nD:, nD:]
+
+        self._localPDisplacement = self._localFlux[:nD]
+        self._localPMultiplier = self._localFlux[nD:]
+
+        self._localOrder = np.concatenate([self._displacementDofs, self._multiplierDofs])
+        self._localBlock = np.ix_(self._localOrder, self._localOrder)
 
     @property
     def characteristicLength(self) -> float:
@@ -427,77 +543,81 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
     ):
         self._stateVarsTemp[:, :] = self._stateVars
 
-        response = self._response
-        tangents = self._tangents
-        increment = self._increment
-
         displacementIncrements = dU[self._displacementDofs]
 
         multipliers = U[self._multiplierDofs]
         multiplierIncrements = dU[self._multiplierDofs]
 
-        nDisplacementDofs = self._displacementDofs.size
-        nMultiplierDofs = self._multiplierDofs.size
+        matmul = np.matmul
+        einsum = np.einsum
 
-        PDisplacement = np.zeros(nDisplacementDofs)
-        PMultiplier = np.zeros(nMultiplierDofs)
+        centres = self._materialPointNodes
+        volumes = self._materialPointVolumeArray
 
-        KUU = np.zeros((nDisplacementDofs, nDisplacementDofs))
-        KUL = np.zeros((nDisplacementDofs, nMultiplierDofs))
-        KLU = np.zeros((nMultiplierDofs, nDisplacementDofs))
-        KLL = np.zeros((nMultiplierDofs, nMultiplierDofs))
+        B = self._strainOperatorStack
+        BTv = self._weightedTransposedStack
+        laplacians = self._laplacianCoefficients
+        weightedLaplacians = self._weightedLaplacianStack
+
+        dStrains = self._dStrainStack
+        stresses = self._stressStack
+        yieldValues = self._yieldStack
+
+        stacks = self._tangentStacks
+
+        # -- the increment, for every material point at once ------------------------------
+        matmul(B, displacementIncrements, out=dStrains)
+        self._dLambdaStack[:, 0] = multiplierIncrements[centres]
+        matmul(laplacians, multiplierIncrements, out=self._laplaceDLambdaStack[:, 0])
+
+        # the stress the material reads is the one of the last increment, already in place
+        for stack in stacks.values():
+            stack.fill(0.0)
+
+        # -- the material evaluations, which are sequential because each owns its state ----
+        assignCurrentStateVars = self._material.assignCurrentStateVars
+        materialRoutine = self._materialRoutine
+        materialStateVars = self._materialStateVars
+        responses = self._responses
+        tangentsPerPoint = self._tangentsPerPoint
+        increments = self._increments
 
         for p in range(self._nMaterialPoints):
-            B = self._strainOperators[p]
-            laplacian = self._laplacianCoefficients[p]
-            volume = self._materialPointVolumes[p]
+            assignCurrentStateVars(materialStateVars[p])
+            materialRoutine(responses[p], tangentsPerPoint[p], increments[p], time, dT)
 
-            # the material point is collocated on a grid point, so its plastic multiplier is
-            # that grid point's value rather than an interpolation
-            centre = self._materialPointNode(p)
+        self._strainStates += dStrains
+        self._multiplierStates[:, 0] = multipliers[centres]
 
-            increment.dStrain[:] = B @ displacementIncrements
-            increment.dLambda[0] = multiplierIncrements[centre]
-            increment.laplaceDLambda[0] = laplacian @ multiplierIncrements
+        # -- the assembly, again for every material point at once --------------------------
+        self._localTangent.fill(0.0)
+        self._localFlux.fill(0.0)
 
-            # the stress enters the rate form material as the stress of the last increment
-            response.stress[:] = self._stresses[p]
-            response.f[:] = 0.0
-            tangents.zero()
+        einsum("pij,pj->i", BTv, stresses, out=self._localPDisplacement)
+        self._localPMultiplier[centres] += yieldValues[:, 0] * volumes
 
-            self._material.assignCurrentStateVars(self._materialStateVars[p])
+        matmul(BTv, stacks["dStress_dStrain"], out=self._weightedTimesTangent)
+        matmul(self._weightedTimesTangent, B, out=self._displacementBlocks)
+        self._displacementBlocks.sum(axis=0, out=self._localKUU)
 
-            self._materialRoutine(response, tangents, increment, time, dT)
+        # The plastic multiplier enters the stress through its Laplacian over the whole molecule,
+        # and directly at the grid point the material point sits on. Summing the outer products of
+        # the two stacked factors is one plain matrix product, which beats a three operand einsum
+        # by better than three times.
+        matmul(BTv, stacks["dStress_dLaplacian"], out=self._laplacianCouplings)
+        matmul(self._laplacianCouplings[:, :, 0].T, laplacians, out=self._localKUL)
 
-            self._strains[p] += increment.dStrain
-            self._stresses[p][:] = response.stress
-            self._multipliers[p][0] = multipliers[centre]
-            self._yieldFunctions[p][:] = response.f
+        matmul(BTv, stacks["dStress_dLambda"], out=self._stressCouplings)
+        self._localKUL[:, centres] += self._stressCouplings[:, :, 0].T
 
-            PDisplacement += B.T @ response.stress * volume
-            PMultiplier[centre] += response.f[0] * volume
+        matmul(stacks["dF_dStrain"], B, out=self._yieldRows)
+        self._localKLU[centres, :] += self._yieldRows[:, 0, :] * volumes[:, None]
 
-            # the plastic multiplier enters the stress both directly and through its Laplacian
-            dStress_dMultipliers = np.zeros((nVoigtComponents, nMultiplierDofs))
-            dStress_dMultipliers += np.outer(tangents.dStress_dLaplacian[:, 0], laplacian)
-            dStress_dMultipliers[:, centre] += tangents.dStress_dLambda[:, 0]
+        self._localKLL[centres, :] += stacks["dF_dLaplacian"][:, 0, 0][:, None] * weightedLaplacians
+        self._localKLL[centres, centres] += stacks["dF_dLambda"][:, 0, 0] * volumes
 
-            dYield_dMultipliers = tangents.dF_dLaplacian[0, 0] * laplacian
-            dYield_dMultipliers[centre] += tangents.dF_dLambda[0, 0]
-
-            KUU += B.T @ tangents.dStress_dStrain @ B * volume
-            KUL += B.T @ dStress_dMultipliers * volume
-
-            KLU[centre, :] += tangents.dF_dStrain[0, :] @ B * volume
-            KLL[centre, :] += dYield_dMultipliers * volume
-
-        P[self._displacementDofs] += PDisplacement
-        P[self._multiplierDofs] += PMultiplier
-
-        K[self._displacementBlock] += KUU
-        K[self._displacementMultiplierBlock] += KUL
-        K[self._multiplierDisplacementBlock] += KLU
-        K[self._multiplierBlock] += KLL
+        P[self._localOrder] += self._localFlux
+        K[self._localBlock] += self._localTangent
 
     def acceptLastState(self):
         self._stateVars[:, :] = self._stateVarsTemp
