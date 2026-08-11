@@ -63,35 +63,39 @@ class Panel:
     the parameter study in :func:`main` can vary it without touching module state.
     """
 
-    #: The width and the height of the panel.
+    #: The width, the height and the out of plane thickness of the panel. The thickness only
+    #: enters as a factor on the reaction force, and hence on its normalisation by ``fy0 b t``.
     width: float = 60.0
     height: float = 120.0
+    thickness: float = 1.0
 
-    youngsModulus: float = 20000.0
-    poissonsRatio: float = 0.3
+    shearModulus: float = 4000
+    poissonsRatio: float = 0.49
+    youngsModulus: float = 2.0 * shearModulus * (1.0 + poissonsRatio)
 
     #: The initial yield strength.
     yieldStrength: float = 100.0
 
     #: The softening modulus. Negative, otherwise nothing localises.
-    hardeningModulus: float = -2000.0
+    hardeningModulus: float = -400.0
 
     #: The internal length of the regularisation. The gradient parameter follows from it as
     #: ``g = |H| l^2``. Six is a compromise: the localized zone comes out a few times ``l`` wide,
     #: so a much larger value fills the whole 60 wide panel and nothing recognisable localizes,
     #: while a much smaller one needs a grid fine enough to resolve it and the cost of the mesh
     #: study explodes.
-    internalLength: float = 6.0
+    gradientParameter: float = 3600
+    internalLength: float = np.sqrt(gradientParameter / abs(hardeningModulus))
 
     #: The yield strength of the weak corner, as a fraction of the initial one. A shallow
     #: imperfection does not win against the rest of the panel: at 0.9 the plastic zone comes out
     #: symmetric about the vertical centre line and merely sits at the bottom edge, at 0.8 it is
     #: anchored at the corner. Going deeper still, to 0.7, localizes so sharply that Newton gives
     #: up before the zone is fully developed.
-    weakeningFactor: float = 0.8
+    weakeningFactor: float = 0.9
 
     #: The radius of the weakened region around the bottom left corner.
-    weakCornerRadius: float = 6.0
+    weakCornerRadius: float = 12.0
 
     #: Marmot's smooth Fischer-Burmeister complementarity formulation, which is what makes the
     #: elastic to plastic switch differentiable and thus Newton friendly.
@@ -99,12 +103,6 @@ class Panel:
 
     density: float = 2.4e-9
     nonlocalViscosity: float = 0.0
-
-    @property
-    def gradientParameter(self) -> float:
-        """The gradient parameter ``g`` belonging to the requested internal length."""
-
-        return abs(self.hardeningModulus) * self.internalLength**2
 
     @property
     def exhaustionMultiplier(self) -> float:
@@ -128,6 +126,23 @@ class Panel:
 
         return float(np.sqrt(0.5 * (1.0 + (1.0 - nu) ** 2 + nu**2)))
 
+    @property
+    def referenceLoad(self) -> float:
+        """The load the reaction force is normalised by, ``fy0 b t``.
+
+        The reaction force divided by this is the mean axial stress over the cross section in
+        units of the initial yield strength, so a normalised load of one means the whole cross
+        section carrying exactly ``fy0``.
+
+        The peak comes out *above* one, and by a predictable amount: a uniaxial stress state
+        reaches the Mises surface only at ``sigma = fy0 / misesFactor``, so a panel of the strong
+        material alone would peak at ``1 / misesFactor``. That makes the normalised peak an
+        independent check on the whole computation -- it has to sit just below that value, short
+        of it because the weak corner has already yielded and softened.
+        """
+
+        return self.yieldStrength * self.width * self.thickness
+
     def shorteningAtYielding(self) -> float:
         """The end shortening at which the weak corner first yields, in closed form.
 
@@ -145,11 +160,16 @@ class Panel:
 #: The panel the mesh study uses.
 defaultPanel = Panel()
 
-#: How far past the closed form onset of yielding the displacement controlled part of the loading
-#: goes. It only has to pass yielding, so that the plastic multiplier at the weak corner is
-#: non-zero and can serve as the control quantity: while everything is still elastic it is
-#: identically zero, a trial load increment produces no change in it at all, and the arc length
-#: controller has nothing to divide by.
+#: How far past the closed form onset of yielding the loading goes, as a multiple of it. Under
+#: direct displacement control this is the whole loading history, so it has to reach well past the
+#: peak for the softening branch to be visible.
+shorteningFactor = 4.0
+
+#: How far past the closed form onset of yielding the *displacement controlled* part goes when the
+#: arc length solver takes over afterwards. It only has to pass yielding, so that the plastic
+#: multiplier at the weak corner is non-zero and can serve as the control quantity: while
+#: everything is still elastic it is identically zero, a trial load increment produces no change in
+#: it at all, and the arc length controller has nothing to divide by.
 yieldingSafetyFactor = 1.15
 
 #: How far into the softening range the weak corner is driven under indirect control, as a
@@ -239,7 +259,7 @@ def weakCornerControlPoints(grid, panel: Panel) -> list:
 def run(
     nCells=(20, 40),
     panel: Panel = defaultPanel,
-    control: str = "indirect",
+    control: str = "displacement",
     verbose: bool = True,
 ) -> tuple:
     """Compress the panel.
@@ -251,16 +271,19 @@ def run(
     panel
         The panel and its material.
     control
-        ``indirect`` drives the plastic multiplier at the weak corner with the arc length solver,
-        which is what makes the softening branch reachable. ``displacement`` drives the end
-        shortening directly, which is simpler but only survives until the response snaps back.
+        ``displacement`` drives the end shortening directly, which is what this softening law
+        allows: the response has no snap back, so the end shortening stays a monotone parameter
+        along the whole equilibrium path. ``indirect`` instead drives the plastic multiplier of the
+        weak corner with the arc length solver, which is only needed for softening sharp enough to
+        snap back -- with a stiffer ``hardeningModulus`` the arc length parameter comes out at
+        essentially zero, i.e. the end shortening freezes and displacement control cannot follow.
     verbose
         Be verbose during the simulation.
 
     Returns
     -------
     tuple
-        The model, the field output controller and the grid.
+        The model, the field output controller, the grid and the stencils.
     """
 
     sim = FDSimulation(domainSize=2, name="CompressedPanel2D", verbose=verbose)
@@ -272,7 +295,7 @@ def run(
         grid,
         material=createMaterialFactory(sim, panel),
         stressState="plane strain",
-        thickness=1.0,
+        thickness=panel.thickness,
     )
 
     sim.createSolver("NIST")
@@ -280,7 +303,11 @@ def run(
     if control == "indirect":
         sim.createSolver("NISTPArcLength")
 
-    firstStep = sim.createStep(solver="NIST", stepLength=1.0, maxInc=5e-2, minInc=1e-9, maxNumInc=3000, maxIter=25)
+    # under displacement control this single step traces the whole curve, so it needs enough
+    # increments to resolve the peak and the softening branch rather than just to reach yielding
+    maxInc = 5e-2 if control == "indirect" else 1e-2
+
+    firstStep = sim.createStep(solver="NIST", stepLength=1.0, maxInc=maxInc, minInc=1e-9, maxNumInc=3000, maxIter=25)
 
     # Frictionless platens: only the vertical displacement is prescribed on the loaded faces, the
     # panel is free to slide sideways, and a single grid point is pinned against rigid body
@@ -289,8 +316,9 @@ def run(
     firstStep.addDirichlet("pin", grid.nodeSets["rightBottom"], "displacement", {0: 0.0})
 
     if control == "displacement":
-        # Enough to pass the peak, if the solver survives that far.
-        firstStep.addDirichlet("top", grid.nodeSets["top"], "displacement", {1: 4.0 * panel.shorteningAtYielding()})
+        firstStep.addDirichlet(
+            "top", grid.nodeSets["top"], "displacement", {1: shorteningFactor * panel.shorteningAtYielding()}
+        )
     else:
         # Displacement control up to just past the onset of yielding, then hand over to the arc
         # length solver driving the plastic multiplier of the weak corner.
@@ -344,7 +372,7 @@ def run(
 
     model, fieldOutputs = sim.run()
 
-    return model, fieldOutputs, grid
+    return model, fieldOutputs, grid, stencils
 
 
 def plasticZone(model, fieldOutputs) -> tuple:
@@ -420,8 +448,115 @@ def bandGeometry(coordinates: np.ndarray, multiplier: np.ndarray) -> dict:
     )
 
 
-def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel):
-    """Draw the plastic multiplier over the panel next to the load displacement curve.
+def reportWeakRegion(stencils, panel: Panel = defaultPanel) -> dict:
+    """Verify that the stencils inside the weak corner really carry the weakened material.
+
+    Reads the yield strength back off each stencil's own material instance rather than trusting
+    that the factory was wired up correctly. Worth doing for two reasons: the material is selected
+    by the *cell centre*, which for this stencil is the average over its cell corners only and not
+    over its whole molecule -- the Laplacian reaches a grid point further, and a molecule average
+    would be off exactly at the boundary cells, which is where the weak corner sits. And every
+    stencil now owns its own material instance, so a factory returning a shared one would no
+    longer be caught by a difference in results.
+
+    Parameters
+    ----------
+    stencils
+        The stencils covering the grid.
+    panel
+        The panel, for the weakened region.
+
+    Returns
+    -------
+    dict
+        The number of weak stencils, their area fraction and the number of misassigned ones.
+    """
+
+    weakYieldStrength = panel.weakeningFactor * panel.yieldStrength
+
+    weak, misassigned = [], []
+
+    for stencil in stencils:
+        # index 2 of Marmot's GRADIENTVONMISES property vector is the initial yield strength
+        yieldStrength = float(stencil._material.materialProperties[2])
+        centre = stencil.getCoordinatesAtCenter()
+
+        shouldBeWeak = float(np.linalg.norm(centre[:2])) <= panel.weakCornerRadius
+        isWeak = yieldStrength < panel.yieldStrength
+
+        if isWeak:
+            weak.append(centre)
+
+        if isWeak != shouldBeWeak or (isWeak and yieldStrength != weakYieldStrength):
+            misassigned.append((centre, yieldStrength, shouldBeWeak))
+
+    weakArea = sum(
+        stencil._totalVolume
+        for stencil in stencils
+        if float(stencil._material.materialProperties[2]) < panel.yieldStrength
+    )
+    exactArea = 0.25 * np.pi * panel.weakCornerRadius**2 * panel.thickness
+
+    print(
+        "weak region            : {:} of {:} stencils, fy {:.3f} vs {:.3f}, "
+        "area {:.1f} vs {:.1f} exact ({:+.1f} %), misassigned {:}".format(
+            len(weak),
+            len(stencils),
+            weakYieldStrength,
+            panel.yieldStrength,
+            weakArea,
+            exactArea,
+            100.0 * (weakArea / exactArea - 1.0),
+            len(misassigned),
+        )
+    )
+
+    for centre, yieldStrength, shouldBeWeak in misassigned:
+        print(
+            "  MISASSIGNED at ({:.2f}, {:.2f}): fy = {:.3f}, expected {:}".format(
+                centre[0], centre[1], yieldStrength, "weak" if shouldBeWeak else "strong"
+            )
+        )
+
+    return dict(nWeak=len(weak), weakArea=weakArea, exactArea=exactArea, nMisassigned=len(misassigned))
+
+
+def onGrid(model, grid, field: str, values: np.ndarray) -> np.ndarray:
+    """Sort a flat nodal field onto the tensor product grid.
+
+    Done by asking the grid for each node's index rather than by reshaping, so the result does not
+    depend on the order in which the node field happens to list its grid points.
+
+    Parameters
+    ----------
+    model
+        The model.
+    grid
+        The grid of the panel.
+    field
+        The name of the node field the values belong to.
+    values
+        The values, one row per grid point.
+
+    Returns
+    -------
+    np.ndarray
+        The values with the grid shape leading.
+    """
+
+    values = np.asarray(values)
+    shape = tuple(int(n) for n in grid.shape)
+
+    arranged = np.empty(shape + values.shape[1:])
+
+    for node, value in zip(model.nodeFields[field].nodes, values):
+        arranged[tuple(int(i) for i in grid.gridIndexOf(node))] = value
+
+    return arranged
+
+
+def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel, magnification: float = None):
+    """Draw the plastic multiplier, the deformed shape and the load displacement curve.
 
     Parameters
     ----------
@@ -434,33 +569,45 @@ def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel):
     grid
         The grid of the panel.
     panel
-        The panel, for the weak corner outline.
+        The panel, for the weak corner outline and the normalisation of the curve.
+    magnification
+        The factor the displacements are exaggerated by in the deformed shape. Defaults to
+        whatever makes the largest displacement a tenth of the panel height, because at true
+        scale the shortening is around one percent of the height and the kink across the shear
+        band would be invisible. The factor used is stated in the panel title.
+
+    Notes
+    -----
+    The displacement magnitude is measured from the grid point pinned laterally, which is the
+    *bottom right* corner. Frictionless platens let the panel expand sideways, so a large part of
+    ``|u|`` is that lateral expansion relative to the pin rather than anything local: it grows
+    smoothly away from the pinned corner and makes the deformed shape look as though the panel
+    were leaning. Read the localisation off the plastic multiplier panel, and the deformed shape
+    for the kink across the band, not for the overall tilt.
     """
 
     import matplotlib.pyplot as plt
 
     coordinates, multiplier = plasticZone(model, fieldOutputs)
+    displacement = np.asarray(fieldOutputs.fieldOutputs["displacement"].getLastResult())
 
-    # sort the flat field onto the tensor product grid rather than trusting the order in which
-    # the node field happens to list its grid points
     shape = tuple(int(n) for n in grid.shape)
-    nodes = model.nodeFields["plastic multiplier"].nodes
 
-    x = np.empty(shape)
-    y = np.empty(shape)
-    field = np.empty(shape)
+    x = onGrid(model, grid, "plastic multiplier", coordinates[:, 0])
+    y = onGrid(model, grid, "plastic multiplier", coordinates[:, 1])
+    field = onGrid(model, grid, "plastic multiplier", multiplier)
 
-    for node, coordinate, value in zip(nodes, coordinates, multiplier):
-        index = tuple(int(i) for i in grid.gridIndexOf(node))
+    u = onGrid(model, grid, "displacement", displacement[:, :2])
+    magnitude = np.linalg.norm(u, axis=-1)
 
-        x[index] = coordinate[0]
-        y[index] = coordinate[1]
-        field[index] = value
+    if magnification is None:
+        largest = float(magnitude.max())
+        magnification = 0.1 * panel.height / largest if largest > 0.0 else 1.0
 
     force = np.abs(np.array(fieldOutputs.fieldOutputs["reactionForce"].getResultHistory()).flatten())
     shortening = np.abs(np.array(fieldOutputs.fieldOutputs["shortening"].getResultHistory()).flatten())
 
-    figure, axes = plt.subplots(1, 2, figsize=(9.0, 5.0))
+    figure, axes = plt.subplots(1, 3, figsize=(14.0, 5.0))
 
     contour = axes[0].contourf(x, y, np.clip(field, 0.0, None), levels=24, cmap="inferno")
     figure.colorbar(contour, ax=axes[0], label="plastic multiplier")
@@ -470,15 +617,41 @@ def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel):
     axes[0].set_aspect("equal")
     axes[0].set_xlabel("x")
     axes[0].set_ylabel("y")
-    axes[0].set_title("{:} x {:} cells,  l = {:.1f}".format(shape[0] - 1, shape[1] - 1, panel.internalLength))
+    axes[0].set_title("{:} x {:} cells,  l = {:.2f}".format(shape[0] - 1, shape[1] - 1, panel.internalLength))
 
-    axes[1].plot(shortening, force, "-")
-    axes[1].axvline(abs(panel.shorteningAtYielding()), color="grey", ls="--", lw=1.0, label="closed form onset")
-    axes[1].set_xlabel("end shortening")
-    axes[1].set_ylabel("reaction force")
-    axes[1].set_title("load displacement")
-    axes[1].legend()
-    axes[1].grid(True, alpha=0.3)
+    # the deformed shape, i.e. the same contour drawn on the displaced grid points
+    deformed = axes[1].contourf(
+        x + magnification * u[..., 0], y + magnification * u[..., 1], magnitude, levels=24, cmap="viridis"
+    )
+    figure.colorbar(deformed, ax=axes[1], label="|u|")
+
+    # the undeformed outline for reference, so the magnification can be read off the figure
+    axes[1].plot(
+        [0.0, panel.width, panel.width, 0.0, 0.0],
+        [0.0, 0.0, panel.height, panel.height, 0.0],
+        color="grey",
+        ls="--",
+        lw=1.0,
+    )
+
+    axes[1].set_aspect("equal")
+    axes[1].set_xlabel("x")
+    axes[1].set_ylabel("y")
+    axes[1].set_title("deformed shape, displacements x {:.0f}".format(magnification))
+
+    axes[2].plot(shortening / panel.height, force / panel.referenceLoad, "-")
+    axes[2].axvline(
+        abs(panel.shorteningAtYielding()) / panel.height,
+        color="grey",
+        ls="--",
+        lw=1.0,
+        label="closed form onset",
+    )
+    axes[2].set_xlabel("$u\\,/\\,H$")
+    axes[2].set_ylabel("$F\\,/\\,(f_{y0}\\,b\\,t)$")
+    axes[2].set_title("load displacement")
+    axes[2].legend()
+    axes[2].grid(True, alpha=0.3)
 
     figure.tight_layout()
     figure.savefig(fileName, dpi=110)
@@ -501,13 +674,23 @@ def report(name: str, model, fieldOutputs, panel: Panel = defaultPanel) -> dict:
     print()
     print("=== {:} ===".format(name))
     print("increments solved      : {:}".format(len(force)))
-    print("peak load              : {:.4f}".format(force[peak]))
     print(
-        "shortening at peak     : {:.5f}   (closed form onset {:.5f})".format(
-            shortening[peak], abs(panel.shorteningAtYielding())
+        "peak load              : {:.4f}   F/(fy0 b t) = {:.4f}   (strong material alone: {:.4f})".format(
+            force[peak], force[peak] / panel.referenceLoad, 1.0 / panel.misesFactor
         )
     )
-    print("final load             : {:.4f}  ({:.1f} % of peak)".format(force[-1], 100.0 * force[-1] / force[peak]))
+    print(
+        "shortening at peak     : {:.5f}   u/H = {:.5f}   (closed form onset u/H = {:.5f})".format(
+            shortening[peak],
+            shortening[peak] / panel.height,
+            abs(panel.shorteningAtYielding()) / panel.height,
+        )
+    )
+    print(
+        "final load             : {:.4f}   F/(fy0 b t) = {:.4f}  ({:.1f} % of peak)".format(
+            force[-1], force[-1] / panel.referenceLoad, 100.0 * force[-1] / force[peak]
+        )
+    )
     print(
         "max plastic multiplier : {:.6f}  ({:.1f} % of exhaustion)".format(
             multiplier.max(), 100.0 * multiplier.max() / panel.exhaustionMultiplier
@@ -550,7 +733,11 @@ def convergenceOfWidth(spacings, widths) -> dict:
     Returns
     -------
     dict
-        The observed order and the extrapolated width, both ``nan`` if the fit is not meaningful.
+        The observed order and the extrapolated width, both ``nan`` if the widths do not converge,
+        together with a ``diagnosis`` saying why. Refusing to report an order is the whole value of
+        this function: three points can always be fitted by *something*, and a number attached to a
+        sequence that is not converging would read as evidence of grid independence where there is
+        none.
     """
 
     (h1, h2, h3), (w1, w2, w3) = spacings, widths
@@ -558,9 +745,20 @@ def convergenceOfWidth(spacings, widths) -> dict:
     firstDifference = w1 - w2
     secondDifference = w2 - w3
 
+    notConverged = dict(order=np.nan, extrapolated=np.nan)
+
     if not firstDifference * secondDifference > 0.0:
-        # not monotone, so there is no order to speak of
-        return dict(order=np.nan, extrapolated=np.nan)
+        return dict(notConverged, diagnosis="the widths are not monotone, so there is no order to speak of")
+
+    if abs(secondDifference) >= abs(firstDifference):
+        return dict(
+            notConverged,
+            diagnosis=(
+                "the change in width grows under refinement ({:+.3f} then {:+.3f}), i.e. the width is "
+                "not settling. Expect this whenever the grid does not resolve the internal length: "
+                "the regularisation cannot act below one cell, so the answer is still set by the grid"
+            ).format(-firstDifference, -secondDifference),
+        )
 
     # solve (h1^p - h2^p) / (h2^p - h3^p) = firstDifference / secondDifference for p
     target = firstDifference / secondDifference
@@ -574,7 +772,7 @@ def convergenceOfWidth(spacings, widths) -> dict:
     signChanges = np.nonzero(np.diff(np.sign(residuals)))[0]
 
     if signChanges.size == 0:
-        return dict(order=np.nan, extrapolated=np.nan)
+        return dict(notConverged, diagnosis="no convergence order between 0.2 and 6 reproduces these widths")
 
     order = float(
         np.interp(0.0, residuals[signChanges[0] : signChanges[0] + 2], orders[signChanges[0] : signChanges[0] + 2])
@@ -582,7 +780,7 @@ def convergenceOfWidth(spacings, widths) -> dict:
 
     coefficient = firstDifference / (h1**order - h2**order)
 
-    return dict(order=order, extrapolated=float(w3 - coefficient * h3**order))
+    return dict(order=order, extrapolated=float(w3 - coefficient * h3**order), diagnosis="")
 
 
 def main():
@@ -597,9 +795,11 @@ def main():
     results = []
 
     for nCells in grids:
-        model, fieldOutputs, grid = run(nCells=nCells, panel=panel, verbose=False)
+        model, fieldOutputs, grid, stencils = run(nCells=nCells, panel=panel, verbose=True)
 
         results.append(report("{:}x{:} cells".format(*nCells), model, fieldOutputs, panel))
+
+        reportWeakRegion(stencils, panel)
 
         plot("plasticMultiplier_{:}x{:}.png".format(*nCells), model, fieldOutputs, grid, panel)
 
@@ -629,12 +829,6 @@ def main():
     )
 
     print()
-    print("observed order of the width  : {:.2f}".format(convergence["order"]))
-    print(
-        "extrapolated width           : {:.3f}  = {:.2f} l".format(
-            convergence["extrapolated"], convergence["extrapolated"] / panel.internalLength
-        )
-    )
     print(
         "spread of the peak load      : {:.2f} %".format(
             100.0
@@ -642,6 +836,21 @@ def main():
             / min(r["peakLoad"] for r in results)
         )
     )
+
+    if convergence["diagnosis"]:
+        print("width does NOT converge      : {:}".format(convergence["diagnosis"]))
+        print(
+            "                               here h/l is {:}, and resolving l takes roughly h/l <= 0.5".format(
+                ", ".join("{:.2f}".format(panel.width / nCells[0] / panel.internalLength) for nCells in grids)
+            )
+        )
+    else:
+        print("observed order of the width  : {:.2f}".format(convergence["order"]))
+        print(
+            "extrapolated width           : {:.3f}  = {:.2f} l".format(
+                convergence["extrapolated"], convergence["extrapolated"] / panel.internalLength
+            )
+        )
 
 
 if __name__ == "__main__":
