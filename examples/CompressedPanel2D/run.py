@@ -51,6 +51,8 @@ Run it with::
 from dataclasses import dataclass
 
 import numpy as np
+from edelweissfe.utils.exceptions import StepFailed
+
 from edelweissfd.drivers.pythonscriptedsimulation import FDSimulation
 from edelweissfd.stencils.gradientplasticitystencil import GradientPlasticityStencil
 
@@ -163,7 +165,13 @@ defaultPanel = Panel()
 #: How far past the closed form onset of yielding the loading goes, as a multiple of it. Under
 #: direct displacement control this is the whole loading history, so it has to reach well past the
 #: peak for the softening branch to be visible.
-shorteningFactor = 4.0
+#:
+#: It also has to be reachable on *every* grid of the mesh study, because comparing the band on
+#: grids that stopped at different end shortenings is not a mesh study -- the band keeps narrowing
+#: as it develops, so that would confound refinement with loading. Four was too far: with the
+#: volumetric averaging in place the band localises sharply enough that 30 x 60 cells stalls at
+#: 96 percent of it, close to exhausting the material inside the band.
+shorteningFactor = 3.0
 
 #: How far past the closed form onset of yielding the *displacement controlled* part goes when the
 #: arc length solver takes over afterwards. It only has to pass yielding, so that the plastic
@@ -794,14 +802,30 @@ def main():
     grids = [(20, 40), (30, 60), (40, 80)]
     results = []
 
+    completed = []
+
     for nCells in grids:
-        model, fieldOutputs, grid, stencils = run(nCells=nCells, panel=panel, verbose=True)
+        # a grid that gives up must not take the whole study with it: the ones that did converge
+        # are still worth reporting, and which grid failed is itself the useful information
+        try:
+            model, fieldOutputs, grid, stencils = run(nCells=nCells, panel=panel, verbose=True)
+        except StepFailed:
+            print()
+            print("=== {:}x{:} cells: FAILED to reach the end shortening ===".format(*nCells))
+            continue
 
         results.append(report("{:}x{:} cells".format(*nCells), model, fieldOutputs, panel))
+        completed.append(nCells)
 
         reportWeakRegion(stencils, panel)
 
         plot("plasticMultiplier_{:}x{:}.png".format(*nCells), model, fieldOutputs, grid, panel)
+
+    grids = completed
+
+    if not results:
+        print("no grid completed, nothing to compare")
+        return
 
     print()
     print("mesh study: the width of the localized zone has to be set by the internal length")
@@ -823,6 +847,11 @@ def main():
                 *result["hottest"],
             )
         )
+
+    if len(results) < 3:
+        print()
+        print("only {:} of 3 grids completed, so there is nothing to extrapolate from".format(len(results)))
+        return
 
     convergence = convergenceOfWidth(
         [panel.width / nCells[0] for nCells in grids], [result["width"] for result in results]
