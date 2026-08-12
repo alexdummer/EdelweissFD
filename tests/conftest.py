@@ -43,3 +43,11 @@ def at2PhaseFieldProperties():
     field material, matching ``testfiles/marmot/AT2PhaseField`` of EdelweissFE."""
 
     return np.array([20000.0, 0.2, 0.1, 5.0])
+
+
+@pytest.fixture
+def vonMisesProperties():
+    """Young's modulus, Poisson's ratio and the hardening parameters of Marmot's VONMISES,
+    matching ``testfiles/marmot`` of EdelweissFE."""
+
+    return np.array([210000.0, 0.3, 550.0, 1000.0, 200.0, 1400.0])

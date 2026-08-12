@@ -59,6 +59,8 @@ The tangent follows by differentiation and is verified against
 :class:`~edelweissfd.stencils.numericaltangent.NumericalTangentMixin`.
 """
 
+import os
+
 import numpy as np
 from edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial import (
     GradientEnhancedIncrement,
@@ -77,6 +79,18 @@ from edelweissfd.operators.differences import (
 )
 from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
+
+try:
+    from edelweissfe.kernels.gradientenhanceddisplacementkernel import (
+        GradientEnhancedDisplacementKernel,
+    )
+except ImportError:  # pragma: no cover - depends on whether EdelweissFE built its extensions
+    GradientEnhancedDisplacementKernel = None
+
+#: Use the compiled kernel of EdelweissFE when it is available, see
+#: :mod:`edelweissfd.stencils.gradientplasticitystencil` for the measurements that motivate it.
+#: Set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment to force the Python implementation.
+useCompiledKernel = os.environ.get("EDELWEISSFD_NO_COMPILED_KERNEL", "") not in ("1", "true", "True")
 
 #: The supported stress states, mapping to the material routine of the gradient enhanced
 #: material.
@@ -184,6 +198,7 @@ class GradientEnhancedDisplacementStencil(BaseStencil, NumericalTangentMixin):
 
         self._material = None
         self._nodes = None
+        self._kernel = None
 
     # -- descriptive properties ---------------------------------------------------------
 
@@ -306,6 +321,45 @@ class GradientEnhancedDisplacementStencil(BaseStencil, NumericalTangentMixin):
 
         self.acceptLastState()
 
+        self._kernel = self._createCompiledKernel()
+
+    def _createCompiledKernel(self):
+        """The compiled kernel for this cell, or ``None`` to fall back to Python.
+
+        ``None`` when EdelweissFE was installed without its Marmot extensions, when the compiled
+        kernel has been switched off, or when the material is not a Marmot one -- the kernel creates
+        its own Marmot material, so it cannot drive a material that only exists in Python.
+        """
+
+        if GradientEnhancedDisplacementKernel is None or not useCompiledKernel:
+            return None
+
+        if not hasattr(self._material, "materialName") or not hasattr(self._material, "materialProperties"):
+            return None
+
+        weightedTransposed = np.stack(
+            [B.T * volume for B, volume in zip(self._strainOperators, self._materialPointVolumes)]
+        )
+
+        # G^T G is constant per material point, so it is formed once here rather than per evaluation
+        laplacianProducts = np.stack([G.T @ G for G in self._gradients])
+
+        return GradientEnhancedDisplacementKernel(
+            self._material.materialName,
+            np.ascontiguousarray(self._material.materialProperties, dtype=float),
+            self._materialRoutineName == "computePlaneStress",
+            np.ascontiguousarray(np.stack(self._strainOperators)),
+            np.ascontiguousarray(weightedTransposed),
+            np.ascontiguousarray(self._averageOperator, dtype=float),
+            np.ascontiguousarray(laplacianProducts),
+            np.ascontiguousarray(self._materialPointVolumes, dtype=float),
+            np.ascontiguousarray(self._displacementDofs, dtype=np.int64),
+            np.ascontiguousarray(self._nonlocalDofs, dtype=np.int64),
+            self._stateVars,
+            self._stateVarsTemp,
+            self._nStateVarsOverhead,
+        )
+
     @property
     def characteristicLength(self) -> float:
         """The characteristic length of a material point, i.e. the geometric mean of the grid
@@ -326,6 +380,11 @@ class GradientEnhancedDisplacementStencil(BaseStencil, NumericalTangentMixin):
         time: float,
         dT: float,
     ):
+        if self._kernel is not None:
+            self._kernel.computeKernels(K, P, U, dU, time, dT)
+
+            return
+
         self._stateVarsTemp[:, :] = self._stateVars
 
         response = self._response

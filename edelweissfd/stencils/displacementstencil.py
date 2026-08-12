@@ -58,6 +58,8 @@ cell at its :math:`2^n` corners with plain one-sided difference quotients, see
 same compact quotient, so the one dimensional scheme is unaffected.
 """
 
+import os
+
 import numpy as np
 from edelweissfe.points.node import Node
 
@@ -71,6 +73,16 @@ from edelweissfd.operators.differences import (
 )
 from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
+
+try:
+    from edelweissfe.kernels.displacementkernel import DisplacementKernel
+except ImportError:  # pragma: no cover - depends on whether EdelweissFE built its extensions
+    DisplacementKernel = None
+
+#: Use the compiled kernel of EdelweissFE when it is available, see
+#: :mod:`edelweissfd.stencils.gradientplasticitystencil` for the measurements that motivate it.
+#: Set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment to force the Python implementation.
+useCompiledKernel = os.environ.get("EDELWEISSFD_NO_COMPILED_KERNEL", "") not in ("1", "true", "True")
 
 #: The supported stress states, mapping to the material routine and the Voigt components
 #: which carry the reduced tangent.
@@ -172,6 +184,7 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
 
         self._material = None
         self._nodes = None
+        self._kernel = None
 
     def _createMaterialPointOperators(self, cellVolume: float) -> tuple:
         """The gradient operator and the volume of every material point of the cell.
@@ -308,6 +321,40 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
 
         self.acceptLastState()
 
+        self._kernel = self._createCompiledKernel()
+
+    def _createCompiledKernel(self):
+        """The compiled kernel for this cell, or ``None`` to fall back to Python.
+
+        ``None`` when EdelweissFE was installed without its Marmot extensions, when the compiled
+        kernel has been switched off, or when the material is not a Marmot one -- the kernel
+        creates its own Marmot material, so it cannot drive a material that only exists in Python.
+        """
+
+        if DisplacementKernel is None or not useCompiledKernel:
+            return None
+
+        if not hasattr(self._material, "materialName") or not hasattr(self._material, "materialProperties"):
+            return None
+
+        weightedReducedTransposed = np.stack(
+            [B.T * volume for B, volume in zip(self._activeStrainOperators, self._materialPointVolumes)]
+        )
+
+        return DisplacementKernel(
+            self._material.materialName,
+            np.ascontiguousarray(self._material.materialProperties, dtype=float),
+            self._stressState,
+            self.characteristicLength,
+            np.ascontiguousarray(np.stack(self._strainOperators)),
+            np.ascontiguousarray(weightedReducedTransposed),
+            np.ascontiguousarray(np.stack(self._activeStrainOperators)),
+            np.ascontiguousarray(self._activeVoigtIndices, dtype=np.int64),
+            self._stateVars,
+            self._stateVarsTemp,
+            nStateVarsOverheadPerMaterialPoint,
+        )
+
     @property
     def characteristicLength(self) -> float:
         """The characteristic length of a material point, communicated to regularized
@@ -332,6 +379,11 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
         time: float,
         dT: float,
     ):
+        if self._kernel is not None:
+            self._kernel.computeKernels(K, P, U, dU, time, dT)
+
+            return
+
         self._stateVarsTemp[:, :] = self._stateVars
 
         for p in range(self._nMaterialPoints):

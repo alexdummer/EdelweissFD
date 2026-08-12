@@ -135,8 +135,10 @@ jobs:
               "edelweissfe.materials.marmot.marmothypoelastic",
               "edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic",
               "edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic",
-              # the compiled cell kernel: the stencil falls back to Python when it is
+              # the compiled cell kernels: the stencils fall back to Python when one is
               # missing, so its absence would otherwise cost only speed and stay invisible
+              "edelweissfe.kernels.displacementkernel",
+              "edelweissfe.kernels.gradientenhanceddisplacementkernel",
               "edelweissfe.kernels.gradientplasticitykernel",
           ]
 
