@@ -70,6 +70,9 @@ where the yield condition is collocated at the material point, i.e. lumped onto 
 it sits on.
 """
 
+import os
+from time import perf_counter_ns
+
 import numpy as np
 from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
     GradientPlasticityIncrement,
@@ -88,6 +91,70 @@ from edelweissfd.operators.differences import (
 )
 from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
+
+try:
+    from edelweissfe.kernels.gradientplasticitykernel import GradientPlasticityKernel
+except ImportError:  # pragma: no cover - depends on whether EdelweissFE built its extensions
+    GradientPlasticityKernel = None
+
+#: Use the compiled kernel of EdelweissFE when it is available.
+#:
+#: The cell couples few degrees of freedom and its blocks are small -- a six by six tangent,
+#: operators of six by twelve -- so at those sizes a numpy call costs more in dispatch than in
+#: arithmetic. Measured on a real localising run, the Marmot material is only 18.4 percent of the
+#: kernel time and the rest is that overhead, which is what the compiled kernel removes.
+#:
+#: Set to False, or set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment, to force the
+#: Python implementation. The two are tested against each other in ``tests/test_compiledkernel.py``
+#: and the whole suite is run both ways, so neither path is allowed to rot.
+useCompiledKernel = os.environ.get("EDELWEISSFD_NO_COMPILED_KERNEL", "") not in ("1", "true", "True")
+
+#: Accumulate how much of the kernel time is spent inside the material, per stencil.
+#:
+#: Off by default. The kernel is a few tens of microseconds and two clock reads cost about a
+#: tenth of one, so the overhead is small but there is no reason to pay it in production. It is
+#: worth having permanently available because the share decides whether compiling the kernel is
+#: worth anything at all: the attainable speedup is bounded by one over the material share, and
+#: that share is far higher in a real localising run than in a synthetic probe.
+profileMaterialTime = False
+
+
+def materialTimeReport(stencils) -> dict:
+    """Sum the per stencil material and kernel timings collected under
+    :data:`profileMaterialTime`.
+
+    Accumulated per stencil rather than globally on purpose: each stencil is evaluated by one
+    thread only, so per stencil counters need no synchronisation, while a shared accumulator would
+    lose updates on a free threaded interpreter.
+
+    Parameters
+    ----------
+    stencils
+        The stencils to sum over.
+
+    Returns
+    -------
+    dict
+        The material and kernel times in seconds, the number of material evaluations, the
+        microseconds per evaluation, the material share of the kernel time and the speedup the
+        kernel could reach at most if all of the remaining time were removed.
+    """
+
+    materialSeconds = sum(s._materialTimeNs for s in stencils) * 1e-9
+    kernelSeconds = sum(s._kernelTimeNs for s in stencils) * 1e-9
+    calls = sum(s._materialCalls for s in stencils)
+
+    share = materialSeconds / kernelSeconds if kernelSeconds > 0.0 else float("nan")
+
+    return dict(
+        materialSeconds=materialSeconds,
+        kernelSeconds=kernelSeconds,
+        calls=calls,
+        microsecondsPerCall=1e6 * materialSeconds / calls if calls else float("nan"),
+        materialShare=share,
+        ceiling=1.0 / share if share > 0.0 else float("nan"),
+    )
+
 
 #: The supported stress states, mapping to the material routine.
 stressStates = {
@@ -180,6 +247,7 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
 
         self._material = None
         self._nodes = None
+        self._kernel = None
 
     # -- descriptive properties ---------------------------------------------------------
 
@@ -409,6 +477,39 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
 
         self._allocateKernelBuffers()
 
+        self._kernel = self._createCompiledKernel()
+
+    def _createCompiledKernel(self):
+        """The compiled kernel for this cell, or ``None`` to fall back to Python.
+
+        Returns ``None`` when EdelweissFE was installed without its Marmot extensions, when the
+        compiled kernel has been switched off, or when the material is not a Marmot one -- the
+        kernel reaches Marmot's C++ shim directly, so it cannot drive a material that only exists
+        in Python.
+        """
+
+        if GradientPlasticityKernel is None or not useCompiledKernel:
+            return None
+
+        if not hasattr(self._material, "materialName") or not hasattr(self._material, "materialProperties"):
+            return None
+
+        return GradientPlasticityKernel(
+            self._material.materialName,
+            np.ascontiguousarray(self._material.materialProperties, dtype=float),
+            self._materialRoutineName == "computePlaneStress",
+            self._strainOperatorStack,
+            self._weightedTransposedStack,
+            np.ascontiguousarray(self._laplacianCoefficients, dtype=float),
+            np.ascontiguousarray(self._materialPointVolumeArray, dtype=float),
+            np.ascontiguousarray(self._materialPointNodes, dtype=np.int64),
+            np.ascontiguousarray(self._displacementDofs, dtype=np.int64),
+            np.ascontiguousarray(self._multiplierDofs, dtype=np.int64),
+            self._stateVars,
+            self._stateVarsTemp,
+            self._nStateVarsOverhead,
+        )
+
     def _allocateKernelBuffers(self):
         """Allocate everything :meth:`computeKernels` needs, once, and stacked over material points.
 
@@ -516,6 +617,10 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         self._localOrder = np.concatenate([self._displacementDofs, self._multiplierDofs])
         self._localBlock = np.ix_(self._localOrder, self._localOrder)
 
+        self._materialTimeNs = 0
+        self._kernelTimeNs = 0
+        self._materialCalls = 0
+
     @property
     def characteristicLength(self) -> float:
         """The characteristic length of a material point."""
@@ -541,6 +646,19 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         time: float,
         dT: float,
     ):
+        profiling = profileMaterialTime
+
+        if profiling:
+            kernelStart = perf_counter_ns()
+
+        if self._kernel is not None:
+            self._kernel.computeKernels(K, P, U, dU, time, dT)
+
+            if profiling:
+                self._kernelTimeNs += perf_counter_ns() - kernelStart
+
+            return
+
         self._stateVarsTemp[:, :] = self._stateVars
 
         displacementIncrements = dU[self._displacementDofs]
@@ -582,9 +700,16 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         tangentsPerPoint = self._tangentsPerPoint
         increments = self._increments
 
+        if profiling:
+            materialStart = perf_counter_ns()
+
         for p in range(self._nMaterialPoints):
             assignCurrentStateVars(materialStateVars[p])
             materialRoutine(responses[p], tangentsPerPoint[p], increments[p], time, dT)
+
+        if profiling:
+            self._materialTimeNs += perf_counter_ns() - materialStart
+            self._materialCalls += self._nMaterialPoints
 
         self._strainStates += dStrains
         self._multiplierStates[:, 0] = multipliers[centres]
@@ -618,6 +743,9 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
 
         P[self._localOrder] += self._localFlux
         K[self._localBlock] += self._localTangent
+
+        if profiling:
+            self._kernelTimeNs += perf_counter_ns() - kernelStart
 
     def acceptLastState(self):
         self._stateVars[:, :] = self._stateVarsTemp

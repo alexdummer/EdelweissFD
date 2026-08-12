@@ -134,6 +134,10 @@ jobs:
           required = [
               "edelweissfe.materials.marmot.marmothypoelastic",
               "edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic",
+              "edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic",
+              # the compiled cell kernel: the stencil falls back to Python when it is
+              # missing, so its absence would otherwise cost only speed and stay invisible
+              "edelweissfe.kernels.gradientplasticitykernel",
           ]
 
           missing = [name for name in required if not checkSuccessfulExtension(name)]
@@ -152,6 +156,15 @@ jobs:
       - name: Run tests
         shell: bash -l {0}
         run: |
+          pytest -v
+
+      - name: Run tests against the Python fallback kernel
+        shell: bash -l {0}
+        env:
+          EDELWEISSFD_NO_COMPILED_KERNEL: "1"
+        run: |
+          # both paths are live, so both are covered; test_compiledkernel.py additionally
+          # asserts that they agree to round-off on the same inputs
           pytest -v
 
       - name: Run examples
