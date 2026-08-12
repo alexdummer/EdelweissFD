@@ -99,6 +99,19 @@ nodeForcesDefaults = {
     **componentDefaults,
 }
 
+#: The step module each solver needs to drive its incrementation.
+#:
+#: The explicit solvers ask the step to scale the increment size through ``changeIncrementSize``,
+#: which only ``adaptiveForExplicitSimulations`` provides -- with the plain ``adaptive`` step they
+#: fail with an ``AttributeError`` on the first increment. Anything not listed here gets the plain
+#: adaptive step.
+stepTypesBySolver = {
+    "NEST": "adaptiveForExplicitSimulations",
+    "NESTParallel": "adaptiveForExplicitSimulations",
+    "NED": "adaptiveForExplicitSimulations",
+    "NEDParallel": "adaptiveForExplicitSimulations",
+}
+
 #: The default options of an adaptive step.
 stepDefaults = {
     "stepLength": 1.0,
@@ -126,9 +139,10 @@ class FDStep:
         The options of the adaptive step, e.g. ``stepLength`` or ``maxInc``.
     """
 
-    def __init__(self, number: int, solverName: str, options: dict):
+    def __init__(self, number: int, solverName: str, options: dict, stepType: str = "adaptive"):
         self.number = number
         self.solverName = solverName
+        self.stepType = stepType
         self.options = dict(stepDefaults)
         self.options.update(options)
 
@@ -407,7 +421,7 @@ class FDStep:
         stepOptions = dict(self.options)
         stepOptions["solver"] = self.solverName
 
-        return StepDefinition("adaptive", stepOptions, list(self._actionDefinitions))
+        return StepDefinition(self.stepType, stepOptions, list(self._actionDefinitions))
 
 
 def _locateBoundary(grid: StructuredGrid, boundary: str) -> tuple:
@@ -462,6 +476,7 @@ class FDSimulation:
         self.model = FDModel(domainSize)
 
         self.solvers = dict()
+        self._solverTypes = dict()
         self.steps = []
 
         self._nodeFieldOutputRequests = []
@@ -675,9 +690,13 @@ class FDSimulation:
 
         self.solvers[name] = solverClass(self.jobInfo, self.journal, **solverOptions)
 
+        # remembered so that createStep can pick the step module the solver needs, even when the
+        # solver was registered under a different name
+        self._solverTypes[name] = solverName
+
         return self.solvers[name]
 
-    def createStep(self, solver: str = None, **options) -> FDStep:
+    def createStep(self, solver: str = None, stepType: str = None, **options) -> FDStep:
         """Create a simulation step.
 
         Parameters
@@ -685,9 +704,15 @@ class FDSimulation:
         solver
             The name of the solver to be used. Defaults to the first solver, creating a
             :class:`~edelweissfe.solvers.nonlinearimplicitstatic.NIST` if none exists yet.
+        stepType
+            The step module of EdelweissFE driving the incrementation, either ``adaptive`` or
+            ``adaptiveForExplicitSimulations``. Defaults to whichever the solver needs: the
+            explicit solvers reduce the increment size through ``changeIncrementSize``, which only
+            the latter step provides, so choosing this by hand is only necessary for a solver this
+            method does not know about.
         options
-            The options of the adaptive step, e.g. ``stepLength``, ``maxInc``, ``minInc``,
-            ``maxNumInc``, ``maxIter``.
+            The options of the step, e.g. ``stepLength``, ``maxInc``, ``minInc``, ``maxNumInc``,
+            ``maxIter``.
 
         Returns
         -------
@@ -701,7 +726,10 @@ class FDSimulation:
 
             solver = next(iter(self.solvers))
 
-        step = FDStep(len(self.steps), solver, options)
+        if stepType is None:
+            stepType = stepTypesBySolver.get(self._solverTypes.get(solver, solver), "adaptive")
+
+        step = FDStep(len(self.steps), solver, options, stepType=stepType)
 
         self.steps.append(step)
 

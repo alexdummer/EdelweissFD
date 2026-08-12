@@ -99,9 +99,35 @@ class Panel:
     #: The radius of the weakened region around the bottom left corner.
     weakCornerRadius: float = 12.0
 
-    #: Marmot's smooth Fischer-Burmeister complementarity formulation, which is what makes the
-    #: elastic to plastic switch differentiable and thus Newton friendly.
-    useFischerBurmeister: float = 1.0
+    #: Which complementarity formulation of ``GRADIENTVONMISES`` to use: zero selects Marmot's
+    #: ``standard`` return mapping, anything else its smooth ``fischer_burmeister`` variant, see
+    #: ``modules/materials/GradientVonMises/src/GradientVonMises.cpp`` where the constructor reads
+    #: property five.
+    #:
+    #: Fischer-Burmeister is the default because the standard one **cannot solve this problem**.
+    #: Measured: with ``implementation = 0.0`` the Newton-Raphson solver fails at a step progress of
+    #: 0.344828, which is exactly ``1 / shorteningFactor``, i.e. precisely the closed form onset of
+    #: yielding, and it fails at every increment size down to 1e-9. Three findings, in order:
+    #:
+    #: 1. The elastic branch of ``GradientVonMises::computeStressStandard`` is internally
+    #:    inconsistent: it reports the yield function as identically zero -- so its true derivatives
+    #:    are zero -- while returning ``dF_ddStrain = dF_dStress^T C`` and ``dF_dKappa = E``. The
+    #:    numerical tangent checker puts the relative deviation at 1.0; reporting ``f = E dLambda``
+    #:    with zero strain and Laplacian derivatives instead brings it to 3e-10.
+    #: 2. Fixing that is not enough. The panel still fails at the same progress, and both branches
+    #:    are then individually consistent (elastic 3e-10, plastic 5e-9), so the obstacle is the
+    #:    switch between them rather than either branch.
+    #: 3. The two branches carry multiplier diagonals of *opposite sign* -- ``+E`` elastic against a
+    #:    negative value plastic. A grid point flipping between them from one Newton iteration to
+    #:    the next reverses the sign of its diagonal, so the iteration chatters instead of settling.
+    #:    The smooth variant has no such switch: through the same transition its diagonal runs
+    #:    monotonically from -1.0e4 to -3.3e4, never changing sign.
+    #:
+    #: The standard implementation is not wrong in general -- for a spatially *homogeneous* state,
+    #: where every material point switches at the same instant, the two agree to six digits and both
+    #: land exactly on ``fy0 + H kappa``. It is unsuitable here because a localising panel is by
+    #: construction a mixed elastic and plastic field.
+    implementation: float = 1.0
 
     density: float = 2.4e-9
     nonlocalViscosity: float = 0.0
@@ -216,7 +242,7 @@ def createMaterialFactory(sim: FDSimulation, panel: Panel):
                 yieldStress,
                 panel.hardeningModulus,
                 panel.gradientParameter,
-                panel.useFischerBurmeister,
+                panel.implementation,
                 panel.density,
                 panel.nonlocalViscosity,
             ],

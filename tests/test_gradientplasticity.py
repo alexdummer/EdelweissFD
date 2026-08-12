@@ -141,6 +141,17 @@ def test_homogeneousStateReproducesTheSofteningLaw():
 
     which also confirms that neither the Laplacian nor its boundary treatment disturbs a
     uniform field.
+
+    Not to machine precision, though, and the bound is worth stating because it is a property of the
+    formulation rather than of this discretisation. Fischer-Burmeister enforces the yield condition
+    through the smoothed complementarity function
+    ``phi(a, b) = sqrt(a^2 + b^2 + eps) - (a + b)`` with ``a = -f`` and ``b`` proportional to the
+    plastic multiplier increment. At a converged plastic point ``a`` vanishes, so ``phi`` reduces to
+    ``sqrt(b^2 + eps) - b``, which is ``eps / (2 b)`` rather than zero: the yield condition is
+    satisfied only to that, and ``eps`` cannot be made arbitrarily small because it is also what
+    keeps the algorithmic tangent from swinging near the corner -- see ``fbSmoothingRelative`` in
+    Marmot's ``GradientVonMises``. With the default smoothing the violation is of order 1e-9
+    relative to the yield strength, which is what the tolerance below allows for.
     """
 
     yieldStrength = 100.0
@@ -180,7 +191,7 @@ def test_homogeneousStateReproducesTheSofteningLaw():
 
     misesStress = np.sqrt(0.5 * ((s11 - s22) ** 2 + (s22 - s33) ** 2 + (s33 - s11) ** 2) + 3.0 * s12**2)
 
-    assert misesStress == pytest.approx(yieldStrength + hardeningModulus * kappa[0], rel=1e-9)
+    assert misesStress == pytest.approx(yieldStrength + hardeningModulus * kappa[0], rel=1e-7)
 
 
 @pytest.mark.marmot
