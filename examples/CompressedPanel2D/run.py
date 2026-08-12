@@ -96,7 +96,17 @@ class Panel:
     #: up before the zone is fully developed.
     weakeningFactor: float = 0.9
 
-    #: The radius of the weakened region around the bottom left corner.
+    #: Where the centre of the weakened region sits. ``None`` puts it at the origin, i.e. the
+    #: bottom left corner, where only a quarter of the disc lies inside the panel.
+    #:
+    #: Placing it at the centre of the panel is a materially different problem, not just a moved
+    #: flaw: a spot on the vertical centre line leaves the left-right symmetry of the panel intact,
+    #: so the band running up-right and the band running up-left are equally favourable and the
+    #: solution has to pick one. The corner spot breaks that symmetry outright. It also detaches the
+    #: band from the loaded edges, so the inclination is no longer influenced by the platens.
+    weakSpotCentre: tuple = None
+
+    #: The radius of the weakened region.
     weakCornerRadius: float = 12.0
 
     #: Which complementarity formulation of ``GRADIENTVONMISES`` to use: zero selects Marmot's
@@ -131,6 +141,34 @@ class Panel:
 
     density: float = 2.4e-9
     nonlocalViscosity: float = 0.0
+
+    @property
+    def weakSpot(self) -> np.ndarray:
+        """The centre of the weakened region."""
+
+        return np.zeros(2) if self.weakSpotCentre is None else np.asarray(self.weakSpotCentre, dtype=float)
+
+    @property
+    def weakSpotArea(self) -> float:
+        """The exact area of the weakened region, clipped to the panel.
+
+        A spot at a corner contributes a quarter of its disc, one on an edge a half, one in the
+        interior all of it -- which matters when comparing placements, since the same radius then
+        weakens four times as much material in the middle as in a corner.
+        """
+
+        centre = self.weakSpot
+        radius = self.weakCornerRadius
+
+        fractionX = 0.5 if centre[0] <= 0.0 or centre[0] >= self.width else 1.0
+        fractionY = 0.5 if centre[1] <= 0.0 or centre[1] >= self.height else 1.0
+
+        return fractionX * fractionY * np.pi * radius**2 * self.thickness
+
+    def isWeak(self, coordinates) -> bool:
+        """Whether a point lies inside the weakened region."""
+
+        return bool(np.linalg.norm(np.asarray(coordinates)[:2] - self.weakSpot) <= self.weakCornerRadius)
 
     @property
     def exhaustionMultiplier(self) -> float:
@@ -253,9 +291,7 @@ def createMaterialFactory(sim: FDSimulation, panel: Panel):
     weakMaterial = createMaterial(panel.weakeningFactor * panel.yieldStrength)
 
     def materialAt(coordinates):
-        distanceToCorner = np.linalg.norm(coordinates[:2])
-
-        return weakMaterial if distanceToCorner <= panel.weakCornerRadius else strongMaterial
+        return weakMaterial if panel.isWeak(coordinates) else strongMaterial
 
     return materialAt
 
@@ -280,8 +316,8 @@ def weakCornerControlPoints(grid, panel: Panel) -> list:
     """
 
     inWeakCorner = sorted(
-        (node for node in grid.nodes.values() if np.linalg.norm(node.coordinates[:2]) <= panel.weakCornerRadius),
-        key=lambda node: np.linalg.norm(node.coordinates[:2]),
+        (node for node in grid.nodes.values() if panel.isWeak(node.coordinates)),
+        key=lambda node: np.linalg.norm(node.coordinates[:2] - panel.weakSpot),
     )
 
     if len(inWeakCorner) < 2:
@@ -432,6 +468,14 @@ def bandGeometry(coordinates: np.ndarray, multiplier: np.ndarray) -> dict:
     zone, twice the square root of the smaller one is a width across it. Both are threshold free
     and, for a resolved field, independent of the grid.
 
+    .. warning::
+        One ellipse can only describe **one** band. For a field that is symmetric about the vertical
+        centre line -- which is what a weak spot on that line produces, see :func:`antisymmetry` --
+        both conjugate shear directions develop equally and form an X. The major axis of the fitted
+        ellipse is then the vertical bisector of that X, so this reports an inclination of 90
+        degrees and a width spanning the whole pattern, neither of which is a band. Always read the
+        inclination together with :func:`antisymmetry`.
+
     Additionally the participation ratio ``(sum l)^2 / sum l^2`` is reported as a fraction of all
     grid points. It is close to one while the plastic zone is diffuse and drops towards the area
     fraction of the zone once the deformation localizes, which makes it the honest indicator of
@@ -515,7 +559,7 @@ def reportWeakRegion(stencils, panel: Panel = defaultPanel) -> dict:
         yieldStrength = float(stencil._material.materialProperties[2])
         centre = stencil.getCoordinatesAtCenter()
 
-        shouldBeWeak = float(np.linalg.norm(centre[:2])) <= panel.weakCornerRadius
+        shouldBeWeak = panel.isWeak(centre)
         isWeak = yieldStrength < panel.yieldStrength
 
         if isWeak:
@@ -529,7 +573,7 @@ def reportWeakRegion(stencils, panel: Panel = defaultPanel) -> dict:
         for stencil in stencils
         if float(stencil._material.materialProperties[2]) < panel.yieldStrength
     )
-    exactArea = 0.25 * np.pi * panel.weakCornerRadius**2 * panel.thickness
+    exactArea = panel.weakSpotArea
 
     print(
         "weak region            : {:} of {:} stencils, fy {:.3f} vs {:.3f}, "
@@ -589,6 +633,42 @@ def onGrid(model, grid, field: str, values: np.ndarray) -> np.ndarray:
     return arranged
 
 
+def antisymmetry(model, grid, multiplier: np.ndarray) -> float:
+    """How one sided the plastic field is about the vertical centre line of the panel.
+
+    Zero means perfectly symmetric, so both conjugate shear directions developed equally and the
+    pattern is an X rather than a band; one means the field lives entirely on one side, so a single
+    band was selected. This is the measure that distinguishes the two regimes, because
+    :func:`bandGeometry` cannot: it fits one ellipse and reports the bisector of a symmetric X as a
+    vertical band.
+
+    A weak spot on the centre line leaves the panel's left-right symmetry intact and the measure
+    comes out at machine precision, a few times 1e-14. A spot in a corner breaks that symmetry and
+    it comes out at a few tenths.
+
+    Parameters
+    ----------
+    model
+        The model.
+    grid
+        The grid of the panel.
+    multiplier
+        The plastic multiplier per grid point.
+
+    Returns
+    -------
+    float
+        The ratio of the antisymmetric to the symmetric part, in the L1 sense.
+    """
+
+    field = onGrid(model, grid, "plastic multiplier", multiplier)
+    mirrored = field[::-1, :]
+
+    symmetric = np.abs(field + mirrored).sum()
+
+    return float(np.abs(field - mirrored).sum() / symmetric) if symmetric > 0.0 else float("nan")
+
+
 def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel, magnification: float = None):
     """Draw the plastic multiplier, the deformed shape and the load displacement curve.
 
@@ -646,7 +726,9 @@ def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel, 
     contour = axes[0].contourf(x, y, np.clip(field, 0.0, None), levels=24, cmap="inferno")
     figure.colorbar(contour, ax=axes[0], label="plastic multiplier")
 
-    axes[0].add_patch(plt.Circle((0.0, 0.0), panel.weakCornerRadius, fill=False, color="deepskyblue", lw=1.5))
+    axes[0].add_patch(
+        plt.Circle(tuple(panel.weakSpot), panel.weakCornerRadius, fill=False, color="deepskyblue", lw=1.5)
+    )
 
     axes[0].set_aspect("equal")
     axes[0].set_xlabel("x")
@@ -692,7 +774,7 @@ def plot(fileName: str, model, fieldOutputs, grid, panel: Panel = defaultPanel, 
     plt.close(figure)
 
 
-def report(name: str, model, fieldOutputs, panel: Panel = defaultPanel) -> dict:
+def report(name: str, model, fieldOutputs, panel: Panel = defaultPanel, grid=None) -> dict:
     """Print the peak load and where the plastic deformation concentrated."""
 
     force = np.abs(np.array(fieldOutputs.fieldOutputs["reactionForce"].getResultHistory()).flatten())
@@ -739,6 +821,19 @@ def report(name: str, model, fieldOutputs, panel: Panel = defaultPanel) -> dict:
         )
     )
     print("zone inclination       : {:.1f} deg".format(band["angle"]))
+
+    if grid is not None:
+        measure = antisymmetry(model, grid, multiplier)
+        print(
+            "antisymmetry           : {:.3e}   ({:})".format(
+                measure,
+                (
+                    "a symmetric X, so the inclination above is its bisector, not a band"
+                    if measure < 1e-6
+                    else "a single band was selected"
+                ),
+            )
+        )
 
     return dict(
         peakLoad=force[peak],
@@ -838,7 +933,11 @@ def main():
     panel = defaultPanel
 
     print("internal length      : {:.3f}".format(panel.internalLength))
-    print("weak corner radius   : {:.3f}".format(panel.weakCornerRadius))
+    print(
+        "weak spot            : centre ({:.1f}, {:.1f}), radius {:.3f}, area {:.1f}".format(
+            *panel.weakSpot, panel.weakCornerRadius, panel.weakSpotArea
+        )
+    )
     print("exhaustion at kappa  : {:.4f}".format(panel.exhaustionMultiplier))
     print("onset of yielding at : {:.4f}".format(abs(panel.shorteningAtYielding())))
 
@@ -857,7 +956,7 @@ def main():
             print("=== {:}x{:} cells: FAILED to reach the end shortening ===".format(*nCells))
             continue
 
-        results.append(report("{:}x{:} cells".format(*nCells), model, fieldOutputs, panel))
+        results.append(report("{:}x{:} cells".format(*nCells), model, fieldOutputs, panel, grid))
         completed.append(nCells)
 
         reportWeakRegion(stencils, panel)
