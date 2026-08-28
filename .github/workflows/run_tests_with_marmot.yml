@@ -33,7 +33,7 @@ jobs:
           echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
 
           cd ..
-          git clone https://github.com/EdelweissFE/EdelweissFE.git
+          git clone https://github.com/Edelweiss-Numerics/EdelweissFE.git
           cd EdelweissFE
 
           if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
