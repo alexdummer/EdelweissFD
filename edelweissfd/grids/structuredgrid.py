@@ -348,17 +348,31 @@ class StructuredGrid:
         derivatives the way a C0 finite element shape function is, so no penalty and no extra
         unknowns are required.
 
-        At a boundary the missing neighbour is a **ghost node** outside the grid. It is
-        eliminated by the homogeneous Neumann condition
+        At a boundary the homogeneous Neumann condition :math:`\\partial u / \\partial n = 0`
+        has to be built into the formula some other way, since there is no neighbour past the
+        boundary. Mirroring the missing neighbour onto the grid point on the opposite side of
+        the centre, :math:`u_{ghost} = u_{i+1}`, turning the quotient into
+        :math:`2 (u_{i+1} - u_i) / h_d^2`, is the obvious choice, and does make the discrete
+        Neumann condition itself second order accurate -- but plugging a ghost value into the
+        *unmodified* three point formula is not the same as a genuine second derivative there:
+        Taylor expanding :math:`u(h)` about the boundary under :math:`u'(0) = 0` gives
 
         .. math::
-            \\frac{\\partial u}{\\partial n} = 0
-            \\quad \\Longrightarrow \\quad
-            u_{ghost} = u_{i+1}
+            \\frac{2 \\left(u(h) - u(0)\\right)}{h^2}
+                = u''(0) + \\frac{h}{3} u'''(0) + O(h^2),
 
-        i.e. by mirroring across the boundary grid point, which turns the quotient there into
-        :math:`2 (u_{i+1} - u_i) / h_d^2`. The coefficients always sum to zero, so a constant
-        field has a vanishing Laplacian on the boundary just as in the interior.
+        an uncancelled first order term, because the two "neighbours" the formula sums are
+        really the same physical point counted twice, unlike the interior formula's genuine,
+        symmetry-cancelling pair. The fix used here instead fits a cubic through the boundary
+        point and its two real interior neighbours with :math:`u'(0) = 0` imposed exactly --
+        no ghost node at all -- which gives the second order accurate, one-sided formula
+
+        .. math::
+            u''(0) \\approx \\frac{-7 u_0 + 8 u_1 - u_2}{2 h^2}.
+
+        See ``tests/test_laplacian.py`` for both orders verified numerically. Falls back to the
+        ghost mirror rule when the grid is too thin in a direction to have two real interior
+        neighbours (``shape[d] < 3``), since the one-sided formula needs them.
 
         Parameters
         ----------
@@ -379,21 +393,37 @@ class StructuredGrid:
             coefficients[contributor] = coefficients.get(contributor, 0.0) + weight
 
         for direction in range(self.nDim):
-            inverseSquaredSpacing = 1.0 / self.spacings[direction] ** 2
+            h2 = self.spacings[direction] ** 2
+            i = centreIndex[direction]
+            n = self.shape[direction]
 
-            for offset in (-1, 1):
+            def nodeAt(offset):
                 index = list(centreIndex)
-                index[direction] += offset
+                index[direction] = i + offset
+                return self._nodeGrid[tuple(index)]
 
-                if not 0 <= index[direction] < self.shape[direction]:
-                    # the neighbour is a ghost node; the homogeneous Neumann condition mirrors
-                    # it onto the grid point on the opposite side of the centre
-                    index = list(centreIndex)
-                    index[direction] -= offset
-
-                contribute(self._nodeGrid[tuple(index)], inverseSquaredSpacing)
-
-            contribute(node, -2.0 * inverseSquaredSpacing)
+            if 0 < i < n - 1:
+                # interior: the genuine, symmetry-cancelling three point formula
+                contribute(nodeAt(-1), 1.0 / h2)
+                contribute(nodeAt(1), 1.0 / h2)
+                contribute(node, -2.0 / h2)
+            elif n >= 3:
+                # boundary, with two real interior neighbours available: the one-sided,
+                # ghost-free formula consistent with the Neumann condition to second order
+                inward = 1 if i == 0 else -1
+                contribute(node, -7.0 / (2.0 * h2))
+                contribute(nodeAt(inward), 8.0 / (2.0 * h2))
+                contribute(nodeAt(2 * inward), -1.0 / (2.0 * h2))
+            else:
+                # too thin in this direction for the one-sided formula; fall back to the
+                # ghost mirror rule, first order at the boundary but still exact for a
+                # constant field and valid for any n >= 1
+                for offset in (-1, 1):
+                    neighbourIndex = i + offset
+                    if not 0 <= neighbourIndex < n:
+                        neighbourIndex = i - offset
+                    contribute(nodeAt(neighbourIndex - i), 1.0 / h2)
+                contribute(node, -2.0 / h2)
 
         return coefficients
 

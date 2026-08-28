@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The finite difference Laplacian of the grid, including its ghost node boundary treatment.
+"""The finite difference Laplacian of the grid, including its Neumann boundary treatment.
 
 This operator is what lets EdelweissFD solve a gradient plasticity problem as a genuine two
 field problem: the material asks to be told the Laplacian of the plastic multiplier, and a
@@ -7,8 +7,15 @@ difference operator can simply provide it. A C0 finite element cannot, which is 
 own ``C0GradientPlasticityFiniteElement`` carries a third field for the gradient of the plastic
 multiplier and ties it down with a penalty.
 
-At a boundary the missing neighbour is a ghost node, eliminated by the homogeneous Neumann
-condition through mirroring across the boundary grid point.
+At a boundary the homogeneous Neumann condition is built in through a one-sided, ghost-free
+formula using the boundary point and its two real interior neighbours -- see
+:meth:`~edelweissfd.grids.structuredgrid.StructuredGrid.laplacianAt` for the derivation. A
+straightforward ghost-node mirror rule also satisfies the Neumann condition itself, but is only
+first order accurate for the resulting second derivative, which turned out to cap a whole
+gradient plasticity solve at first order in mesh size -- see
+``test_secondOrderAccurateForAGenericBoundaryCurvature`` below for a test field that actually
+exercises the difference (``cos`` does not: its odd derivatives vanish at the boundary by
+symmetry, which is why it passed under the old, buggy formula too).
 """
 
 import numpy as np
@@ -45,29 +52,48 @@ def test_spacingEntersAsItsInverseSquare():
     assert coefficients[(1, 1)] == pytest.approx(-2.0 - 2.0 / 16.0)
 
 
-def test_ghostNodeMirrorsAtABoundary():
-    """The homogeneous Neumann condition doubles the coefficient of the inward neighbour."""
+def test_neumannBoundaryIsAOneSidedThreePointFormula():
+    """The boundary formula reaches the two real interior neighbours, ghost-free.
+
+    Coefficients (-3.5, 4.0, -0.5) at (self, first interior neighbour, second interior
+    neighbour): the one-sided, second order accurate fit of a cubic through those three points
+    with the Neumann condition imposed exactly, see :meth:`StructuredGrid.laplacianAt`.
+    """
 
     grid = StructuredGrid("g", [4.0], [5])  # spacing 1
 
     atBoundary = coefficientsByIndex(grid, grid.nodeAt(0))
-    assert atBoundary == pytest.approx({(0,): -2.0, (1,): 2.0})
+    assert atBoundary == pytest.approx({(0,): -3.5, (1,): 4.0, (2,): -0.5})
 
     atOtherBoundary = coefficientsByIndex(grid, grid.nodeAt(4))
-    assert atOtherBoundary == pytest.approx({(4,): -2.0, (3,): 2.0})
+    assert atOtherBoundary == pytest.approx({(4,): -3.5, (3,): 4.0, (2,): -0.5})
 
     inside = coefficientsByIndex(grid, grid.nodeAt(2))
     assert inside == pytest.approx({(1,): 1.0, (2,): -2.0, (3,): 1.0})
 
 
-def test_ghostNodeMirrorsInBothDirectionsAtACorner():
-    """At a corner both directions are mirrored."""
+def test_neumannBoundaryFallsBackToGhostMirrorWhenTooThin():
+    """A grid with only two points in a direction has no second interior neighbour to reach,
+    so the one-sided formula cannot be built there; the ghost mirror rule still applies."""
+
+    grid = StructuredGrid("g", [1.0], [2])  # spacing 1, only two points
+
+    atBoundary = coefficientsByIndex(grid, grid.nodeAt(0))
+    assert atBoundary == pytest.approx({(0,): -2.0, (1,): 2.0})
+
+
+def test_neumannBoundaryInBothDirectionsAtACorner():
+    """At a corner both directions contribute their own one-sided formula; in a grid only three
+    points wide the "second interior neighbour" the formula reaches for is itself the opposite
+    boundary point, which is still a perfectly valid third value to fit the cubic through."""
 
     grid = StructuredGrid("g", [2.0, 2.0], [3, 3])
 
     coefficients = coefficientsByIndex(grid, grid.nodeAt(0, 0))
 
-    assert coefficients == pytest.approx({(0, 0): -4.0, (1, 0): 2.0, (0, 1): 2.0})
+    assert coefficients == pytest.approx(
+        {(0, 0): -7.0, (1, 0): 4.0, (2, 0): -0.5, (0, 1): 4.0, (0, 2): -0.5}
+    )
 
 
 @pytest.mark.parametrize("nDim", [1, 2, 3])
@@ -136,3 +162,33 @@ def test_secondOrderAccurateForAFieldSatisfyingTheNeumannCondition():
         rates = [np.log2(errors[i] / errors[i + 1]) for i in range(len(errors) - 1)]
 
         assert min(rates) > 1.8, rates
+
+
+def test_secondOrderAccurateForAGenericBoundaryCurvature():
+    """``cos`` has odd derivatives that vanish at the boundary by symmetry, which is exactly
+    the special case that hides a first order boundary error -- see the module docstring. A
+    field with a generic, nonzero third derivative there is the test that actually catches it:
+    the ghost mirror rule gives order 1 for this field, the one-sided formula order 2.
+    """
+
+    length = 1.0
+
+    def field(x):
+        return x**2 + x**3 + x**4  # u'(0) = 0 automatically (every term has degree >= 2), so
+        # this satisfies the Neumann condition without being built to trivially cancel the
+        # boundary formula's higher order terms the way an even function like cos does; its
+        # third derivative at 0 is 6 != 0, which is exactly the term the ghost mirror rule drops
+
+    def exactLaplacianAtZero():
+        return 2.0
+
+    errors = []
+    for nCells in (20, 40, 80, 160):
+        grid = StructuredGrid("g", [length], [nCells + 1])
+        node = grid.nodeAt(0)
+        laplacian = grid.laplacianAt(node)
+        approximation = sum(c * field(n.coordinates[0]) for n, c in laplacian.items())
+        errors.append(abs(approximation - exactLaplacianAtZero()))
+
+    rates = [np.log2(errors[i] / errors[i + 1]) for i in range(len(errors) - 1)]
+    assert min(rates) > 1.8, rates
