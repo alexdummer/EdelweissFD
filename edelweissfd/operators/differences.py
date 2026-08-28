@@ -71,6 +71,63 @@ voigtIndexPairs = ((0, 0), (1, 1), (2, 2), (0, 1), (0, 2), (1, 2))
 #: The number of components of a symmetric second order tensor in Voigt notation.
 nVoigtComponents = len(voigtIndexPairs)
 
+#: The Voigt index of the out-of-plane normal component (zz), in the order above.
+outOfPlaneVoigtIndex = 2
+
+
+def condensePlaneStressTangents(D, dLambda, dLaplacian, dFdStrain, dFdLambda, dFdLaplacian,
+                                 zz: int = outOfPlaneVoigtIndex):
+    """Statically condense out the zz row/column Marmot's ``computePlaneStress`` leaves in.
+
+    Marmot's plane stress routine correctly condenses the *stress* -- sigma_zz = 0 is enforced by
+    solving for the corresponding strain internally, verified directly against the closed form
+    plane stress modulus -- but the algorithmic tangent blocks it returns are the raw, uncondensed
+    ones: at nu=0.49, the returned ``dStress_dStrain`` is the full 3D elastic tangent, about 13x
+    stiffer than the correct plane stress modulus E/(1-nu^2) (confirmed by differencing the
+    material response directly). Left uncorrected, Newton's search direction is systematically
+    too small everywhere plane stress is used, which shows up as slow (linear, not quadratic)
+    convergence rather than an outright wrong answer -- easy to mistake for a genuine structural
+    instability, since it can exceed the iteration budget right where the physics gets interesting
+    (e.g. at the onset of yielding).
+
+    The fix is the standard implicit function theorem static condensation: since sigma_zz is
+    identically zero for every combination of the (in-plane strain, plastic multiplier increment,
+    its Laplacian) ``computePlaneStress`` is called with, differentiating that identity through
+    gives the dependence of the implicitly eliminated eps_zz on each of them, which every other
+    tangent block must include to stay consistent. Verified to reduce the deviation from a central
+    difference of the material response from order one down to 1e-8..1e-13 across the yield
+    transition, at several plastic multiplier increments each.
+
+    Parameters
+    ----------
+    D
+        ``dStress_dStrain``, shape ``(..., 6, 6)``.
+    dLambda, dLaplacian
+        ``dStress_dLambda`` and ``dStress_dLaplacian``, shape ``(..., 6)``.
+    dFdStrain
+        Shape ``(..., 6)``.
+    dFdLambda, dFdLaplacian
+        Shape ``(...,)``.
+    zz
+        The Voigt index to condense out.
+
+    Returns
+    -------
+    tuple
+        The six condensed arrays, in the same shapes as given.
+    """
+
+    Dzz = D[..., zz, zz]
+
+    Dcond = D - np.einsum("...i,...j->...ij", D[..., :, zz], D[..., zz, :]) / Dzz[..., None, None]
+    dLambdaCond = dLambda - D[..., :, zz] * dLambda[..., zz][..., None] / Dzz[..., None]
+    dLapCond = dLaplacian - D[..., :, zz] * dLaplacian[..., zz][..., None] / Dzz[..., None]
+    dFdEcond = dFdStrain - dFdStrain[..., zz][..., None] * D[..., zz, :] / Dzz[..., None]
+    dFdLambdaCond = dFdLambda - dFdStrain[..., zz] * dLambda[..., zz] / Dzz
+    dFdLapCond = dFdLaplacian - dFdStrain[..., zz] * dLaplacian[..., zz] / Dzz
+
+    return Dcond, dLambdaCond, dLapCond, dFdEcond, dFdLambdaCond, dFdLapCond
+
 
 def finiteDifferenceCoefficients(offsets, derivativeOrder: int, spacing: float = 1.0) -> np.ndarray:
     """The coefficients of a finite difference quotient.
@@ -381,6 +438,64 @@ def cellStrainOperator(gradient: np.ndarray) -> np.ndarray:
                 strainOperator[v, corner * nDim + j] += gradient[i, corner]
 
     return strainOperator
+
+
+def hourglassVector(spacings) -> np.ndarray:
+    """The Flanagan-Belytschko orthogonal hourglass shape vector of a 2D grid cell.
+
+    Single point quadrature at the cell centre -- :func:`cellGradientOperator` sampled once,
+    rather than :func:`cellCornerGradientOperators` sampled at every corner -- is second order
+    accurate and does not lock volumetrically, but the bilinear cell then has one zero energy
+    mode left uncontrolled: the alternating corner pattern ``(1, -1, -1, 1)``, the "hourglass"
+    mode, which the single sampling point cannot see at all.
+
+    Flanagan and Belytschko's remedy [1]_ projects the constant and linear parts out of that
+    pattern,
+
+    .. math::
+        \\boldsymbol \\gamma = \\boldsymbol h
+            - \\left(\\boldsymbol h \\cdot \\boldsymbol x\\right) \\boldsymbol b_x
+            - \\left(\\boldsymbol h \\cdot \\boldsymbol y\\right) \\boldsymbol b_y
+
+    with :math:`\\boldsymbol h = (1, -1, -1, 1)` and :math:`\\boldsymbol b_x, \\boldsymbol b_y`
+    the centre gradient's corner weights. The result is, by construction, orthogonal to any
+    constant or linear field -- :math:`\\boldsymbol \\gamma \\cdot \\boldsymbol u` is exactly
+    zero for such a field and :math:`O(h^2)` for a smooth one with curvature, so a stabilization
+    stiffness built from it, :math:`c \\, \\boldsymbol \\gamma \\boldsymbol \\gamma^T`, resists
+    the hourglass mode without spoiling the second order accuracy of the underlying operator --
+    see ``tests/test_hourglassstabilization.py`` for both properties verified numerically.
+
+    Parameters
+    ----------
+    spacings
+        The grid spacing per direction, shape ``(2,)``. Only two dimensions are supported: a
+        trilinear hexahedron has three independent hourglass modes per component, not one, which
+        is a materially larger extension than this single mode.
+
+    Returns
+    -------
+    np.ndarray
+        The hourglass vector, shape ``(4,)``, ordered like :func:`cellCornerOffsets`.
+
+    References
+    ----------
+    .. [1] D.P. Flanagan, T. Belytschko, "A uniform strain hexahedron and quadrilateral with
+       orthogonal hourglass control", IJNME 17, 1981, 679-706.
+    """
+
+    spacings = np.asarray(spacings, dtype=float)
+
+    if spacings.size != 2:
+        raise ValueError("The orthogonal hourglass vector is only implemented in two dimensions.")
+
+    pattern = np.array([1.0, -1.0, -1.0, 1.0])
+    corners = cellCornerOffsets(2).astype(float)
+    coordinates = corners * spacings
+
+    gradient = cellGradientOperator(spacings)
+    bx, by = gradient[0, :], gradient[1, :]
+
+    return pattern - (pattern @ coordinates[:, 0]) * bx - (pattern @ coordinates[:, 1]) * by
 
 
 def volumetricallyAveragedStrainOperators(strainOperators, weights=None) -> list:

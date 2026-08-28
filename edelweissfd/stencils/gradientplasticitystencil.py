@@ -86,6 +86,8 @@ from edelweissfd.operators.differences import (
     cellCornerOffsets,
     cellGradientOperator,
     cellStrainOperator,
+    condensePlaneStressTangents,
+    hourglassVector,
     nVoigtComponents,
     volumetricallyAveragedStrainOperators,
 )
@@ -163,6 +165,26 @@ stressStates = {
     "plane stress": "computePlaneStress",
 }
 
+def _condensePlaneStressTangents(stacks: dict):
+    """Apply :func:`~edelweissfd.operators.differences.condensePlaneStressTangents` to every
+    material point of the cell at once, in place -- see there for why this is needed at all."""
+
+    Dcond, dLambdaCond, dLapCond, dFdEcond, dFdLambdaCond, dFdLapCond = condensePlaneStressTangents(
+        stacks["dStress_dStrain"],
+        stacks["dStress_dLambda"][:, :, 0],
+        stacks["dStress_dLaplacian"][:, :, 0],
+        stacks["dF_dStrain"][:, 0, :],
+        stacks["dF_dLambda"][:, 0, 0],
+        stacks["dF_dLaplacian"][:, 0, 0],
+    )
+
+    stacks["dStress_dStrain"][...] = Dcond
+    stacks["dStress_dLambda"][:, :, 0] = dLambdaCond
+    stacks["dStress_dLaplacian"][:, :, 0] = dLapCond
+    stacks["dF_dStrain"][:, 0, :] = dFdEcond
+    stacks["dF_dLambda"][:, 0, 0] = dFdLambdaCond
+    stacks["dF_dLaplacian"][:, 0, 0] = dFdLapCond
+
 
 class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
     """A gradient plasticity stencil on a single grid cell.
@@ -184,7 +206,33 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         default: corner sampling constrains the volumetric strain once per corner, which
         over-constrains the cell as Poisson's ratio approaches one half, and a shear band deforms
         at constant volume, so without it the band simply does not form. Turn it off only to
-        reproduce that.
+        reproduce that. Ignored when ``hourglassControl`` is ``"stabilized"``, which does not lock
+        in the first place.
+    hourglassControl
+        ``"corner"`` (default) samples the strain at every corner of the cell with a one-sided
+        quotient, see :func:`~edelweissfd.operators.differences.cellCornerGradientOperators`.
+        That resists the hourglass mode, but is only first order accurate at the corner itself --
+        confirmed to be the accuracy bottleneck of the whole coupled solve, since the plastic
+        multiplier's Laplacian is a compact, essentially exact second order stencil. ``"stabilized"``
+        instead samples the strain once, at the cell centre, with :func:`cellGradientOperator`
+        (second order, and does not lock volumetrically to begin with), and adds a Flanagan-Belytschko
+        orthogonal hourglass stabilization stiffness, see
+        :func:`~edelweissfd.operators.differences.hourglassVector`, to control the one zero energy
+        mode single point sampling leaves open. Only implemented in two dimensions. Experimental:
+        validated on small linear elastic patches (no near-zero eigenvalues under the panel's own,
+        weakly constrained boundary conditions, and an :math:`O(h^2)` stabilization response on a
+        smooth field), not yet exercised at the scale of the compiled kernel, which is bypassed
+        whenever this is not ``"corner"``.
+    hourglassStiffness
+        A representative elastic modulus the stabilization stiffness is scaled from, required when
+        ``hourglassControl`` is ``"stabilized"``. Fixed at construction, deliberately not the
+        current (possibly heavily softened) material tangent -- scaling down with the tangent would
+        withdraw stabilization exactly where localisation makes it most needed.
+    hourglassCoefficient
+        The dimensionless factor :math:`a_{hg}` scaling the stabilization stiffness,
+        :math:`c = a_{hg} \\, G \\, V / L^2` with :math:`G` the ``hourglassStiffness``, :math:`V`
+        the cell volume and :math:`L` the :attr:`characteristicLength`. The classical range for
+        artificial stiffness hourglass control is 0.03 to 0.1.
     """
 
     def __init__(
@@ -194,11 +242,17 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         stressState: str = "plane strain",
         thickness: float = 1.0,
         volumetricAveraging: bool = True,
+        hourglassControl: str = "corner",
+        hourglassStiffness: float = None,
+        hourglassCoefficient: float = 0.05,
     ):
         if stressState not in stressStates:
             raise ValueError(
                 "Unknown stress state '{:}'; available are {:}".format(stressState, ", ".join(stressStates))
             )
+
+        if hourglassControl not in ("corner", "stabilized"):
+            raise ValueError("Unknown hourglassControl '{:}'; available are 'corner', 'stabilized'.")
 
         self._stencilNumber = stencilNumber
         self._stressState = stressState
@@ -209,6 +263,11 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         if self._nDim == 1 and stressState in ("plane strain", "plane stress"):
             raise ValueError("A one dimensional grid needs the stress state '3d'.")
 
+        if hourglassControl == "stabilized" and self._nDim != 2:
+            raise ValueError("hourglassControl='stabilized' is only implemented in two dimensions.")
+
+        self._hourglassControl = hourglassControl
+
         self._cornerOffsets = cellCornerOffsets(self._nDim)
         self._nCorners = self._cornerOffsets.shape[0]
 
@@ -218,7 +277,13 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
 
         self._totalVolume = cellVolume
 
-        if self._nDim == 1:
+        if hourglassControl == "stabilized":
+            # single point quadrature at the cell centre, repeated onto every corner so the
+            # material points still sit one per corner -- the yield condition still needs a grid
+            # point to be collocated on -- but all of them see the identical, second order
+            # accurate strain, sampled only once.
+            self._gradients = [cellGradientOperator(self._spacings)] * self._nCorners
+        elif self._nDim == 1:
             self._gradients = [cellGradientOperator(self._spacings)]
         else:
             self._gradients = cellCornerGradientOperators(self._spacings)
@@ -231,13 +296,30 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         # Without this the cell locks volumetrically as Poisson's ratio approaches one half, and a
         # shear band -- which deforms at constant volume -- cannot form at all. On by default,
         # because a gradient plasticity computation is localisation at nearly incompressible
-        # plastic flow, i.e. exactly the case that locks.
-        self._volumetricAveraging = volumetricAveraging
+        # plastic flow, i.e. exactly the case that locks. Single point quadrature does not lock in
+        # the first place, so there is nothing to avearge there.
+        self._volumetricAveraging = volumetricAveraging and hourglassControl == "corner"
 
-        if volumetricAveraging:
+        if self._volumetricAveraging:
             self._strainOperators = volumetricallyAveragedStrainOperators(
                 self._strainOperators, self._materialPointVolumes
             )
+
+        self._hourglassStiffnessMatrix = None
+        if hourglassControl == "stabilized":
+            if hourglassStiffness is None:
+                raise ValueError("hourglassControl='stabilized' needs hourglassStiffness.")
+
+            gamma = hourglassVector(self._spacings)
+            stiffnessScale = hourglassCoefficient * hourglassStiffness * cellVolume / self.characteristicLength**2
+
+            nDisplacementDofs = self._nCorners * self._nDim
+            Khg = np.zeros((nDisplacementDofs, nDisplacementDofs))
+            for component in range(self._nDim):
+                index = np.arange(component, nDisplacementDofs, self._nDim)
+                Khg[np.ix_(index, index)] += stiffnessScale * np.outer(gamma, gamma)
+
+            self._hourglassStiffnessMatrix = Khg
 
         self._materialRoutineName = stressStates[stressState]
 
@@ -483,12 +565,23 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         """The compiled kernel for this cell, or ``None`` to fall back to Python.
 
         Returns ``None`` when EdelweissFE was installed without its Marmot extensions, when the
-        compiled kernel has been switched off, or when the material is not a Marmot one -- the
+        compiled kernel has been switched off, when the material is not a Marmot one -- the
         kernel reaches Marmot's C++ shim directly, so it cannot drive a material that only exists
-        in Python.
+        in Python --, when hourglass stabilization is in use, which the compiled kernel does not
+        yet know about, or when the stress state is plane stress: Marmot's ``computePlaneStress``
+        returns an uncondensed tangent (verified directly against central differences of the
+        material response -- see :func:`_condensePlaneStressTangents`), and the compiled kernel
+        has no equivalent correction, so plane stress always falls back to the Python path, which
+        does.
         """
 
         if GradientPlasticityKernel is None or not useCompiledKernel:
+            return None
+
+        if self._hourglassStiffnessMatrix is not None:
+            return None
+
+        if self._materialRoutineName == "computePlaneStress":
             return None
 
         if not hasattr(self._material, "materialName") or not hasattr(self._material, "materialProperties"):
@@ -711,6 +804,9 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
             self._materialTimeNs += perf_counter_ns() - materialStart
             self._materialCalls += self._nMaterialPoints
 
+        if self._materialRoutineName == "computePlaneStress":
+            _condensePlaneStressTangents(stacks)
+
         self._strainStates += dStrains
         self._multiplierStates[:, 0] = multipliers[centres]
 
@@ -724,6 +820,14 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         matmul(BTv, stacks["dStress_dStrain"], out=self._weightedTimesTangent)
         matmul(self._weightedTimesTangent, B, out=self._displacementBlocks)
         self._displacementBlocks.sum(axis=0, out=self._localKUU)
+
+        if self._hourglassStiffnessMatrix is not None:
+            # a fixed, linear elastic-like spring resisting the hourglass mode, referenced to the
+            # total displacement -- tangent-consistent by construction, since it does not depend
+            # on the material's (possibly heavily softened) state at all
+            Khg = self._hourglassStiffnessMatrix
+            self._localKUU += Khg
+            self._localPDisplacement += Khg @ U[self._displacementDofs]
 
         # The plastic multiplier enters the stress through its Laplacian over the whole molecule,
         # and directly at the grid point the material point sits on. Summing the outer products of
