@@ -15,8 +15,6 @@ import numpy as np
 import pytest
 
 from edelweissfd.stencils import gradientplasticitystencil as gps
-from edelweissfd.stencils.gradientplasticitystencil import GradientPlasticityStencil
-
 from tests.test_gradientplasticity import buildSingleCellGrid
 
 pytestmark = pytest.mark.marmot

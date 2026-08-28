@@ -165,6 +165,7 @@ stressStates = {
     "plane stress": "computePlaneStress",
 }
 
+
 def _condensePlaneStressTangents(stacks: dict):
     """Apply :func:`~edelweissfd.operators.differences.condensePlaneStressTangents` to every
     material point of the cell at once, in place -- see there for why this is needed at all."""

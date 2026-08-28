@@ -91,9 +91,7 @@ def test_neumannBoundaryInBothDirectionsAtACorner():
 
     coefficients = coefficientsByIndex(grid, grid.nodeAt(0, 0))
 
-    assert coefficients == pytest.approx(
-        {(0, 0): -7.0, (1, 0): 4.0, (2, 0): -0.5, (0, 1): 4.0, (0, 2): -0.5}
-    )
+    assert coefficients == pytest.approx({(0, 0): -7.0, (1, 0): 4.0, (2, 0): -0.5, (0, 1): 4.0, (0, 2): -0.5})
 
 
 @pytest.mark.parametrize("nDim", [1, 2, 3])

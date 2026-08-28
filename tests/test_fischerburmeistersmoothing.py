@@ -28,7 +28,6 @@ exactly, is asserted where a genuinely converged plastic state exists rather tha
 
 import numpy as np
 import pytest
-
 from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
     GradientPlasticityIncrement,
     GradientPlasticityResponse,

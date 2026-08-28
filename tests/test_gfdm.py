@@ -9,7 +9,9 @@ import pytest
 from edelweissfd.drivers.pythonscriptedsimulation import FDSimulation
 from edelweissfd.grids.structuredgrid import StructuredGrid
 from edelweissfd.operators.gfdm import gatherCloud, gfdmWeights
-from edelweissfd.stencils.gfdmgradientplasticitystencil import GFDMGradientPlasticityStencil
+from edelweissfd.stencils.gfdmgradientplasticitystencil import (
+    GFDMGradientPlasticityStencil,
+)
 
 
 def gradientVonMisesProperties(

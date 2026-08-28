@@ -322,8 +322,12 @@ class GFDMGradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
             # edelweissfd.operators.differences.condensePlaneStressTangents.
             t = self._tangents
             Dcond, dLambdaCond, dLapCond, dFdEcond, dFdLambdaCond, dFdLapCond = condensePlaneStressTangents(
-                t.dStress_dStrain, t.dStress_dLambda[:, 0], t.dStress_dLaplacian[:, 0],
-                t.dF_dStrain[0, :], t.dF_dLambda[0, 0], t.dF_dLaplacian[0, 0],
+                t.dStress_dStrain,
+                t.dStress_dLambda[:, 0],
+                t.dStress_dLaplacian[:, 0],
+                t.dF_dStrain[0, :],
+                t.dF_dLambda[0, 0],
+                t.dF_dLaplacian[0, 0],
             )
             t.dStress_dStrain[...] = Dcond
             t.dStress_dLambda[:, 0] = dLambdaCond

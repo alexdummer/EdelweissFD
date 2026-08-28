@@ -75,8 +75,9 @@ nVoigtComponents = len(voigtIndexPairs)
 outOfPlaneVoigtIndex = 2
 
 
-def condensePlaneStressTangents(D, dLambda, dLaplacian, dFdStrain, dFdLambda, dFdLaplacian,
-                                 zz: int = outOfPlaneVoigtIndex):
+def condensePlaneStressTangents(
+    D, dLambda, dLaplacian, dFdStrain, dFdLambda, dFdLaplacian, zz: int = outOfPlaneVoigtIndex
+):
     """Statically condense out the zz row/column Marmot's ``computePlaneStress`` leaves in.
 
     Marmot's plane stress routine correctly condenses the *stress* -- sigma_zz = 0 is enforced by

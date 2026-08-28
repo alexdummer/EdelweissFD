@@ -48,7 +48,6 @@ import numpy as np
 from edelweissfe.points.node import Node
 from edelweissfe.sets.nodeset import NodeSet
 
-
 #: The node set name of the lower and the upper boundary per direction.
 #:
 #: The naming follows the ``planeRectQuad`` and ``boxGen`` generators of EdelweissFE, which

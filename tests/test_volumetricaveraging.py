@@ -152,8 +152,8 @@ def test_theTangentStaysConsistentWithAveragingOn(spacings, stressState):
 
     from edelweissfe.materials.marmot.marmothypoelastic import MarmotHypoElasticMaterial
 
-    from tests.test_tangents import buildStencil
     from edelweissfd.stencils.displacementstencil import DisplacementStencil
+    from tests.test_tangents import buildStencil
 
     material = MarmotHypoElasticMaterial("LINEARELASTIC", np.array([20000.0, 0.49]))
 
