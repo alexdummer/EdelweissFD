@@ -664,6 +664,61 @@ class FDSimulation:
 
         return stencils
 
+    def assignNodalStencils(self, stencilClass, grid: StructuredGrid, material, **stencilOptions) -> list:
+        """Place one stencil on every grid point of a grid, rather than one per cell.
+
+        For a stencil whose material point sits directly at the grid node -- e.g. a Generalized
+        Finite Difference stencil built from a per-node neighbour cloud, rather than a per-cell
+        corner sampling -- there is no cell to attach to. Otherwise identical to
+        :meth:`assignStencils`.
+
+        Parameters
+        ----------
+        stencilClass
+            The stencil class, e.g.
+            :class:`~edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil`.
+        grid
+            The grid to be covered.
+        material
+            See :meth:`assignStencils`.
+        stencilOptions
+            Further keyword arguments passed on to the stencil constructor.
+
+        Returns
+        -------
+        list
+            The created stencils.
+        """
+
+        stencils = []
+
+        materialFactory = material if callable(material) else None
+
+        for node in grid.nodes.values():
+            stencil = stencilClass(self._nextStencilNumber, grid.spacings, **stencilOptions)
+
+            stencil.setNode(grid, node)
+
+            if materialFactory is not None:
+                provider = materialFactory(stencil.getCoordinatesAtCenter())
+            else:
+                provider = material
+
+            stencil.setMaterial(materialInstanceFrom(provider))
+
+            self.model.addStencil(stencil)
+
+            stencils.append(stencil)
+
+            self._nextStencilNumber += 1
+
+        self.journal.message(
+            "Assigned {:} {:} nodal stencils on grid '{:}'".format(len(stencils), stencilClass.__name__, grid.name),
+            self.identification,
+        )
+
+        return stencils
+
     # -- steps --------------------------------------------------------------------------
 
     def createSolver(self, solverName: str = "NIST", name: str = None, **solverOptions):
