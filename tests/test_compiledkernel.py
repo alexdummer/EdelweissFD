@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The compiled gradient plasticity kernel must agree with the Python one exactly.
 
-The stencil delegates its inner loop to EdelweissFE's compiled kernel when that is available and
+The stencil delegates its inner loop to a compiled kernel when that is available and
 falls back to the Python implementation otherwise, so both paths are live and both have to give
 the same answer. The bound is round-off rather than an accuracy tolerance: the two evaluate the
 same expressions over the same material and differ only in the order the sums are accumulated --
@@ -24,7 +24,7 @@ def kernelAvailable() -> bool:
     return gps.GradientPlasticityKernel is not None
 
 
-needsKernel = pytest.mark.skipif(not kernelAvailable(), reason="EdelweissFE was built without the compiled kernel")
+needsKernel = pytest.mark.skipif(not kernelAvailable(), reason="EdelweissFD was built without the compiled kernel")
 
 
 #: Relative bound for two evaluations that differ only in summation order.
@@ -263,7 +263,7 @@ def test_theDisplacementKernelAgrees(spacings, stressState, linearElasticPropert
         DisplacementStencil.__module__
         and getattr(sys.modules[DisplacementStencil.__module__], "DisplacementKernel", None) is None
     ):
-        pytest.skip("EdelweissFE was built without the compiled displacement kernel")
+        pytest.skip("EdelweissFD was built without the compiled displacement kernel")
 
     def makeMaterial():
         return MarmotHypoElasticMaterial("LINEARELASTIC", linearElasticProperties)
@@ -290,7 +290,7 @@ def test_theDisplacementKernelAgreesForAPlasticMaterial(vonMisesProperties):
     from edelweissfd.stencils.displacementstencil import DisplacementStencil
 
     if getattr(sys.modules[DisplacementStencil.__module__], "DisplacementKernel", None) is None:
-        pytest.skip("EdelweissFE was built without the compiled displacement kernel")
+        pytest.skip("EdelweissFD was built without the compiled displacement kernel")
 
     def makeMaterial():
         return MarmotHypoElasticMaterial("VONMISES", np.asarray(vonMisesProperties, dtype=float))
@@ -331,7 +331,7 @@ def test_theGradientEnhancedKernelAgrees(spacings, stressState, at2PhaseFieldPro
         getattr(sys.modules[GradientEnhancedDisplacementStencil.__module__], "GradientEnhancedDisplacementKernel", None)
         is None
     ):
-        pytest.skip("EdelweissFE was built without the compiled gradient enhanced kernel")
+        pytest.skip("EdelweissFD was built without the compiled gradient enhanced kernel")
 
     def makeMaterial():
         return MarmotGradientEnhancedHypoElasticMaterial("AT2PHASEFIELD", at2PhaseFieldProperties)

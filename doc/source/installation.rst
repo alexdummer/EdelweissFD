@@ -4,8 +4,11 @@ Installation
 Prerequisites
 -------------
 
-EdelweissFD is pure Python, but it stands on two compiled projects which have to be
-installed first.
+EdelweissFD stands on two compiled projects which have to be installed first: Marmot for the
+constitutive models, and EdelweissFE for the solution machinery. EdelweissFD's own compiled cell
+kernels -- an optional speedup, every stencil falls back to an equivalent pure-Python
+implementation when one is missing -- need both too, since they reach Marmot through the
+point-wise material interfaces EdelweissFE declares.
 
 1. `Marmot <https://github.com/MAteRialMOdelingToolbox/Marmot>`_, providing the constitutive
    models. Install it into the environment prefix::
@@ -34,10 +37,17 @@ installed first.
 EdelweissFD
 -----------
 
-.. code-block:: bash
+Its own compiled kernels need the same Eigen headers as EdelweissFE's material interfaces
+above, and, since they cimport EdelweissFE's C++ shims directly, the same Marmot install::
 
     cd EdelweissFD
-    pip install -e .
+    EIGEN_INCLUDE_DIR=/path/to/include/eigen3 pip install -e .
+
+Check that they really were built the same way as above, this time against EdelweissFD's own
+stencils::
+
+    python -c "from edelweissfd.stencils import gradientplasticitystencil as gps; \
+        assert gps.GradientPlasticityKernel is not None"
 
 Tests
 -----

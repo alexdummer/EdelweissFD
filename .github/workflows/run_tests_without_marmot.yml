@@ -1,9 +1,10 @@
 name: Run tests without Marmot
 
-# EdelweissFD is pure Python, but it stands on EdelweissFE, which is not on PyPI and has to be
-# built from source. This job covers the tier of the test suite which needs no constitutive
-# models from Marmot at all, i.e. the tests marked with anything but `marmot`, and is therefore
-# the fast feedback loop.
+# EdelweissFD stands on EdelweissFE, which is not on PyPI and has to be built from source. Its
+# own compiled cell kernels need Marmot too, so without it they are skipped and every stencil
+# falls back to its pure-Python implementation. This job covers the tier of the test suite which
+# needs no constitutive models from Marmot at all, i.e. the tests marked with anything but
+# `marmot`, and is therefore the fast feedback loop.
 
 on: [push, pull_request]
 

@@ -135,11 +135,6 @@ jobs:
               "edelweissfe.materials.marmot.marmothypoelastic",
               "edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic",
               "edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic",
-              # the compiled cell kernels: the stencils fall back to Python when one is
-              # missing, so its absence would otherwise cost only speed and stay invisible
-              "edelweissfe.kernels.displacementkernel",
-              "edelweissfe.kernels.gradientenhanceddisplacementkernel",
-              "edelweissfe.kernels.gradientplasticitykernel",
           ]
 
           missing = [name for name in required if not checkSuccessfulExtension(name)]
@@ -153,7 +148,41 @@ jobs:
       - name: Build EdelweissFD
         shell: bash -l {0}
         run: |
-          pip install '.[test]'
+          # Eigen was installed straight into $CONDA_PREFIX/include above, not into an eigen3
+          # subdirectory, so point the compiled kernels at it explicitly, same as EdelweissFE above.
+          EIGEN_INCLUDE_DIR=$CONDA_PREFIX/include pip install -v '.[test]'
+
+      - name: Check that the compiled kernels were built
+        shell: bash -l {0}
+        run: |
+          # setup.py tolerates failing extensions on purpose (every stencil falls back to
+          # Python when its kernel is missing), so a missing one would otherwise only surface
+          # as silently reduced coverage of the compiled path.
+          python - <<'PY'
+          import sys
+
+          from edelweissfd.stencils import (
+              displacementstencil,
+              gradientenhanceddisplacementstencil,
+              gradientplasticitystencil,
+          )
+
+          required = [
+              ("edelweissfd.kernels.displacementkernel", displacementstencil.DisplacementKernel),
+              (
+                  "edelweissfd.kernels.gradientenhanceddisplacementkernel",
+                  gradientenhanceddisplacementstencil.GradientEnhancedDisplacementKernel,
+              ),
+              ("edelweissfd.kernels.gradientplasticitykernel", gradientplasticitystencil.GradientPlasticityKernel),
+          ]
+
+          missing = [name for name, kernel in required if kernel is None]
+
+          for name in missing:
+              print("::error::the extension {:} was not built".format(name))
+
+          sys.exit(1 if missing else 0)
+          PY
 
       - name: Run tests
         shell: bash -l {0}

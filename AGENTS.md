@@ -23,6 +23,11 @@ EdelweissFE (including its compiled Marmot material interfaces) must already be 
 pip install -e .
 ```
 
+EdelweissFD's own compiled cell kernels (see [Compiled Kernel Fallback](#compiled-kernel-fallback))
+need the same Eigen headers and Marmot install as EdelweissFE's material interfaces; point
+`EIGEN_INCLUDE_DIR` at them if they are not in the environment prefix. Every stencil falls back to
+an equivalent pure-Python implementation if a kernel fails to build, so this is optional.
+
 Optional dependencies for testing and documentation:
 ```bash
 pip install -e ".[test,doc]"
@@ -150,10 +155,11 @@ a fresh instance per stencil; never pass the same material instance to more than
 
 ### Compiled Kernel Fallback
 
-Cell-based stencils can delegate their inner loop to EdelweissFE's compiled Cython kernel (e.g.
-`GradientPlasticityKernel`) when available, falling back to an equivalent pure-Python `computeKernels`
-otherwise. A stencil configuration unsupported by the compiled kernel (e.g. `hourglassControl="stabilized"`)
-must make `_createCompiledKernel` return `None` to force the Python path.
+Cell-based stencils can delegate their inner loop to EdelweissFD's own compiled Cython kernel
+(`edelweissfd/kernels/`, e.g. `GradientPlasticityKernel`) when available, falling back to an
+equivalent pure-Python `computeKernels` otherwise. A stencil configuration unsupported by the
+compiled kernel (e.g. `hourglassControl="stabilized"`) must make `_createCompiledKernel` return
+`None` to force the Python path.
 
 ### Voigt Convention
 
