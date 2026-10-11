@@ -28,13 +28,13 @@ exactly, is asserted where a genuinely converged plastic state exists rather tha
 
 import numpy as np
 import pytest
-from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
-    GradientPlasticityIncrement,
-    GradientPlasticityResponse,
-    GradientPlasticityTangents,
-)
 
-pytestmark = pytest.mark.marmot
+pytestmark = [pytest.mark.marmot, pytest.mark.gradientplasticity]
+
+basegradientplasticity = pytest.importorskip("edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial")
+GradientPlasticityIncrement = basegradientplasticity.GradientPlasticityIncrement
+GradientPlasticityResponse = basegradientplasticity.GradientPlasticityResponse
+GradientPlasticityTangents = basegradientplasticity.GradientPlasticityTangents
 
 shearModulus = 4000.0
 poissonsRatio = 0.49

@@ -36,7 +36,7 @@ failed or skipped extension only costs speed and never a missing feature.
 
 import os
 import sys
-from os.path import expanduser, join
+from os.path import expanduser, isfile, join
 
 import numpy
 from Cython.Build import build_ext, cythonize
@@ -48,29 +48,28 @@ directives = {
     "wraparound": False,
     "nonecheck": False,
     "initializedcheck": False,
+    # Without this, importing a kernel silently re-enables the GIL process-wide on a free-threaded
+    # interpreter, which disables the thread-parallel stencil loops of the parallel solvers.
+    "freethreading_compatible": True,
 }
 
-default_install_prefix = sys.prefix
 print("*" * 80)
 print("EdelweissFD setup")
 print("System prefix: " + sys.prefix)
 print("*" * 80)
 
-marmot_dir = expanduser(os.environ.get("MARMOT_INSTALL_DIR", default_install_prefix))
-eigen_include = expanduser(os.environ.get("EIGEN_INCLUDE_DIR", join(default_install_prefix, "include/eigen3")))
-arch_flags = os.environ.get("EDELWEISSFD_ARCH_FLAGS", "-march=native").split()
-print("Marmot install directory (overwrite via environment var. MARMOT_INSTALL_DIR):")
-print(marmot_dir)
-print("Eigen include directory (overwrite via environment var. EIGEN_INCLUDE_DIR):")
-print(eigen_include)
-print("Architecture compile flags (overwrite via environment var. EDELWEISSFD_ARCH_FLAGS):")
-print(arch_flags)
-
-# The kernels cimport the point-wise Marmot material declarations of EdelweissFE and include
-# the C++ shims living next to them, so both have to be locatable in the *installed* EdelweissFE
-# -- editable or not -- rather than assumed to sit in a sibling checkout.
 try:
     import edelweissfe
+
+    # The platform-dependent compile flags are shared with EdelweissFE, so that the kernels are
+    # built with the same settings as the material interfaces they call into, including the
+    # EDELWEISSFE_ARCH_FLAGS override.
+    from edelweissfe.utils.extensionbuild import (
+        compile_flags,
+        get_arch_flags,
+        native_prefix,
+        runtime_library_dirs,
+    )
 
     # The parent of the installed edelweissfe package, so Cython's own cimport resolution (which
     # is independent of the C compiler's include_dirs below) can walk
@@ -85,17 +84,34 @@ except ImportError:
     print("WARNING: EdelweissFE is not installed. The compiled kernels will NOT be built.")
     print("!" * 80)
 
-print("*" * 80)
-
 extensions = []
 
 if edelweissfe_marmot_materials_dir is not None:
+    marmot_dir = expanduser(os.environ.get("MARMOT_INSTALL_DIR", native_prefix))
+    eigen_include = expanduser(os.environ.get("EIGEN_INCLUDE_DIR", join(native_prefix, "include", "eigen3")))
+    arch_flags = get_arch_flags()
+    print("Marmot install directory (overwrite via environment var. MARMOT_INSTALL_DIR):")
+    print(marmot_dir)
+    print("Eigen include directory (overwrite via environment var. EIGEN_INCLUDE_DIR):")
+    print(eigen_include)
+    print("Architecture compile flags (overwrite via environment var. EDELWEISSFE_ARCH_FLAGS):")
+    print(arch_flags)
+    print("*" * 80)
+
     print("Gather the compiled finite difference cell kernels")
-    for kernel_source in [
-        "displacementkernel.pyx",
-        "gradientenhanceddisplacementkernel.pyx",
-        "gradientplasticitykernel.pyx",
+    # Each kernel against the point-wise material declarations of EdelweissFE it cimports. Cython
+    # resolves the cimports already in cythonize() below, where a missing declaration aborts the
+    # whole build rather than just this one extension, so a kernel whose material family the
+    # installed EdelweissFE does not ship is left out up front.
+    for kernel_source, material_declarations in [
+        ("displacementkernel.pyx", "_marmotmaterials.pxd"),
+        ("gradientenhanceddisplacementkernel.pyx", "_gradientenhanced.pxd"),
+        ("gradientplasticitykernel.pyx", "_gradientplasticity.pxd"),
     ]:
+        if not isfile(join(edelweissfe_marmot_materials_dir, material_declarations)):
+            print(f"[SKIP] {kernel_source}: the installed EdelweissFE does not provide {material_declarations}")
+            continue
+
         extensions += [
             Extension(
                 "*",
@@ -108,12 +124,13 @@ if edelweissfe_marmot_materials_dir is not None:
                 ],
                 libraries=["Marmot"],
                 library_dirs=[join(marmot_dir, "lib")],
-                runtime_library_dirs=[join(marmot_dir, "lib")],
+                runtime_library_dirs=runtime_library_dirs(join(marmot_dir, "lib")),
                 language="c++",
-                extra_compile_args=["-O3", "-std=c++20", *arch_flags],
+                extra_compile_args=compile_flags(cxx20=True, arch=arch_flags),
             )
         ]
 
+print("*" * 80)
 print("Now compile!")
 
 

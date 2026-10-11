@@ -17,7 +17,7 @@ Requires Python >= 3.14 and targets the free-threaded ("nogil") CPython build (`
 
 ## Setup & Installation
 
-EdelweissFE (including its compiled Marmot material interfaces) must already be installed. Then:
+EdelweissFE `next_v26.11` (including its compiled Marmot material interfaces, built against Marmot `next_v26.11`) must already be installed. Then:
 
 ```bash
 pip install -e .
@@ -141,6 +141,11 @@ Two families of stencils exist:
 - **Nodal** (`GFDMGradientPlasticityStencil`): A Generalized Finite Difference (GFDM) scheme assigned via
   `assignNodalStencils`. Fits a weighted-least-squares local Taylor model over a neighbour cloud
   (`edelweissfd/operators/gfdm.py`: `gatherCloud`, `gfdmWeights`) with condition-number singularity checks.
+
+The two gradient plasticity stencils need EdelweissFE's point-wise gradient plasticity material family
+(`edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial` and its Marmot wrapper), which is not
+yet part of EdelweissFE/Marmot `next_v26.11`. Without it they stay importable but raise on construction, and
+their tests (marked `gradientplasticity`) are skipped.
 
 `FDModel` (`edelweissfd/models/fdmodel.py`) is an `FEModel` subclass that holds `grids`; stencils live in
 `elements` (aliased as `.stencils`), which is what the solvers iterate over.

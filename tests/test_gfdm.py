@@ -179,6 +179,7 @@ def test_gfdmWeightsRaisesForARankDeficientCloud():
 # -- GFDMGradientPlasticityStencil -------------------------------------------------------------
 
 
+@pytest.mark.gradientplasticity
 def test_onlyOneMaterialPointPerStencil():
     """Unlike the corner-sampled stencil, there is exactly one material point: the node
     itself."""
@@ -193,6 +194,7 @@ def test_onlyOneMaterialPointPerStencil():
     )
 
 
+@pytest.mark.gradientplasticity
 def test_boundaryNodesHaveASmallerMoleculeThanInteriorNodes():
     """A boundary node's cloud is gathered one-sided, so it should not need to reach as wide a
     molecule as an interior node's two-sided cloud of the same minimum size."""
@@ -206,6 +208,7 @@ def test_boundaryNodesHaveASmallerMoleculeThanInteriorNodes():
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("nodePosition", ["boundary", "interior"])
 @pytest.mark.parametrize("stressState", ["plane strain", "plane stress"])
 def test_tangentIsConsistentInTwoDimensions(nodePosition, stressState):
@@ -222,6 +225,7 @@ def test_tangentIsConsistentInTwoDimensions(nodePosition, stressState):
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("nodePosition", ["boundary", "interior"])
 def test_tangentIsConsistentInOneDimension(nodePosition):
     """The one dimensional case needs its own check: it is what motivated the dimension-aware

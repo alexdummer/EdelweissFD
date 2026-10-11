@@ -40,7 +40,7 @@ operators, stencils, and a Python scripting driver.
 
 ## Installation
 
-EdelweissFE (including its compiled Marmot material interfaces) must be installed first.
+EdelweissFE `next_v26.11` (including its compiled Marmot material interfaces, built against Marmot `next_v26.11`) must be installed first.
 
 ```bash
 pip install -e .

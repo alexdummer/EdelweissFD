@@ -91,6 +91,7 @@ def randomIncrement(stencil, scale=4e-3, seed=7) -> np.ndarray:
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("cellPosition", ["interior", "corner"])
 def test_theTwoPathsAgreeToMachinePrecision(cellPosition):
     """The whole point. Both the interior molecule and a boundary one, where the ghost node
@@ -108,6 +109,7 @@ def test_theTwoPathsAgreeToMachinePrecision(cellPosition):
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 def test_theStateVariablesAgreeAsWell():
     """Not just the returned tangent and flux: the stress, strain, multiplier and yield value the
     kernel leaves behind in the state variables are what the next increment starts from and what
@@ -129,6 +131,7 @@ def test_theStateVariablesAgreeAsWell():
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 def test_repeatedEvaluationsAgree():
     """A Newton iteration evaluates the same cell many times from the same accepted state. Both
     paths reset the trial state variables at the top of every evaluation, so repeating one has to
@@ -149,6 +152,7 @@ def test_repeatedEvaluationsAgree():
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 def test_acceptingAndResettingStillWork():
     """The state variable bookkeeping stayed in Python, so it must still act on what the compiled
     kernel wrote."""
@@ -170,6 +174,7 @@ def test_acceptingAndResettingStillWork():
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("cellPosition", ["interior", "corner"])
 def test_theCompiledTangentIsConsistent(cellPosition):
     """The numerical tangent checker drives the compiled path through the same contract, so it
@@ -183,6 +188,7 @@ def test_theCompiledTangentIsConsistent(cellPosition):
     compiled.assertTangentConsistent(dU, dU, 1.0, 1.0, perturbation=1e-9, relativeTolerance=1e-5)
 
 
+@pytest.mark.gradientplasticity
 def test_theStencilRunsWithoutTheCompiledKernel():
     """The package has to stay usable when EdelweissFE was installed without its extensions."""
 

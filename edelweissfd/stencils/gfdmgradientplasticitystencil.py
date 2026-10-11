@@ -48,11 +48,17 @@ but needs a larger cloud than is implemented here; left for later.
 """
 
 import numpy as np
-from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
-    GradientPlasticityIncrement,
-    GradientPlasticityResponse,
-    GradientPlasticityTangents,
-)
+
+try:
+    from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
+        GradientPlasticityIncrement,
+        GradientPlasticityResponse,
+        GradientPlasticityTangents,
+    )
+except ImportError:  # pragma: no cover - depends on whether EdelweissFE ships the material family
+    # The gradient plasticity material family is not (yet) part of every EdelweissFE release, so
+    # this module stays importable without it; constructing a stencil then fails explicitly.
+    GradientPlasticityIncrement = GradientPlasticityResponse = GradientPlasticityTangents = None
 
 from edelweissfd.operators.differences import (
     cellStrainOperator,
@@ -131,6 +137,9 @@ class GFDMGradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
         self._totalVolume = None
 
         self._nMaterialPoints = 1
+
+        if GradientPlasticityResponse is None:
+            raise ImportError("The gradient plasticity material family is not available in the installed EdelweissFE.")
 
         self._response = GradientPlasticityResponse.createZero(1)
         self._tangents = GradientPlasticityTangents.createZero(1)
