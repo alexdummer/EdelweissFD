@@ -287,6 +287,35 @@ def test_theDisplacementKernelAgrees(spacings, stressState, linearElasticPropert
     assertClose(compiled._stateVarsTemp, interpreted._stateVarsTemp, "state variables disagree")
 
 
+def test_theDisplacementKernelAcceptsAMixedCaseMaterialName(linearElasticProperties):
+    """EdelweissFE's material accepts a name Marmot only registers upper-case, and keeps it as
+    given; the compiled kernel has to accept every material the Python path accepts."""
+
+    from edelweissfe.materials.marmot.marmothypoelastic import MarmotHypoElasticMaterial
+
+    from edelweissfd.stencils.displacementstencil import DisplacementStencil
+
+    if getattr(sys.modules[DisplacementStencil.__module__], "DisplacementKernel", None) is None:
+        pytest.skip("EdelweissFD was built without the compiled displacement kernel")
+
+    def makeMaterial():
+        return MarmotHypoElasticMaterial("LinearElastic", linearElasticProperties)
+
+    compiled, interpreted = buildStencilBothPaths(
+        DisplacementStencil, [1.0, 2.0], makeMaterial, stressState="plane strain"
+    )
+
+    assert compiled._kernel is not None
+
+    dU = np.random.default_rng(3).normal(scale=1e-3, size=compiled.nDof)
+
+    KCompiled, PCompiled = evaluate(compiled, dU, dU)
+    KInterpreted, PInterpreted = evaluate(interpreted, dU, dU)
+
+    assertClose(KCompiled, KInterpreted, "tangents disagree")
+    assertClose(PCompiled, PInterpreted, "fluxes disagree")
+
+
 def test_theDisplacementKernelAgreesForAPlasticMaterial(vonMisesProperties):
     """A yielding material, so the state variable round trip through the compiled kernel is
     exercised rather than only the elastic tangent."""

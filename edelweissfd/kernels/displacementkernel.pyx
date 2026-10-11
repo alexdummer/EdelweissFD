@@ -172,12 +172,24 @@ cdef class DisplacementKernel:
         # Marmot keeps only the pointer to the properties, so the copy has to outlive the call
         self._materialProperties = np.ascontiguousarray(materialProperties, dtype=float).copy()
 
-        self._material = MarmotMaterialHypoElasticFactory.createMaterial(
-            encodedName,
-            &self._materialProperties[0],
-            self._materialProperties.shape[0],
-            1,
-        )
+        # Marmot registers its materials upper-case, and EdelweissFE's MarmotHypoElasticMaterial
+        # retries the factory with the upper-case name while keeping the name as given, so do the
+        # same: every material the Python path accepts has to work on the compiled path as well.
+        try:
+            self._material = MarmotMaterialHypoElasticFactory.createMaterial(
+                encodedName,
+                &self._materialProperties[0],
+                self._materialProperties.shape[0],
+                1,
+            )
+        except ValueError:
+            encodedName = materialName.upper().encode("UTF-8")
+            self._material = MarmotMaterialHypoElasticFactory.createMaterial(
+                encodedName,
+                &self._materialProperties[0],
+                self._materialProperties.shape[0],
+                1,
+            )
 
         self._material.setCharacteristicElementLength(characteristicLength)
 
