@@ -19,118 +19,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Mambaforge
-        uses: conda-incubator/setup-miniconda@v3
+      # Branch selection, locked environment and EdelweissFE: see .github/actions/setup-edelweissfe.
+      # Marmot is not needed: every module importing a Marmot-backed extension does so lazily or
+      # tolerates its absence, so autodoc works without it.
+      - uses: ./.github/actions/setup-edelweissfe
         with:
-          use-mamba: true
-          miniforge-variant: Miniforge3
-          miniforge-version: latest
-          activate-environment: anaconda-client-env
-
-      - name: Clone EdelweissFE
-        shell: bash -l {0}
-        run: |
-          # Use github.base_ref (target of PR). If this is not a PR, fall back to the shared
-          # development branch rather than to the default branch of the dependency.
-          TARGET_BRANCH="${{ github.base_ref || 'next_v26.11' }}"
-
-          echo "EdelweissFE and Marmot branch is: $TARGET_BRANCH"
-          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
-
-          cd ..
-          git clone https://github.com/Edelweiss-Numerics/EdelweissFE.git
-          cd EdelweissFE
-
-          if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
-            git checkout $TARGET_BRANCH
-          else
-            echo "::error::Branch $TARGET_BRANCH not found in EdelweissFE, and there is no safe default to fall back to."
-            exit 1
-          fi
-
-      - name: Install conda packages
-        shell: bash -l {0}
-        run: |
-          mamba install --file ../EdelweissFE/conda_requirements.txt
-
-      - name: Install pip packages
-        shell: bash -l {0}
-        run: |
-          pip install -r ../EdelweissFE/pip_requirements.txt
-
-      - name: Install Eigen
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone --branch 3.4.0 https://gitlab.com/libeigen/eigen.git
-          cd eigen
-          mkdir build
-          cd build
-          cmake -DBUILD_TESTING=OFF -DINCLUDE_INSTALL_DIR=$CONDA_PREFIX/include -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
-          make install
-          cd ../..
-
-      - name: Install Autodiff
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone --branch v1.1.0 https://github.com/autodiff/autodiff.git
-          cd autodiff
-          mkdir build
-          cd build
-          cmake -DAUTODIFF_BUILD_TESTS=OFF \
-            -DAUTODIFF_BUILD_PYTHON=OFF \
-            -DAUTODIFF_BUILD_EXAMPLES=OFF \
-            -DAUTODIFF_BUILD_DOCS=OFF \
-            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-            ..
-          make install
-          cd ../..
-
-      - name: Install Fastor
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone https://github.com/romeric/Fastor.git
-          cd Fastor
-          mkdir build
-          cd build
-          cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
-          make install
-          cd ../..
-
-      - name: Install Marmot
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone --recurse-submodules https://github.com/MAteRialMOdelingToolbox/Marmot/
-          cd Marmot
-
-          if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
-            git checkout $TARGET_BRANCH
-          else
-            echo "::error::Branch $TARGET_BRANCH not found in Marmot, and there is no safe default to fall back to."
-            exit 1
-          fi
-
-          mkdir build
-          cd build
-          cmake -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
-          make install
-          cd ../..
-
-      - name: Build EdelweissFE
-        shell: bash -l {0}
-        run: |
-          EIGEN_INCLUDE_DIR=$CONDA_PREFIX/include pip install -v ../EdelweissFE
+          marmot: "false"
 
       - name: Build EdelweissFD with documentation dependencies
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
-          pip install '.[doc]'
+          # the documentation dependencies are part of EdelweissFE's locked environment
+          pip install -v --no-deps --no-build-isolation .
 
       - name: Build documentation
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
           sphinx-build ./doc/source/ ./docs -b html
 

@@ -1,0 +1,102 @@
+name: Set up EdelweissFE
+description: >
+  Clone EdelweissFE, install the environment its conda-lock.yml pins (as `edelweissfe`), optionally build and install
+  Marmot (cached per Marmot commit and lockfile, exporting MARMOT_INSTALL_DIR), and install EdelweissFE into the
+  environment. Mirrors EdelweissFE's own setup-locked-env and build-marmot actions, which cannot be used directly
+  since they expect EdelweissFE's checkout as the workspace.
+
+inputs:
+  marmot:
+    description: Build Marmot, so that the Marmot-backed extensions of EdelweissFE (and EdelweissFD) are built.
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Resolve the EdelweissFE and Marmot branches
+      id: resolve
+      shell: bash -eo pipefail {0}
+      run: |
+        # Try, in order: the branch actually under test (github.head_ref, set for a pull_request
+        # event), the PR's base branch (github.base_ref), then next_v26.11, the shared development
+        # branch -- not the dependency's default branch, since an EdelweissFD branch name
+        # essentially never matches one over there and silently building against a stale, possibly
+        # API incompatible revision is worse than failing.
+        resolve() {
+          local repository=$1
+          for candidate in "${{ github.head_ref }}" "${{ github.base_ref }}" "next_v26.11"; do
+            [ -n "$candidate" ] || continue
+            sha=$(git ls-remote "https://github.com/$repository.git" "refs/heads/$candidate" | cut -f1)
+            if [ -n "$sha" ]; then
+              echo "$candidate $sha"
+              return
+            fi
+          done
+          echo "::error::No candidate branch exists in $repository, and there is no safe default to fall back to." >&2
+          return 1
+        }
+
+        resolved=$(resolve Edelweiss-Numerics/EdelweissFE)
+        read -r branch sha <<< "$resolved"
+        echo "Using EdelweissFE branch $branch at $sha"
+        echo "edelweissfe-branch=$branch" >> "$GITHUB_OUTPUT"
+        echo "edelweissfe-sha=$sha" >> "$GITHUB_OUTPUT"
+
+        resolved=$(resolve MAteRialMOdelingToolbox/Marmot)
+        read -r branch sha <<< "$resolved"
+        echo "Using Marmot branch $branch at $sha"
+        echo "marmot-branch=$branch" >> "$GITHUB_OUTPUT"
+        echo "marmot-sha=$sha" >> "$GITHUB_OUTPUT"
+
+    # Cloned outside of the workspace, so that neither `pip install .` nor pytest of EdelweissFD
+    # ever sees it.
+    - name: Clone EdelweissFE
+      id: clone
+      shell: bash -eo pipefail {0}
+      run: |
+        git clone --branch "${{ steps.resolve.outputs.edelweissfe-branch }}" \
+          https://github.com/Edelweiss-Numerics/EdelweissFE.git "${{ runner.temp }}/EdelweissFE"
+        git -C "${{ runner.temp }}/EdelweissFE" checkout --detach "${{ steps.resolve.outputs.edelweissfe-sha }}"
+        echo "lockfile-hash=$(sha256sum "${{ runner.temp }}/EdelweissFE/conda-lock.yml" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+    # Installs exactly what conda-lock.yml pins (conda packages, no solving).
+    - uses: mamba-org/setup-micromamba@v2
+      with:
+        environment-file: ${{ runner.temp }}/EdelweissFE/conda-lock.yml
+        environment-name: edelweissfe
+        cache-environment: true
+        init-shell: bash
+
+    # Marmot is installed into a prefix of its own (not the environment), so that it can be cached
+    # and restored independently of the environment's cache.
+    - uses: actions/cache@v4
+      if: inputs.marmot == 'true'
+      id: cache
+      with:
+        path: ${{ runner.temp }}/marmot
+        key: marmot-${{ runner.os }}-${{ runner.arch }}-${{ steps.resolve.outputs.marmot-sha }}-${{ steps.clone.outputs.lockfile-hash }}
+
+    - name: Build and install Marmot
+      if: inputs.marmot == 'true' && steps.cache.outputs.cache-hit != 'true'
+      shell: bash -leo pipefail {0}
+      run: |
+        cd "${{ runner.temp }}"
+        git clone --recurse-submodules --branch "${{ steps.resolve.outputs.marmot-branch }}" \
+          https://github.com/MAteRialMOdelingToolbox/Marmot.git Marmot
+        git -C Marmot checkout --detach "${{ steps.resolve.outputs.marmot-sha }}"
+        cmake -S Marmot -B Marmot/build -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/marmot" \
+          -DCMAKE_PREFIX_PATH="$CONDA_PREFIX" -DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF
+        cmake --build Marmot/build -j 4
+        cmake --install Marmot/build
+
+    - name: Export MARMOT_INSTALL_DIR
+      if: inputs.marmot == 'true'
+      shell: bash
+      run: echo "MARMOT_INSTALL_DIR=${{ runner.temp }}/marmot" >> "$GITHUB_ENV"
+
+    - name: Build EdelweissFE
+      shell: bash -leo pipefail {0}
+      run: |
+        # Without Marmot, the Marmot-backed extensions cannot be built; setup.py tolerates that on
+        # purpose.
+        pip install -v --no-deps --no-build-isolation "${{ runner.temp }}/EdelweissFE"

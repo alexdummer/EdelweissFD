@@ -1,9 +1,18 @@
 name: Run tests
 
 # The full test suite, which needs the constitutive models of Marmot and therefore the whole
-# chain Eigen -> autodiff -> Fastor -> Marmot -> EdelweissFE -> EdelweissFD.
+# chain Marmot -> EdelweissFE -> EdelweissFD.
 
 on: [push, pull_request]
+
+# A newer push to the same branch or pull request supersedes the run in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Fixed thread count, so that a result does not depend on the runner's core count.
+env:
+  OMP_NUM_THREADS: 2
 
 jobs:
   build:
@@ -12,120 +21,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Mambaforge
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          use-mamba: true
-          miniforge-variant: Miniforge3
-          miniforge-version: latest
-          activate-environment: anaconda-client-env
-
-      - name: Clone EdelweissFE
-        shell: bash -l {0}
-        run: |
-          # Use github.base_ref (target of PR). If this is not a PR, fall back to the shared
-          # development branch rather than to the default branch of the dependency, since an
-          # EdelweissFD branch name essentially never matches one over there and silently
-          # building against a stale, possibly API incompatible revision is worse than failing.
-          TARGET_BRANCH="${{ github.base_ref || 'next_v26.11' }}"
-
-          echo "EdelweissFE and Marmot branch is: $TARGET_BRANCH"
-          echo "TARGET_BRANCH=$TARGET_BRANCH" >> $GITHUB_ENV
-
-          cd ..
-          git clone https://github.com/Edelweiss-Numerics/EdelweissFE.git
-          cd EdelweissFE
-
-          if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
-            git checkout $TARGET_BRANCH
-          else
-            echo "::error::Branch $TARGET_BRANCH not found in EdelweissFE, and there is no safe default to fall back to."
-            exit 1
-          fi
-
-      - name: Install conda packages
-        shell: bash -l {0}
-        run: |
-          mamba install --file ../EdelweissFE/conda_requirements.txt
-
-      - name: Install pip packages
-        shell: bash -l {0}
-        run: |
-          pip install -r ../EdelweissFE/pip_requirements.txt
-
-      - name: Install Eigen
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone --branch 3.4.0 https://gitlab.com/libeigen/eigen.git
-          cd eigen
-          mkdir build
-          cd build
-          cmake -DBUILD_TESTING=OFF -DINCLUDE_INSTALL_DIR=$CONDA_PREFIX/include -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
-          make install
-          cd ../..
-
-      - name: Install Autodiff
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone --branch v1.1.0 https://github.com/autodiff/autodiff.git
-          cd autodiff
-          mkdir build
-          cd build
-          cmake -DAUTODIFF_BUILD_TESTS=OFF \
-            -DAUTODIFF_BUILD_PYTHON=OFF \
-            -DAUTODIFF_BUILD_EXAMPLES=OFF \
-            -DAUTODIFF_BUILD_DOCS=OFF \
-            -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX \
-            ..
-          make install
-          cd ../..
-
-      - name: Install Fastor
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone https://github.com/romeric/Fastor.git
-          cd Fastor
-          mkdir build
-          cd build
-          cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
-          make install
-          cd ../..
-
-      - name: Install Marmot
-        shell: bash -l {0}
-        run: |
-          cd ..
-          git clone --recurse-submodules https://github.com/MAteRialMOdelingToolbox/Marmot/
-          cd Marmot
-
-          if git show-ref --verify --quiet refs/remotes/origin/$TARGET_BRANCH; then
-            git checkout $TARGET_BRANCH
-          else
-            echo "::error::Branch $TARGET_BRANCH not found in Marmot, and there is no safe default to fall back to."
-            exit 1
-          fi
-
-          mkdir build
-          cd build
-          cmake -DCMAKE_INSTALL_PREFIX=$CONDA_PREFIX ..
-          make install
-          cd ../..
-
-      - name: Build EdelweissFE
-        shell: bash -l {0}
-        run: |
-          # Eigen was installed straight into $CONDA_PREFIX/include above, not into an eigen3
-          # subdirectory, so point EdelweissFE at it explicitly.
-          EIGEN_INCLUDE_DIR=$CONDA_PREFIX/include pip install -v ../EdelweissFE
+      # Branch selection, locked environment, Marmot and EdelweissFE: see .github/actions/setup-edelweissfe.
+      - uses: ./.github/actions/setup-edelweissfe
 
       - name: Check that the Marmot material interfaces were built
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
           # setup.py of EdelweissFE tolerates failing extensions on purpose, so a missing
-          # material interface would otherwise only surface as silently skipped tests.
+          # material interface would otherwise only surface as silently skipped tests. The
+          # gradient plasticity one is not required: it is not part of every EdelweissFE release.
           python - <<'PY'
           import sys
 
@@ -134,7 +38,6 @@ jobs:
           required = [
               "edelweissfe.materials.marmot.marmothypoelastic",
               "edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic",
-              "edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic",
           ]
 
           missing = [name for name in required if not checkSuccessfulExtension(name)]
@@ -146,20 +49,22 @@ jobs:
           PY
 
       - name: Build EdelweissFD
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
-          # Eigen was installed straight into $CONDA_PREFIX/include above, not into an eigen3
-          # subdirectory, so point the compiled kernels at it explicitly, same as EdelweissFE above.
-          EIGEN_INCLUDE_DIR=$CONDA_PREFIX/include pip install -v '.[test]'
+          # Editable, so that the compiled kernels land next to the sources the tests import.
+          pip install -v --no-deps --no-build-isolation -e .
 
       - name: Check that the compiled kernels were built
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
           # setup.py tolerates failing extensions on purpose (every stencil falls back to
           # Python when its kernel is missing), so a missing one would otherwise only surface
-          # as silently reduced coverage of the compiled path.
+          # as silently reduced coverage of the compiled path. The gradient plasticity kernel is
+          # only required if EdelweissFE provides the material it calls into.
           python - <<'PY'
           import sys
+
+          from edelweissfe.utils.misc import checkSuccessfulExtension
 
           from edelweissfd.stencils import (
               displacementstencil,
@@ -173,8 +78,12 @@ jobs:
                   "edelweissfd.kernels.gradientenhanceddisplacementkernel",
                   gradientenhanceddisplacementstencil.GradientEnhancedDisplacementKernel,
               ),
-              ("edelweissfd.kernels.gradientplasticitykernel", gradientplasticitystencil.GradientPlasticityKernel),
           ]
+
+          if checkSuccessfulExtension("edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic"):
+              required.append(
+                  ("edelweissfd.kernels.gradientplasticitykernel", gradientplasticitystencil.GradientPlasticityKernel)
+              )
 
           missing = [name for name, kernel in required if kernel is None]
 
@@ -185,12 +94,12 @@ jobs:
           PY
 
       - name: Run tests
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
           pytest -v
 
       - name: Run tests against the Python fallback kernel
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         env:
           EDELWEISSFD_NO_COMPILED_KERNEL: "1"
         run: |
@@ -199,7 +108,7 @@ jobs:
           pytest -v
 
       - name: Run examples
-        shell: bash -l {0}
+        shell: bash -leo pipefail {0}
         run: |
           python examples/TensionBar1D/run.py
           python examples/SimpleBeam2D/run.py
