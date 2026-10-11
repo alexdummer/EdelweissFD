@@ -1,0 +1,166 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EdelweissFD &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">EdelweissFD</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="edelweissfd">
+<h1>EdelweissFD<a class="headerlink" href="#edelweissfd" title="Link to this heading"></a></h1>
+<p>EdelweissFD is a light-weight finite difference framework for <strong>multifield</strong> (coupled
+physics) problems. It is the finite difference sibling of <a class="reference external" href="https://github.com/EdelweissFE/EdelweissFE">EdelweissFE</a> and reuses its complete solution machinery;
+the constitutive models come from <a class="reference external" href="https://github.com/MAteRialMOdelingToolbox/Marmot">Marmot</a>.</p>
+<p>Simulations are set up and executed by <strong>Python scripts</strong>, not by input files.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.drivers.pythonscriptedsimulation</span><span class="w"> </span><span class="kn">import</span> <span class="n">FDSimulation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.stencils.displacementstencil</span><span class="w"> </span><span class="kn">import</span> <span class="n">DisplacementStencil</span>
+
+<span class="n">sim</span> <span class="o">=</span> <span class="n">FDSimulation</span><span class="p">(</span><span class="n">domainSize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"TensionBar1D"</span><span class="p">)</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createStructuredGrid</span><span class="p">(</span><span class="n">lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">],</span> <span class="n">nGridPoints</span><span class="o">=</span><span class="p">[</span><span class="mi">101</span><span class="p">])</span>
+<span class="n">material</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createMaterial</span><span class="p">(</span><span class="s2">"LinearElastic"</span><span class="p">,</span> <span class="p">[</span><span class="mf">20000.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">assignStencils</span><span class="p">(</span><span class="n">DisplacementStencil</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+                   <span class="n">stressState</span><span class="o">=</span><span class="s2">"uniaxial stress"</span><span class="p">)</span>
+
+<span class="n">step</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createStep</span><span class="p">(</span><span class="n">stepLength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">step</span><span class="o">.</span><span class="n">addDirichlet</span><span class="p">(</span><span class="s2">"clamped"</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="s2">"left"</span><span class="p">],</span> <span class="s2">"displacement"</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
+<span class="n">step</span><span class="o">.</span><span class="n">addNeumann</span><span class="p">(</span><span class="s2">"pulled"</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">,</span> <span class="s2">"displacement"</span><span class="p">,</span> <span class="p">[</span><span class="mf">10.0</span><span class="p">])</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">addNodeFieldOutput</span><span class="p">(</span><span class="s2">"displacement"</span><span class="p">,</span> <span class="s2">"displacement"</span><span class="p">,</span> <span class="s2">"U"</span><span class="p">,</span>
+                       <span class="n">nodeSet</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="s2">"all"</span><span class="p">])</span>
+
+<span class="n">model</span><span class="p">,</span> <span class="n">fieldOutputs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<section id="why-this-is-a-thin-package">
+<h2>Why this is a thin package<a class="headerlink" href="#why-this-is-a-thin-package" title="Link to this heading"></a></h2>
+<p>EdelweissFE’s solution stack is discretization agnostic. Its central abstraction,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNodeCouplingEntity</span></code>,
+describes <em>anything</em> that couples nodes – finite elements, constraints, cells, particles.
+A finite difference <strong>stencil</strong> is exactly such an entity: it couples a grid point with its
+neighbours, reports which fields it operates on, and returns a residual and a tangent.</p>
+<p>Consequently EdelweissFD does not reimplement the degrees of freedom and the sparse
+assembly, the Newton-Raphson and arc-length solvers, the linear solvers, the adaptive time
+stepping, the boundary conditions, the field output, or the constitutive models. It imports
+all of them. What it adds is the discretization: structured grids, finite difference
+operators, stencils, and the Python scripting driver.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#edelweissfd">EdelweissFD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#tests">Tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="documentation/index.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="documentation/grids.html">Grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/operators.html">Finite difference operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/stencils.html">Stencils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/materials.html">Materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/drivers.html">Running a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="documentation/models.html">The model tree</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="installation.html" class="btn btn-neutral float-right" title="Installation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,290 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edelweissfd.stepactions.tractionnodalload &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">edelweissfd.stepactions.tractionnodalload</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for edelweissfd.stepactions.tractionnodalload</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1">#  _____    _      _              _         _____ _____ ____</span>
+<span class="c1"># | ____|__| | ___| |_      _____(_)___ ___|  ___|  ___|  _ \</span>
+<span class="c1"># |  _| / _` |/ _ \ \ \ /\ / / _ \ / __/ __| |_  | |_  | | | |</span>
+<span class="c1"># | |__| (_| |  __/ |\ V  V /  __/ \__ \__ \  _| |  _| | |_| |</span>
+<span class="c1"># |_____\__,_|\___|_| \_/\_/ \___|_|___/___/_|   |_|   |____/</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#  Unit of Strength of Materials and Structural Analysis</span>
+<span class="c1">#  University of Innsbruck,</span>
+<span class="c1">#  2017 - today</span>
+<span class="c1">#</span>
+<span class="c1">#  Alexander Dummer alexander.dummer@uibk.ac.at</span>
+<span class="c1">#</span>
+<span class="c1">#  This file is part of EdelweissFD.</span>
+<span class="c1">#</span>
+<span class="c1">#  This library is free software; you can redistribute it and/or</span>
+<span class="c1">#  modify it under the terms of the GNU Lesser General Public</span>
+<span class="c1">#  License as published by the Free Software Foundation; either</span>
+<span class="c1">#  version 2.1 of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  The full text of the license can be found in the file LICENSE.md at</span>
+<span class="c1">#  the top level directory of EdelweissFD.</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+
+<span class="sd">"""</span>
+<span class="sd">A Neumann boundary condition for a structured grid.</span>
+
+<span class="sd">In the finite difference scheme of EdelweissFD a prescribed traction enters the momentum</span>
+<span class="sd">balance as equivalent nodal forces, obtained by multiplying the traction with the tributary</span>
+<span class="sd">area of each grid point of the boundary plane. Since these areas differ between the</span>
+<span class="sd">interior of a boundary plane and its rim, the loads are node-wise, which</span>
+<span class="sd">:mod:`edelweissfe.stepactions.nodeforces` cannot express -- it applies the same load to</span>
+<span class="sd">every node of a set.</span>
+
+<span class="sd">The action is a plain</span>
+<span class="sd">:class:`~edelweissfe.stepactions.base.nodalloadbase.NodalLoadBase`, so the solvers of</span>
+<span class="sd">EdelweissFE consume it exactly like nodal forces. It is registered under the</span>
+<span class="sd">``nodeforces`` module key of the step manager, which is the key the solvers read.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sympy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.sets.nodeset</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.stepactions.base.nodalloadbase</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodalLoadBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.timesteppers.timestep</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeStep</span>
+
+<span class="c1">#: The step manager module key the solvers read nodal loads from.</span>
+<span class="n">stepActionModule</span> <span class="o">=</span> <span class="s2">"nodeforces"</span>
+
+
+<div class="viewcode-block" id="TractionNodalLoad">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">TractionNodalLoad</span><span class="p">(</span><span class="n">NodalLoadBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A traction on a boundary plane of a structured grid, converted to consistent nodal</span>
+<span class="sd">    forces.</span>
+
+<span class="sd">    The load is ramped over the step progress, i.e. it grows linearly from zero at the</span>
+<span class="sd">    beginning of the step to the full value at its end, unless an amplitude is given.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name</span>
+<span class="sd">        The name of the step action.</span>
+<span class="sd">    field</span>
+<span class="sd">        The field the load acts on.</span>
+<span class="sd">    nodeSet</span>
+<span class="sd">        The node set of the boundary plane. Its order defines the order of the load array.</span>
+<span class="sd">    nodalLoads</span>
+<span class="sd">        The nodal loads, shape ``(len(nodeSet), fieldSize)``.</span>
+<span class="sd">    amplitudeExpression</span>
+<span class="sd">        An optional expression in the step progress ``t``, evaluated on ``[0...1]``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nodeSet</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">,</span>
+        <span class="n">nodalLoads</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">amplitudeExpression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_field</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nSet</span> <span class="o">=</span> <span class="n">nodeSet</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">nodalLoads</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">nodalLoads</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeSet</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"The nodal loads have </span><span class="si">{:}</span><span class="s2"> rows, but the node set holds </span><span class="si">{:}</span><span class="s2"> nodes."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodeSet</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_createAmplitude</span><span class="p">(</span><span class="n">amplitudeExpression</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_createAmplitude</span><span class="p">(</span><span class="n">amplitudeExpression</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">callable</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Build the amplitude function of the step progress.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        amplitudeExpression</span>
+<span class="sd">            The expression in the step progress ``t``, or ``None`` for a linear ramp.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        callable</span>
+<span class="sd">            The amplitude function.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">amplitudeExpression</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="k">lambda</span> <span class="n">stepProgress</span><span class="p">:</span> <span class="n">stepProgress</span>
+
+        <span class="n">t</span> <span class="o">=</span> <span class="n">sp</span><span class="o">.</span><span class="n">symbols</span><span class="p">(</span><span class="s2">"t"</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">sp</span><span class="o">.</span><span class="n">lambdify</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">sp</span><span class="o">.</span><span class="n">sympify</span><span class="p">(</span><span class="n">amplitudeExpression</span><span class="p">),</span> <span class="s2">"numpy"</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">field</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_field</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nodeSet</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeSet</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nSet</span>
+
+<div class="viewcode-block" id="TractionNodalLoad.getCurrentLoad">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.getCurrentLoad">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getCurrentLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeStep</span><span class="p">:</span> <span class="n">TimeStep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The nodal loads at the end of the current increment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        timeStep</span>
+<span class="sd">            The current time step.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.ndarray</span>
+<span class="sd">            The nodal loads, shape ``(len(nodeSet), fieldSize)``.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span><span class="p">(</span><span class="n">timeStep</span><span class="o">.</span><span class="n">stepProgress</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span></div>
+
+
+<div class="viewcode-block" id="TractionNodalLoad.updateStepAction">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.updateStepAction">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">updateStepAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">,</span> <span class="n">jobInfo</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">fieldOutputController</span><span class="p">,</span> <span class="n">journal</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Continue with the load reached at the end of the previous step.</span>
+
+<span class="sd">        The signature is the one the step manager uses; ``action`` may carry the keys</span>
+<span class="sd">        ``nodalLoads`` and ``f(t)`` to change the load in a subsequent step.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"nodalLoads"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">action</span><span class="p">[</span><span class="s2">"nodalLoads"</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">action</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"f(t)"</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">amplitude</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_createAmplitude</span><span class="p">(</span><span class="n">action</span><span class="p">[</span><span class="s2">"f(t)"</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="TractionNodalLoad.applyAtStepEnd">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.applyAtStepEnd">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">applyAtStepEnd</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">stepMagnitude</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Freeze the load reached at the end of the step, so it is held constant in</span>
+<span class="sd">        subsequent steps unless updated."""</span>
+
+        <span class="k">if</span> <span class="n">stepMagnitude</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsStepStart</span> <span class="o">+</span> <span class="n">stepMagnitude</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodalLoadsDelta</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

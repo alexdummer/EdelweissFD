@@ -1,0 +1,966 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stencils &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Materials" href="materials.html" />
+    <link rel="prev" title="Finite difference operators" href="operators.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="grids.html">Grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operators.html">Finite difference operators</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Stencils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.base.basestencil">The stencil interface</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.base.basestencil.BaseStencil"><code class="docutils literal notranslate"><span class="pre">BaseStencil</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.displacementstencil"><code class="docutils literal notranslate"><span class="pre">displacementstencil</span></code> - The balance of linear momentum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil"><code class="docutils literal notranslate"><span class="pre">DisplacementStencil</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.displacementstencil.nStateVarsOverheadPerMaterialPoint"><code class="docutils literal notranslate"><span class="pre">nStateVarsOverheadPerMaterialPoint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.displacementstencil.stressStates"><code class="docutils literal notranslate"><span class="pre">stressStates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.displacementstencil.useCompiledKernel"><code class="docutils literal notranslate"><span class="pre">useCompiledKernel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.gradientenhanceddisplacementstencil"><code class="docutils literal notranslate"><span class="pre">gradientenhanceddisplacementstencil</span></code> - A gradient-enhanced continuum</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil"><code class="docutils literal notranslate"><span class="pre">GradientEnhancedDisplacementStencil</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.stressStates"><code class="docutils literal notranslate"><span class="pre">stressStates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.useCompiledKernel"><code class="docutils literal notranslate"><span class="pre">useCompiledKernel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.numericaltangent">Verifying a tangent</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin"><code class="docutils literal notranslate"><span class="pre">NumericalTangentMixin</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Running a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">The model tree</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Documentation</a></li>
+      <li class="breadcrumb-item active">Stencils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/documentation/stencils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="stencils">
+<h1>Stencils<a class="headerlink" href="#stencils" title="Link to this heading"></a></h1>
+<p>Implementing your own stencil is done by subclassing the abstract base class
+<a class="reference internal" href="#edelweissfd.stencils.base.basestencil.BaseStencil" title="edelweissfd.stencils.base.basestencil.BaseStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseStencil</span></code></a>.</p>
+<section id="module-edelweissfd.stencils.base.basestencil">
+<span id="the-stencil-interface"></span><h2>The stencil interface<a class="headerlink" href="#module-edelweissfd.stencils.base.basestencil" title="Link to this heading"></a></h2>
+<p>The abstract base class of all finite difference stencils.</p>
+<p>A stencil is a <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseNodeCouplingEntity</span></code>,
+which is the abstraction EdelweissFE offers for anything that couples nodes. From the
+point of view of the solvers a stencil is therefore indistinguishable from a finite
+element: the <a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/dofmanager.html#edelweissfe.numerics.dofmanager.DofManager" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DofManager</span></code></a> derives the global
+degrees of freedom and the sparsity pattern from the stencil’s nodes and fields, and the
+solvers evaluate it through <a class="reference internal" href="#edelweissfd.stencils.base.basestencil.BaseStencil.computeKernels" title="edelweissfd.stencils.base.basestencil.BaseStencil.computeKernels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">computeKernels()</span></code></a>.</p>
+<p>Implementing a stencil means implementing <a class="reference internal" href="#edelweissfd.stencils.base.basestencil.BaseStencil.computeKernels" title="edelweissfd.stencils.base.basestencil.BaseStencil.computeKernels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">computeKernels()</span></code></a>, plus the
+handful of descriptive properties below.</p>
+<p>Conventions inherited from EdelweissFE, all of which matter:</p>
+<ul class="simple">
+<li><p>The degrees of freedom of the stencil are ordered node-major and field-minor, i.e. all
+fields of node 0, then all fields of node 1, and so on.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">P</span></code> is the internal flux in <em>positive</em> sense; the solvers form the residual as
+<span class="math notranslate nohighlight">\(R = -P + P_{ext}\)</span>. Consequently <code class="docutils literal notranslate"><span class="pre">K</span></code> is <span class="math notranslate nohighlight">\(\partial P / \partial U\)</span>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">K</span></code> arrives as a two dimensional, column-major view of the stencil’s block in the
+global sparse matrix, so writing <code class="docutils literal notranslate"><span class="pre">K[i,</span> <span class="pre">j]</span></code> addresses row <code class="docutils literal notranslate"><span class="pre">i</span></code> and column <code class="docutils literal notranslate"><span class="pre">j</span></code> of the
+local block. It is <em>not</em> zeroed between iterations by the stencil; the solver zeroes the
+whole value array instead.</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.base.basestencil.</span></span><span class="sig-name descname"><span class="pre">BaseStencil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nDof</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil" title="Link to this definition"></a></dt>
+<dd><p>The interface every finite difference stencil has to fulfill.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nDof</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>)</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.acceptLastState">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">acceptLastState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.acceptLastState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.acceptLastState" title="Link to this definition"></a></dt>
+<dd><p>Accept the state computed in the last converged increment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.computeBodyForce">
+<span class="sig-name descname"><span class="pre">computeBodyForce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.computeBodyForce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.computeBodyForce" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the external flux due to a body force, i.e. a force per unit volume.</p>
+<p>The signature is the one the solvers of EdelweissFE call, and the contribution is
+added to the <em>external</em> flux vector.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The external flux to be augmented, shape <code class="docutils literal notranslate"><span class="pre">(nDof,)</span></code>.</p></li>
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The tangent to be augmented; a body force which does not depend on the solution
+contributes nothing.</p></li>
+<li><p><strong>load</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The force per unit volume, one entry per spatial direction.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.computeKernels">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">computeKernels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.computeKernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.computeKernels" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the internal flux and the tangent of this stencil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The tangent to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,</span> <span class="pre">nDof)</span></code>.</p></li>
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The internal flux to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,)</span></code>.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.getCoordinatesAtCenter">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getCoordinatesAtCenter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.getCoordinatesAtCenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.getCoordinatesAtCenter" title="Link to this definition"></a></dt>
+<dd><p>The coordinates of the point this stencil is centred at.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.getNumberOfQuadraturePoints">
+<span class="sig-name descname"><span class="pre">getNumberOfQuadraturePoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.getNumberOfQuadraturePoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.getNumberOfQuadraturePoints" title="Link to this definition"></a></dt>
+<dd><p>A stencil owns exactly one material point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.getResultArray">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">getResultArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadraturePoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getPersistentView</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.getResultArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.getResultArray" title="Link to this definition"></a></dt>
+<dd><p>Get a result of this stencil.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quadraturePoint</span></code> argument exists only because
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/utils.html#edelweissfe.utils.elementresultcollector.ElementResultCollector" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementResultCollector</span></code></a> passes it;
+a stencil owns exactly one material point, so the only valid value is zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the result.</p></li>
+<li><p><strong>quadraturePoint</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Must be zero.</p></li>
+<li><p><strong>getPersistentView</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Whether a view or a copy should be returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.initializeStencil">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">initializeStencil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.initializeStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.initializeStencil" title="Link to this definition"></a></dt>
+<dd><p>Prepare the stencil for computing, once its nodes and material are known.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.resetToLastValidState">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">resetToLastValidState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.resetToLastValidState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.resetToLastValidState" title="Link to this definition"></a></dt>
+<dd><p>Discard the current state and fall back to the last converged one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.setCell">
+<span class="sig-name descname"><span class="pre">setCell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cellIndex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.setCell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.setCell" title="Link to this definition"></a></dt>
+<dd><p>Attach this stencil to a cell of a grid.</p>
+<p>The default implementation couples exactly the corner grid points of the cell, which
+is all a stencil built from first derivatives needs. A stencil which also needs second
+derivatives – a Laplacian, say – overrides this to widen its molecule beyond the
+cell, asking the grid for the additional grid points and coefficients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> – The <a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">StructuredGrid</span></code></a> the cell belongs to.</p></li>
+<li><p><strong>cellIndex</strong> – The grid index of the cell’s lower left corner.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.setMaterial">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">setMaterial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/base/basestencil.html#BaseStencil.setMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.setMaterial" title="Link to this definition"></a></dt>
+<dd><p>Assign the material this stencil evaluates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>material</strong> – The material instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.cornerOffsets">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cornerOffsets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></span><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.cornerOffsets" title="Link to this definition"></a></dt>
+<dd><p>The corner offsets of the cell this stencil sits on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.dofIndicesPermutation">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">dofIndicesPermutation</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></span><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.dofIndicesPermutation" title="Link to this definition"></a></dt>
+<dd><p>Stencils assemble node-major and field-minor already, so no permutation is
+needed.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.ensightType">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">ensightType</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.ensightType" title="Link to this definition"></a></dt>
+<dd><p>The shape of the stencil in Ensight Gold notation. Since a stencil evaluates its
+material at a single point, it is visualized as that point.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.hasMaterial">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hasMaterial</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.hasMaterial" title="Link to this definition"></a></dt>
+<dd><p>Whether a material has been assigned to this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.stencilNumber">
+<span class="property"><span class="k"><span class="pre">abstract</span></span><span class="w"> </span><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stencilNumber</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.stencilNumber" title="Link to this definition"></a></dt>
+<dd><p>The unique number of this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.base.basestencil.BaseStencil.visualizationNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">visualizationNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.base.basestencil.BaseStencil.visualizationNodes" title="Link to this definition"></a></dt>
+<dd><p>The nodes used for visualization.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-edelweissfd.stencils.displacementstencil">
+<span id="displacementstencil-the-balance-of-linear-momentum"></span><h2><code class="docutils literal notranslate"><span class="pre">displacementstencil</span></code> - The balance of linear momentum<a class="headerlink" href="#module-edelweissfd.stencils.displacementstencil" title="Link to this heading"></a></h2>
+<p>The finite difference stencil for the balance of linear momentum.</p>
+<p>One stencil sits on one grid cell and owns the material points of that cell. The strain at
+a material point is a difference quotient of the corner displacements,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol \varepsilon = \boldsymbol B \, \boldsymbol u_{corners}\]</div>
+<p>and the internal flux is the discrete adjoint of the divergence,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol P = \sum_{p} \boldsymbol B_p^T \boldsymbol \sigma_p \; V_p,
+\qquad
+\boldsymbol K = \sum_{p} \boldsymbol B_p^T \boldsymbol C_p \, \boldsymbol B_p \; V_p\]</div>
+<p>so that summing the contributions of all cells adjacent to a grid point yields the compact
+difference approximation of <span class="math notranslate nohighlight">\(-\nabla \cdot \boldsymbol \sigma\)</span> there. Traction
+free boundaries follow without any further treatment, and a prescribed traction enters as
+equivalent nodal forces.</p>
+<p><strong>Where the material points sit.</strong> In one dimension a single point per cell suffices and
+the strain is the compact quotient <span class="math notranslate nohighlight">\((u_{i+1} - u_i)/h\)</span>. In two and three dimensions a
+single point per cell would have to use a gradient averaged over all parallel cell edges,
+and that averaged operator annihilates the hourglass (checkerboard) mode, i.e. the scheme
+would admit spurious zero energy displacement patterns. EdelweissFD therefore samples the
+cell at its <span class="math notranslate nohighlight">\(2^n\)</span> corners with plain one-sided difference quotients, see
+<a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellCornerGradientOperators" title="edelweissfd.operators.differences.cellCornerGradientOperators"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a>, each owning
+<span class="math notranslate nohighlight">\(2^{-n}\)</span> of the cell volume. In one dimension both corner operators reduce to the
+same compact quotient, so the one dimensional scheme is unaffected.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.displacementstencil.</span></span><span class="sig-name descname"><span class="pre">DisplacementStencil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencilNumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stressState</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plane</span> <span class="pre">strain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volumetricAveraging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil" title="Link to this definition"></a></dt>
+<dd><p>A momentum balance stencil on a single grid cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stencilNumber</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – A unique number for this stencil.</p></li>
+<li><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p></li>
+<li><p><strong>stressState</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – One of <code class="docutils literal notranslate"><span class="pre">3d</span></code>, <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">strain</span></code>, <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">stress</span></code> or <code class="docutils literal notranslate"><span class="pre">uniaxial</span> <span class="pre">stress</span></code>. It selects
+the material routine and hence which components are condensed out by the material.</p></li>
+<li><p><strong>thickness</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – An out-of-plane thickness, only meaningful for the two dimensional stress states.</p></li>
+<li><p><strong>volumetricAveraging</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Average the volumetric part of the strain operator over the cell, the classical B-bar or
+mean dilatation treatment, see
+<a class="reference internal" href="operators.html#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators" title="edelweissfd.operators.differences.volumetricallyAveragedStrainOperators"><code class="xref py py-func docutils literal notranslate"><span class="pre">volumetricallyAveragedStrainOperators()</span></code></a>. Corner
+sampling constrains the volumetric strain once per corner, which over-constrains the cell
+as Poisson’s ratio approaches one half, so the cell can no longer deform at constant
+volume and locks.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.acceptLastState">
+<span class="sig-name descname"><span class="pre">acceptLastState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.acceptLastState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.acceptLastState" title="Link to this definition"></a></dt>
+<dd><p>Accept the state computed in the last converged increment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.computeBodyForce">
+<span class="sig-name descname"><span class="pre">computeBodyForce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.computeBodyForce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.computeBodyForce" title="Link to this definition"></a></dt>
+<dd><p>Distribute a force per unit volume onto the corner grid points.</p>
+<p>Each corner owns an equal share of the cell volume, so the equivalent grid point
+forces are the load times that share. For a uniform load this is exactly what a
+bilinear finite element with a two by two quadrature yields.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>load</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>)</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.computeKernels">
+<span class="sig-name descname"><span class="pre">computeKernels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.computeKernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.computeKernels" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the internal flux and the tangent of this stencil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The tangent to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,</span> <span class="pre">nDof)</span></code>.</p></li>
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The internal flux to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,)</span></code>.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.getCoordinatesAtCenter">
+<span class="sig-name descname"><span class="pre">getCoordinatesAtCenter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.getCoordinatesAtCenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.getCoordinatesAtCenter" title="Link to this definition"></a></dt>
+<dd><p>The coordinates of the point this stencil is centred at.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.getNumberOfQuadraturePoints">
+<span class="sig-name descname"><span class="pre">getNumberOfQuadraturePoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.getNumberOfQuadraturePoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.getNumberOfQuadraturePoints" title="Link to this definition"></a></dt>
+<dd><p>A stencil owns exactly one material point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.getResultArray">
+<span class="sig-name descname"><span class="pre">getResultArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadraturePoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getPersistentView</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.getResultArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.getResultArray" title="Link to this definition"></a></dt>
+<dd><p>Get a result of this stencil.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quadraturePoint</span></code> argument exists only because
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/utils.html#edelweissfe.utils.elementresultcollector.ElementResultCollector" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementResultCollector</span></code></a> passes it;
+a stencil owns exactly one material point, so the only valid value is zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the result.</p></li>
+<li><p><strong>quadraturePoint</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Must be zero.</p></li>
+<li><p><strong>getPersistentView</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Whether a view or a copy should be returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.initializeStencil">
+<span class="sig-name descname"><span class="pre">initializeStencil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.initializeStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.initializeStencil" title="Link to this definition"></a></dt>
+<dd><p>Create the state variables and let the material initialize them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.resetToLastValidState">
+<span class="sig-name descname"><span class="pre">resetToLastValidState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.resetToLastValidState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.resetToLastValidState" title="Link to this definition"></a></dt>
+<dd><p>Discard the current state and fall back to the last converged one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.setMaterial">
+<span class="sig-name descname"><span class="pre">setMaterial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.setMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.setMaterial" title="Link to this definition"></a></dt>
+<dd><p>Assign the material this stencil evaluates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>material</strong> – A material honoring
+<a class="reference internal" href="materials.html#edelweissfe.materials.base.basehypoelasticmaterial.BaseHypoElasticMaterial" title="edelweissfe.materials.base.basehypoelasticmaterial.BaseHypoElasticMaterial"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseHypoElasticMaterial</span></code></a>.
+The instance must belong to this stencil alone: it is re-pointed at the state
+variables of each material point during evaluation, so sharing it with another
+stencil is a data race as soon as the solver computes stencils on several threads.
+See <code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.setNodes">
+<span class="sig-name descname"><span class="pre">setNodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/displacementstencil.html#DisplacementStencil.setNodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.setNodes" title="Link to this definition"></a></dt>
+<dd><p>Assign the corner grid points of the cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nodes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a><em>]</em>) – The corner grid points, ordered like <a class="reference internal" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.cornerOffsets" title="edelweissfd.stencils.displacementstencil.DisplacementStencil.cornerOffsets"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cornerOffsets</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.characteristicLength">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">characteristicLength</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.characteristicLength" title="Link to this definition"></a></dt>
+<dd><p>The characteristic length of a material point, communicated to regularized
+materials.</p>
+<p>It is the geometric mean of the grid spacings a material point covers, i.e. the whole
+cell in one dimension and half a cell per direction where the cell is sampled at its
+corners. The out-of-plane thickness deliberately does not enter.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.cornerOffsets">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cornerOffsets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.cornerOffsets" title="Link to this definition"></a></dt>
+<dd><p>The corner offsets of the cell this stencil sits on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.fields">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fields</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.fields" title="Link to this definition"></a></dt>
+<dd><p>The list of fields per node which this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.hasMaterial">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hasMaterial</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.hasMaterial" title="Link to this definition"></a></dt>
+<dd><p>Whether a material has been assigned to this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.nDof">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nDof</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.nDof" title="Link to this definition"></a></dt>
+<dd><p>The total number of degrees of freedom this entity has.
+Not that this information is redundent, as it results from the list of fields on nodes,
+but we keep this redundant information for the sake of performance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.nMaterialPoints">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nMaterialPoints</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.nMaterialPoints" title="Link to this definition"></a></dt>
+<dd><p>The number of material points this stencil owns.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.nNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.nNodes" title="Link to this definition"></a></dt>
+<dd><p>The number of nodes this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.nodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.nodes" title="Link to this definition"></a></dt>
+<dd><p>The list of nodes this currently entity holds.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.stencilNumber">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stencilNumber</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.stencilNumber" title="Link to this definition"></a></dt>
+<dd><p>The unique number of this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.DisplacementStencil.strainOperators">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">strainOperators</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.DisplacementStencil.strainOperators" title="Link to this definition"></a></dt>
+<dd><p>The full six component strain operator of every material point.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.nStateVarsOverheadPerMaterialPoint">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.displacementstencil.</span></span><span class="sig-name descname"><span class="pre">nStateVarsOverheadPerMaterialPoint</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">12</span></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.nStateVarsOverheadPerMaterialPoint" title="Link to this definition"></a></dt>
+<dd><p>Number of state variables the stencil keeps per material point in front of the
+material’s own ones, namely the stress and the strain.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.stressStates">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.displacementstencil.</span></span><span class="sig-name descname"><span class="pre">stressStates</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'3d':</span> <span class="pre">{'activeVoigtIndices':</span> <span class="pre">(0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5),</span> <span class="pre">'materialRoutine':</span> <span class="pre">'computeStress'},</span> <span class="pre">'plane</span> <span class="pre">strain':</span> <span class="pre">{'activeVoigtIndices':</span> <span class="pre">(0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5),</span> <span class="pre">'materialRoutine':</span> <span class="pre">'computeStress'},</span> <span class="pre">'plane</span> <span class="pre">stress':</span> <span class="pre">{'activeVoigtIndices':</span> <span class="pre">(0,</span> <span class="pre">1,</span> <span class="pre">3),</span> <span class="pre">'materialRoutine':</span> <span class="pre">'computePlaneStress'},</span> <span class="pre">'uniaxial</span> <span class="pre">stress':</span> <span class="pre">{'activeVoigtIndices':</span> <span class="pre">(0,),</span> <span class="pre">'materialRoutine':</span> <span class="pre">'computeUniaxialStress'}}</span></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.stressStates" title="Link to this definition"></a></dt>
+<dd><p>The supported stress states, mapping to the material routine and the Voigt components
+which carry the reduced tangent.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.useCompiledKernel">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.displacementstencil.</span></span><span class="sig-name descname"><span class="pre">useCompiledKernel</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.useCompiledKernel" title="Link to this definition"></a></dt>
+<dd><p>Use the compiled kernel when it is available, see
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.stencils.gradientplasticitystencil</span></code> for the measurements that motivate it.
+Set <code class="docutils literal notranslate"><span class="pre">EDELWEISSFD_NO_COMPILED_KERNEL=1</span></code> in the environment to force the Python implementation.</p>
+</dd></dl>
+
+</section>
+<section id="module-edelweissfd.stencils.gradientenhanceddisplacementstencil">
+<span id="gradientenhanceddisplacementstencil-a-gradient-enhanced-continuum"></span><h2><code class="docutils literal notranslate"><span class="pre">gradientenhanceddisplacementstencil</span></code> - A gradient-enhanced continuum<a class="headerlink" href="#module-edelweissfd.stencils.gradientenhanceddisplacementstencil" title="Link to this heading"></a></h2>
+<p>The multifield finite difference stencil for a gradient-enhanced continuum.</p>
+<p>Two fields live on every grid point: the <code class="docutils literal notranslate"><span class="pre">displacement</span></code> and one nonlocal scalar,
+by default <code class="docutils literal notranslate"><span class="pre">nonlocal</span> <span class="pre">damage</span></code>. The governing equations are the balance of linear momentum
+together with one screened Poisson equation per nonlocal variable,</p>
+<div class="math notranslate nohighlight">
+\[-\nabla \cdot \boldsymbol \sigma(\boldsymbol \varepsilon, \bar\kappa) = \boldsymbol 0
+\qquad
+\bar\kappa - \nabla \cdot \left( c(\bar\kappa) \nabla \bar\kappa \right)
+- \kappa(\boldsymbol \varepsilon, \bar\kappa) = 0\]</div>
+<p>as implemented by Marmot’s <code class="docutils literal notranslate"><span class="pre">MarmotMaterialGeneralGradientEnhancedHypoElastic</span></code>. Phase field
+models fit this framework as well, with the phase field taking the role of the nonlocal
+variable; <code class="docutils literal notranslate"><span class="pre">AT2PHASEFIELD</span></code> is such a material.</p>
+<p>Discretely, per material point of the cell and with <span class="math notranslate nohighlight">\(\boldsymbol N\)</span> averaging the
+corner values to the material point and <span class="math notranslate nohighlight">\(\boldsymbol G\)</span> differencing them,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol P_u = \boldsymbol B^T \boldsymbol \sigma \, V
+\qquad
+\boldsymbol P_{\bar\kappa} =
+    \left[ \boldsymbol N^T (\bar\kappa - \kappa)
+          + c \, \boldsymbol G^T \boldsymbol G \bar{\boldsymbol \kappa} \right] V\]</div>
+<p>The gradient term appears in its adjoint form, which is what makes the assembled operator
+the compact difference Laplacian and keeps a traction free, flux free boundary natural.
+The tangent follows by differentiation and is verified against
+<a class="reference internal" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin" title="edelweissfd.stencils.numericaltangent.NumericalTangentMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">NumericalTangentMixin</span></code></a>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientenhanceddisplacementstencil.</span></span><span class="sig-name descname"><span class="pre">GradientEnhancedDisplacementStencil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencilNumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stressState</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plane</span> <span class="pre">strain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonlocalField</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nonlocal</span> <span class="pre">damage'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil" title="Link to this definition"></a></dt>
+<dd><p>A gradient-enhanced momentum balance stencil on a single grid cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stencilNumber</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – A unique number for this stencil.</p></li>
+<li><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p></li>
+<li><p><strong>stressState</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – One of <code class="docutils literal notranslate"><span class="pre">3d</span></code>, <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">strain</span></code> or <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">stress</span></code>.</p></li>
+<li><p><strong>nonlocalField</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the nonlocal field, e.g. <code class="docutils literal notranslate"><span class="pre">nonlocal</span> <span class="pre">damage</span></code>.</p></li>
+<li><p><strong>thickness</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – An out-of-plane thickness, only meaningful for the two dimensional stress states.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.acceptLastState">
+<span class="sig-name descname"><span class="pre">acceptLastState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.acceptLastState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.acceptLastState" title="Link to this definition"></a></dt>
+<dd><p>Accept the state computed in the last converged increment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.computeBodyForce">
+<span class="sig-name descname"><span class="pre">computeBodyForce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.computeBodyForce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.computeBodyForce" title="Link to this definition"></a></dt>
+<dd><p>Distribute a force per unit volume onto the displacement degrees of freedom of the
+corner grid points. The nonlocal field is not loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>load</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>)</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>)</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.computeKernels">
+<span class="sig-name descname"><span class="pre">computeKernels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.computeKernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.computeKernels" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the internal flux and the tangent of this stencil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The tangent to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,</span> <span class="pre">nDof)</span></code>.</p></li>
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The internal flux to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,)</span></code>.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.getCoordinatesAtCenter">
+<span class="sig-name descname"><span class="pre">getCoordinatesAtCenter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.getCoordinatesAtCenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.getCoordinatesAtCenter" title="Link to this definition"></a></dt>
+<dd><p>The coordinates of the point this stencil is centred at.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.getNumberOfQuadraturePoints">
+<span class="sig-name descname"><span class="pre">getNumberOfQuadraturePoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.getNumberOfQuadraturePoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.getNumberOfQuadraturePoints" title="Link to this definition"></a></dt>
+<dd><p>A stencil owns exactly one material point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.getResultArray">
+<span class="sig-name descname"><span class="pre">getResultArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadraturePoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getPersistentView</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.getResultArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.getResultArray" title="Link to this definition"></a></dt>
+<dd><p>Get a result of this stencil.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quadraturePoint</span></code> argument exists only because
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/utils.html#edelweissfe.utils.elementresultcollector.ElementResultCollector" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementResultCollector</span></code></a> passes it;
+a stencil owns exactly one material point, so the only valid value is zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the result.</p></li>
+<li><p><strong>quadraturePoint</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Must be zero.</p></li>
+<li><p><strong>getPersistentView</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Whether a view or a copy should be returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.initializeStencil">
+<span class="sig-name descname"><span class="pre">initializeStencil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.initializeStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.initializeStencil" title="Link to this definition"></a></dt>
+<dd><p>Create the state variables and let the material initialize them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.resetToLastValidState">
+<span class="sig-name descname"><span class="pre">resetToLastValidState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.resetToLastValidState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.resetToLastValidState" title="Link to this definition"></a></dt>
+<dd><p>Discard the current state and fall back to the last converged one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.setMaterial">
+<span class="sig-name descname"><span class="pre">setMaterial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.setMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.setMaterial" title="Link to this definition"></a></dt>
+<dd><p>Assign the material this stencil evaluates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>material</strong> – A material with a single nonlocal variable, honoring
+<a class="reference internal" href="materials.html#module-edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial" title="edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial</span></code></a>.
+The instance must belong to this stencil alone, see
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.setNodes">
+<span class="sig-name descname"><span class="pre">setNodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientenhanceddisplacementstencil.html#GradientEnhancedDisplacementStencil.setNodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.setNodes" title="Link to this definition"></a></dt>
+<dd><p>Assign the corner grid points of the cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nodes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a><em>]</em>) – The corner grid points, ordered like <a class="reference internal" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.cornerOffsets" title="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.cornerOffsets"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cornerOffsets</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.characteristicLength">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">characteristicLength</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.characteristicLength" title="Link to this definition"></a></dt>
+<dd><p>The characteristic length of a material point, i.e. the geometric mean of the grid
+spacings it covers. The out-of-plane thickness deliberately does not enter.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.cornerOffsets">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cornerOffsets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.cornerOffsets" title="Link to this definition"></a></dt>
+<dd><p>The corner offsets of the cell this stencil sits on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.fields">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fields</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.fields" title="Link to this definition"></a></dt>
+<dd><p>The list of fields per node which this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.hasMaterial">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hasMaterial</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.hasMaterial" title="Link to this definition"></a></dt>
+<dd><p>Whether a material has been assigned to this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nDof">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nDof</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nDof" title="Link to this definition"></a></dt>
+<dd><p>The total number of degrees of freedom this entity has.
+Not that this information is redundent, as it results from the list of fields on nodes,
+but we keep this redundant information for the sake of performance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nMaterialPoints">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nMaterialPoints</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nMaterialPoints" title="Link to this definition"></a></dt>
+<dd><p>The number of material points this stencil owns.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nNodes" title="Link to this definition"></a></dt>
+<dd><p>The number of nodes this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nodes" title="Link to this definition"></a></dt>
+<dd><p>The list of nodes this currently entity holds.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nonlocalField">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nonlocalField</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.nonlocalField" title="Link to this definition"></a></dt>
+<dd><p>The name of the nonlocal field.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.stencilNumber">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stencilNumber</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.GradientEnhancedDisplacementStencil.stencilNumber" title="Link to this definition"></a></dt>
+<dd><p>The unique number of this stencil.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.stressStates">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientenhanceddisplacementstencil.</span></span><span class="sig-name descname"><span class="pre">stressStates</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'3d':</span> <span class="pre">'computeStress',</span> <span class="pre">'plane</span> <span class="pre">strain':</span> <span class="pre">'computeStress',</span> <span class="pre">'plane</span> <span class="pre">stress':</span> <span class="pre">'computePlaneStress'}</span></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.stressStates" title="Link to this definition"></a></dt>
+<dd><p>The supported stress states, mapping to the material routine of the gradient enhanced
+material.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">stress</span></code> yields a correct residual, but Marmot’s
+<code class="docutils literal notranslate"><span class="pre">MarmotMaterialGeneralGradientEnhancedHypoElastic::computePlaneStress</span></code> returns the
+un-condensed three dimensional tangent, i.e. the tangent is inconsistent with the
+condensed response. Newton still converges, but not quadratically, and the numerical
+tangent check will flag the deviation. Prefer <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">strain</span></code>.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.useCompiledKernel">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientenhanceddisplacementstencil.</span></span><span class="sig-name descname"><span class="pre">useCompiledKernel</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.useCompiledKernel" title="Link to this definition"></a></dt>
+<dd><p>Use the compiled kernel when it is available, see
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.stencils.gradientplasticitystencil</span></code> for the measurements that motivate it.
+Set <code class="docutils literal notranslate"><span class="pre">EDELWEISSFD_NO_COMPILED_KERNEL=1</span></code> in the environment to force the Python implementation.</p>
+</dd></dl>
+
+</section>
+<section id="module-edelweissfd.stencils.numericaltangent">
+<span id="verifying-a-tangent"></span><h2>Verifying a tangent<a class="headerlink" href="#module-edelweissfd.stencils.numericaltangent" title="Link to this heading"></a></h2>
+<p>A numerical tangent for stencils.</p>
+<p>Analytic tangents are what the stencils use in production, since they are exact and cheap.
+A wrong analytic tangent, however, does not announce itself: the residual still converges,
+just slowly or not at all, and the cause is hard to see from a Newton log. This mixin
+therefore provides a second, independent opinion by differencing the internal flux with
+respect to the stencil’s own degrees of freedom.</p>
+<p>It is used by the test suite and can be switched on temporarily while developing a new
+stencil. It is not meant for production runs, as it costs <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">nDof</span></code> material
+evaluations per stencil.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stencils.numericaltangent.NumericalTangentMixin">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.numericaltangent.</span></span><span class="sig-name descname"><span class="pre">NumericalTangentMixin</span></span><a class="reference internal" href="../_modules/edelweissfd/stencils/numericaltangent.html#NumericalTangentMixin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin" title="Link to this definition"></a></dt>
+<dd><p>Adds a numerically differenced tangent to a stencil.</p>
+<p>The stencil must implement <code class="docutils literal notranslate"><span class="pre">computeKernels</span></code>, <code class="docutils literal notranslate"><span class="pre">acceptLastState</span></code> and
+<code class="docutils literal notranslate"><span class="pre">resetToLastValidState</span></code>, and its <code class="docutils literal notranslate"><span class="pre">computeKernels</span></code> must not depend on state left
+over from a previous call, i.e. it must restore its temporary state variables from the
+converged ones on entry. All stencils of EdelweissFD do so.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.numericaltangent.NumericalTangentMixin.assertTangentConsistent">
+<span class="sig-name descname"><span class="pre">assertTangentConsistent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relativeTolerance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/numericaltangent.html#NumericalTangentMixin.assertTangentConsistent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin.assertTangentConsistent" title="Link to this definition"></a></dt>
+<dd><p>Raise if the analytic tangent disagrees with the numerical one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+<li><p><strong>perturbation</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The absolute perturbation of the degrees of freedom.</p></li>
+<li><p><strong>relativeTolerance</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The tolerated deviation, relative to the largest entry of the analytic tangent.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.numericaltangent.NumericalTangentMixin.checkTangent">
+<span class="sig-name descname"><span class="pre">checkTangent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/numericaltangent.html#NumericalTangentMixin.checkTangent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin.checkTangent" title="Link to this definition"></a></dt>
+<dd><p>Compare the analytic tangent against the numerical one.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+<li><p><strong>perturbation</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The absolute perturbation of the degrees of freedom.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The analytic tangent, the numerical tangent, and the deviation relative to the
+largest entry of the analytic tangent.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.numericaltangent.NumericalTangentMixin.computeNumericalTangent">
+<span class="sig-name descname"><span class="pre">computeNumericalTangent</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">perturbation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/numericaltangent.html#NumericalTangentMixin.computeNumericalTangent"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin.computeNumericalTangent" title="Link to this definition"></a></dt>
+<dd><p>The tangent obtained by central differences of the internal flux.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+<li><p><strong>perturbation</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The absolute perturbation of the degrees of freedom. Defaults to a scaled
+relative perturbation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The numerical tangent, shape <code class="docutils literal notranslate"><span class="pre">(nDof,</span> <span class="pre">nDof)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="edelweissfd.stencils.numericaltangent.NumericalTangentMixin.defaultRelativePerturbation">
+<span class="sig-name descname"><span class="pre">defaultRelativePerturbation</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1e-07</span></span><a class="headerlink" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin.defaultRelativePerturbation" title="Link to this definition"></a></dt>
+<dd><p>The relative perturbation used if no absolute one is given.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="operators.html" class="btn btn-neutral float-left" title="Finite difference operators" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="materials.html" class="btn btn-neutral float-right" title="Materials" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

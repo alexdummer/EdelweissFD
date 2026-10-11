@@ -1,0 +1,478 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finite difference operators &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Stencils" href="stencils.html" />
+    <link rel="prev" title="Grids" href="grids.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="grids.html">Grids</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Finite difference operators</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellAverageOperator"><code class="docutils literal notranslate"><span class="pre">cellAverageOperator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellCornerGradientOperators"><code class="docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellCornerOffsets"><code class="docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellGradientOperator"><code class="docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellStrainOperator"><code class="docutils literal notranslate"><span class="pre">cellStrainOperator()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.condensePlaneStressTangents"><code class="docutils literal notranslate"><span class="pre">condensePlaneStressTangents()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.finiteDifferenceCoefficients"><code class="docutils literal notranslate"><span class="pre">finiteDifferenceCoefficients()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.hourglassVector"><code class="docutils literal notranslate"><span class="pre">hourglassVector()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.stencilOffsets"><code class="docutils literal notranslate"><span class="pre">stencilOffsets()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators"><code class="docutils literal notranslate"><span class="pre">volumetricallyAveragedStrainOperators()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.nVoigtComponents"><code class="docutils literal notranslate"><span class="pre">nVoigtComponents</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.outOfPlaneVoigtIndex"><code class="docutils literal notranslate"><span class="pre">outOfPlaneVoigtIndex</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.voigtIndexPairs"><code class="docutils literal notranslate"><span class="pre">voigtIndexPairs</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="stencils.html">Stencils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Running a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">The model tree</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Documentation</a></li>
+      <li class="breadcrumb-item active">Finite difference operators</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/documentation/operators.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="finite-difference-operators">
+<h1>Finite difference operators<a class="headerlink" href="#finite-difference-operators" title="Link to this heading"></a></h1>
+<p>Relevant module <code class="docutils literal notranslate"><span class="pre">edelweissfd.operators.differences</span></code></p>
+<p id="module-edelweissfd.operators.differences">Finite difference operators on a uniform structured grid.</p>
+<p>Two groups of functions live here.</p>
+<p><strong>General difference quotients.</strong> <a class="reference internal" href="#edelweissfd.operators.differences.finiteDifferenceCoefficients" title="edelweissfd.operators.differences.finiteDifferenceCoefficients"><code class="xref py py-func docutils literal notranslate"><span class="pre">finiteDifferenceCoefficients()</span></code></a> returns the
+coefficients of an arbitrary difference quotient for an arbitrary set of grid offsets, and
+<a class="reference internal" href="#edelweissfd.operators.differences.stencilOffsets" title="edelweissfd.operators.differences.stencilOffsets"><code class="xref py py-func docutils literal notranslate"><span class="pre">stencilOffsets()</span></code></a> picks the offsets: a symmetric window whenever the grid allows it,
+a shifted window near the boundaries. These are used for post-processing, for boundary
+expressions and by the tests which verify the formal order of accuracy.</p>
+<p><strong>Cell operators.</strong> The stencils of EdelweissFD evaluate the material at the <em>centre</em> of a
+grid cell and difference the nodal values over the cell’s corners. The reason is the
+classical one: the wide, node-centred quotient <span class="math notranslate nohighlight">\((u_{i+1} - u_{i-1}) / 2h\)</span> decouples
+the even from the odd grid points and admits spurious checkerboard modes, whereas the
+compact quotient <span class="math notranslate nohighlight">\((u_{i+1} - u_{i}) / h\)</span> over a cell does not. Evaluating the
+material once per cell moreover gives every material point, and thus every set of history
+variables, exactly one owner.</p>
+<p><a class="reference internal" href="#edelweissfd.operators.differences.cellGradientOperator" title="edelweissfd.operators.differences.cellGradientOperator"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a> builds the gradient at the cell centre,
+<a class="reference internal" href="#edelweissfd.operators.differences.cellAverageOperator" title="edelweissfd.operators.differences.cellAverageOperator"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellAverageOperator()</span></code></a> the value at the cell centre, and <a class="reference internal" href="#edelweissfd.operators.differences.cellStrainOperator" title="edelweissfd.operators.differences.cellStrainOperator"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellStrainOperator()</span></code></a>
+the small strain operator in Voigt notation.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Voigt convention used throughout EdelweissFD is the one of Marmot,</p>
+<div class="math notranslate nohighlight">
+\[(\;11,\; 22,\; 33,\; 12,\; 13,\; 23\;)\]</div>
+<p>with engineering shear strains. It deliberately does <strong>not</strong> go through
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.utils.voigtnotation</span></code>, whose native helpers order the shear
+components as <code class="docutils literal notranslate"><span class="pre">12,</span> <span class="pre">23,</span> <span class="pre">13</span></code>.</p>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.cellAverageOperator">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">cellAverageOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nDim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#cellAverageOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.cellAverageOperator" title="Link to this definition"></a></dt>
+<dd><p>The operator evaluating a field at the centre of a grid cell.</p>
+<p>The centre value is the plain average of the corner values, which is the compact,
+second order accurate choice.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nDim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The spatial dimension.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coefficients, shape <code class="docutils literal notranslate"><span class="pre">(2**nDim,)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.cellCornerGradientOperators">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">cellCornerGradientOperators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#cellCornerGradientOperators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.cellCornerGradientOperators" title="Link to this definition"></a></dt>
+<dd><p>The one-sided gradient operators at the corners of a grid cell.</p>
+<p>The derivative along a direction is the plain one-sided difference quotient along the
+single cell edge which starts at that corner and points along that direction,</p>
+<div class="math notranslate nohighlight">
+\[\left. \frac{\partial f}{\partial x_d} \right|_{corner}
+= \frac{f_{next} - f_{previous}}{h_d}\]</div>
+<p>Each operator therefore involves only <span class="math notranslate nohighlight">\(n+1\)</span> of the <span class="math notranslate nohighlight">\(2^n\)</span> corners.</p>
+<p>In contrast to <a class="reference internal" href="#edelweissfd.operators.differences.cellGradientOperator" title="edelweissfd.operators.differences.cellGradientOperator"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a>, which averages over all parallel edges,
+these operators do <strong>not</strong> annihilate the hourglass (checkerboard) mode. Sampling a
+cell at its corners instead of only at its centre is what makes the two and three
+dimensional schemes of EdelweissFD free of spurious zero energy modes; in one
+dimension both choices coincide.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>One operator of shape <code class="docutils literal notranslate"><span class="pre">(nDim,</span> <span class="pre">2**nDim)</span></code> per corner, ordered like
+<a class="reference internal" href="#edelweissfd.operators.differences.cellCornerOffsets" title="edelweissfd.operators.differences.cellCornerOffsets"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.cellCornerOffsets">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">cellCornerOffsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nDim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#cellCornerOffsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.cellCornerOffsets" title="Link to this definition"></a></dt>
+<dd><p>The offsets of the corners of a grid cell, relative to its lower left corner.</p>
+<p>The corners are ordered such that the last axis varies fastest, i.e. in 2D
+<code class="docutils literal notranslate"><span class="pre">(0,0),</span> <span class="pre">(0,1),</span> <span class="pre">(1,0),</span> <span class="pre">(1,1)</span></code>. Everything else in EdelweissFD relies on this order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nDim</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The spatial dimension.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corner offsets, shape <code class="docutils literal notranslate"><span class="pre">(2**nDim,</span> <span class="pre">nDim)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.cellGradientOperator">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">cellGradientOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#cellGradientOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.cellGradientOperator" title="Link to this definition"></a></dt>
+<dd><p>The operator evaluating the gradient of a field at the centre of a grid cell.</p>
+<p>The derivative along a direction is the average of the compact difference quotients
+along all cell edges parallel to that direction,</p>
+<div class="math notranslate nohighlight">
+\[\left. \frac{\partial f}{\partial x_d} \right|_{centre}
+= \frac{1}{2^{n-1}} \sum_{\text{edges} \parallel x_d}
+  \frac{f_{far} - f_{near}}{h_d}\]</div>
+<p>which is second order accurate at the cell centre.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coefficients, shape <code class="docutils literal notranslate"><span class="pre">(nDim,</span> <span class="pre">2**nDim)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.cellStrainOperator">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">cellStrainOperator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gradient</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#cellStrainOperator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.cellStrainOperator" title="Link to this definition"></a></dt>
+<dd><p>The small strain operator of a grid cell in Voigt notation.</p>
+<p>Maps the displacement degrees of freedom of the cell’s corners onto the six component
+Voigt strain at the cell centre. The degrees of freedom are ordered corner-major and
+component-minor, i.e. <code class="docutils literal notranslate"><span class="pre">[corner</span> <span class="pre">0</span> <span class="pre">-</span> <span class="pre">x,</span> <span class="pre">corner</span> <span class="pre">0</span> <span class="pre">-</span> <span class="pre">y,</span> <span class="pre">corner</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">x,</span> <span class="pre">...]</span></code>, which is
+the layout the solvers of EdelweissFE expect.</p>
+<p>Components which do not exist for the given spatial dimension stay zero, so a 2D
+operator describes a state of plane strain and a 1D operator a state of uniaxial
+strain. Whether the out-of-plane components are subsequently condensed out is decided
+by the stencil, by choosing the corresponding material routine.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gradient</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The gradient operator of the cell, shape <code class="docutils literal notranslate"><span class="pre">(nDim,</span> <span class="pre">nCorners)</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The strain operator, shape <code class="docutils literal notranslate"><span class="pre">(6,</span> <span class="pre">nCorners</span> <span class="pre">*</span> <span class="pre">nDim)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.condensePlaneStressTangents">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">condensePlaneStressTangents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">D</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dLambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dLaplacian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dFdStrain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dFdLambda</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dFdLaplacian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#condensePlaneStressTangents"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.condensePlaneStressTangents" title="Link to this definition"></a></dt>
+<dd><p>Statically condense out the zz row/column Marmot’s <code class="docutils literal notranslate"><span class="pre">computePlaneStress</span></code> leaves in.</p>
+<p>Marmot’s plane stress routine correctly condenses the <em>stress</em> – sigma_zz = 0 is enforced by
+solving for the corresponding strain internally, verified directly against the closed form
+plane stress modulus – but the algorithmic tangent blocks it returns are the raw, uncondensed
+ones: at nu=0.49, the returned <code class="docutils literal notranslate"><span class="pre">dStress_dStrain</span></code> is the full 3D elastic tangent, about 13x
+stiffer than the correct plane stress modulus E/(1-nu^2) (confirmed by differencing the
+material response directly). Left uncorrected, Newton’s search direction is systematically
+too small everywhere plane stress is used, which shows up as slow (linear, not quadratic)
+convergence rather than an outright wrong answer – easy to mistake for a genuine structural
+instability, since it can exceed the iteration budget right where the physics gets interesting
+(e.g. at the onset of yielding).</p>
+<p>The fix is the standard implicit function theorem static condensation: since sigma_zz is
+identically zero for every combination of the (in-plane strain, plastic multiplier increment,
+its Laplacian) <code class="docutils literal notranslate"><span class="pre">computePlaneStress</span></code> is called with, differentiating that identity through
+gives the dependence of the implicitly eliminated eps_zz on each of them, which every other
+tangent block must include to stay consistent. Verified to reduce the deviation from a central
+difference of the material response from order one down to 1e-8..1e-13 across the yield
+transition, at several plastic multiplier increments each.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>D</strong> – <code class="docutils literal notranslate"><span class="pre">dStress_dStrain</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">6,</span> <span class="pre">6)</span></code>.</p></li>
+<li><p><strong>dLambda</strong> – <code class="docutils literal notranslate"><span class="pre">dStress_dLambda</span></code> and <code class="docutils literal notranslate"><span class="pre">dStress_dLaplacian</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">6)</span></code>.</p></li>
+<li><p><strong>dLaplacian</strong> – <code class="docutils literal notranslate"><span class="pre">dStress_dLambda</span></code> and <code class="docutils literal notranslate"><span class="pre">dStress_dLaplacian</span></code>, shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">6)</span></code>.</p></li>
+<li><p><strong>dFdStrain</strong> – Shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">6)</span></code>.</p></li>
+<li><p><strong>dFdLambda</strong> – Shape <code class="docutils literal notranslate"><span class="pre">(...,)</span></code>.</p></li>
+<li><p><strong>dFdLaplacian</strong> – Shape <code class="docutils literal notranslate"><span class="pre">(...,)</span></code>.</p></li>
+<li><p><strong>zz</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The Voigt index to condense out.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The six condensed arrays, in the same shapes as given.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.finiteDifferenceCoefficients">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">finiteDifferenceCoefficients</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">derivativeOrder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#finiteDifferenceCoefficients"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.finiteDifferenceCoefficients" title="Link to this definition"></a></dt>
+<dd><p>The coefficients of a finite difference quotient.</p>
+<p>The returned coefficients <span class="math notranslate nohighlight">\(c_i\)</span> approximate</p>
+<div class="math notranslate nohighlight">
+\[\frac{d^m f}{dx^m}(x) \approx \sum_i c_i \, f(x + o_i \, h)\]</div>
+<p>for the requested derivative order <span class="math notranslate nohighlight">\(m\)</span>, the given offsets <span class="math notranslate nohighlight">\(o_i\)</span> and the
+grid spacing <span class="math notranslate nohighlight">\(h\)</span>. They are obtained by requiring the quotient to be exact for
+all monomials up to degree <code class="docutils literal notranslate"><span class="pre">len(offsets)</span> <span class="pre">-</span> <span class="pre">1</span></code>, which is the classical Vandermonde
+construction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>offsets</strong> – The grid offsets of the stencil, in multiples of the spacing. Must be distinct.</p></li>
+<li><p><strong>derivativeOrder</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The order of the derivative to be approximated.</p></li>
+<li><p><strong>spacing</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The grid spacing.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coefficients, one per offset.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.hourglassVector">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">hourglassVector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#hourglassVector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.hourglassVector" title="Link to this definition"></a></dt>
+<dd><p>The Flanagan-Belytschko orthogonal hourglass shape vector of a 2D grid cell.</p>
+<p>Single point quadrature at the cell centre – <a class="reference internal" href="#edelweissfd.operators.differences.cellGradientOperator" title="edelweissfd.operators.differences.cellGradientOperator"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a> sampled once,
+rather than <a class="reference internal" href="#edelweissfd.operators.differences.cellCornerGradientOperators" title="edelweissfd.operators.differences.cellCornerGradientOperators"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a> sampled at every corner – is second order
+accurate and does not lock volumetrically, but the bilinear cell then has one zero energy
+mode left uncontrolled: the alternating corner pattern <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1,</span> <span class="pre">-1,</span> <span class="pre">1)</span></code>, the “hourglass”
+mode, which the single sampling point cannot see at all.</p>
+<p>Flanagan and Belytschko’s remedy <a class="reference internal" href="#rd8c14f1ba366-1" id="id1">[1]</a> projects the constant and linear parts out of that
+pattern,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol \gamma = \boldsymbol h
+    - \left(\boldsymbol h \cdot \boldsymbol x\right) \boldsymbol b_x
+    - \left(\boldsymbol h \cdot \boldsymbol y\right) \boldsymbol b_y\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol h = (1, -1, -1, 1)\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol b_x, \boldsymbol b_y\)</span>
+the centre gradient’s corner weights. The result is, by construction, orthogonal to any
+constant or linear field – <span class="math notranslate nohighlight">\(\boldsymbol \gamma \cdot \boldsymbol u\)</span> is exactly
+zero for such a field and <span class="math notranslate nohighlight">\(O(h^2)\)</span> for a smooth one with curvature, so a stabilization
+stiffness built from it, <span class="math notranslate nohighlight">\(c \, \boldsymbol \gamma \boldsymbol \gamma^T\)</span>, resists
+the hourglass mode without spoiling the second order accuracy of the underlying operator –
+see <code class="docutils literal notranslate"><span class="pre">tests/test_hourglassstabilization.py</span></code> for both properties verified numerically.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(2,)</span></code>. Only two dimensions are supported: a
+trilinear hexahedron has three independent hourglass modes per component, not one, which
+is a materially larger extension than this single mode.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The hourglass vector, shape <code class="docutils literal notranslate"><span class="pre">(4,)</span></code>, ordered like <a class="reference internal" href="#edelweissfd.operators.differences.cellCornerOffsets" title="edelweissfd.operators.differences.cellCornerOffsets"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rd8c14f1ba366-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>D.P. Flanagan, T. Belytschko, “A uniform strain hexahedron and quadrilateral with
+orthogonal hourglass control”, IJNME 17, 1981, 679-706.</p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.stencilOffsets">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">stencilOffsets</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">derivativeOrder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accuracyOrder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nAvailableLeft</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nAvailableRight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#stencilOffsets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.stencilOffsets" title="Link to this definition"></a></dt>
+<dd><p>The grid offsets of a difference quotient of the requested accuracy.</p>
+<p>A symmetric window is returned whenever enough neighbours are available on both
+sides, since symmetry buys one order of accuracy for free. Otherwise the window is
+shifted into the domain, which is the usual treatment at a boundary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>derivativeOrder</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The order of the derivative to be approximated.</p></li>
+<li><p><strong>accuracyOrder</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The requested formal order of accuracy.</p></li>
+<li><p><strong>nAvailableLeft</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The number of available neighbours towards smaller coordinates. <code class="docutils literal notranslate"><span class="pre">None</span></code> means
+unlimited, i.e. an interior point.</p></li>
+<li><p><strong>nAvailableRight</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The number of available neighbours towards larger coordinates. <code class="docutils literal notranslate"><span class="pre">None</span></code> means
+unlimited.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The offsets, in ascending order.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.volumetricallyAveragedStrainOperators">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">volumetricallyAveragedStrainOperators</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strainOperators</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/differences.html#volumetricallyAveragedStrainOperators"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators" title="Link to this definition"></a></dt>
+<dd><p>Replace the volumetric part of each strain operator by the average over the cell.</p>
+<p>The corner sampled strain operators of a cell are the bilinear ones evaluated at the cell’s
+vertices, so they constrain the volumetric strain at every corner separately: one constraint
+per corner against, in the limit, one displacement degree of freedom per grid point. As
+Poisson’s ratio approaches one half that over-constrains the cell and it locks – the cell
+can no longer deform at constant volume, which is exactly what a shear band has to do, so the
+band does not form and the response comes out too stiff instead.</p>
+<p>Averaging the volumetric part over the cell, the classical B-bar or mean dilatation treatment,
+leaves one volumetric constraint per cell and cures it. The deviatoric part stays sampled at
+the corners, so the hourglass mode is still controlled – see
+<a class="reference internal" href="#edelweissfd.operators.differences.cellCornerGradientOperators" title="edelweissfd.operators.differences.cellCornerGradientOperators"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a> for why that sampling is used in the first place.</p>
+<p>Writing <code class="docutils literal notranslate"><span class="pre">m</span></code> for the Voigt trace vector, the volumetric part of an operator is
+<code class="docutils literal notranslate"><span class="pre">B_vol</span> <span class="pre">=</span> <span class="pre">m</span> <span class="pre">m^T</span> <span class="pre">B</span> <span class="pre">/</span> <span class="pre">3</span></code> and</p>
+<div class="math notranslate nohighlight">
+\[\bar{\boldsymbol B}_p = \boldsymbol B_p - \boldsymbol B_{vol,p}
+                         + \sum_q w_q \boldsymbol B_{vol,q}\]</div>
+<p>Note that the trace has to be taken over all three normal components even in two dimensions:
+under plane strain <code class="docutils literal notranslate"><span class="pre">eps_33</span></code> vanishes and the third row of the operator is zero, so it drops
+out of the sum by itself, and the volumetric strain is still <code class="docutils literal notranslate"><span class="pre">eps_11</span> <span class="pre">+</span> <span class="pre">eps_22</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>strainOperators</strong> – The strain operators of the cell’s material points, each of shape
+<code class="docutils literal notranslate"><span class="pre">(6,</span> <span class="pre">nCorners</span> <span class="pre">*</span> <span class="pre">nDim)</span></code>.</p></li>
+<li><p><strong>weights</strong> – The weights to average with, one per material point. Defaults to equal weights, which is
+what equal material point volumes call for.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The averaged strain operators, same shapes as the input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.nVoigtComponents">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">nVoigtComponents</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></span><a class="headerlink" href="#edelweissfd.operators.differences.nVoigtComponents" title="Link to this definition"></a></dt>
+<dd><p>The number of components of a symmetric second order tensor in Voigt notation.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.outOfPlaneVoigtIndex">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">outOfPlaneVoigtIndex</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></span><a class="headerlink" href="#edelweissfd.operators.differences.outOfPlaneVoigtIndex" title="Link to this definition"></a></dt>
+<dd><p>The Voigt index of the out-of-plane normal component (zz), in the order above.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.operators.differences.voigtIndexPairs">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.differences.</span></span><span class="sig-name descname"><span class="pre">voigtIndexPairs</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">((0,</span> <span class="pre">0),</span> <span class="pre">(1,</span> <span class="pre">1),</span> <span class="pre">(2,</span> <span class="pre">2),</span> <span class="pre">(0,</span> <span class="pre">1),</span> <span class="pre">(0,</span> <span class="pre">2),</span> <span class="pre">(1,</span> <span class="pre">2))</span></span><a class="headerlink" href="#edelweissfd.operators.differences.voigtIndexPairs" title="Link to this definition"></a></dt>
+<dd><p>The tensor index pair belonging to each Voigt component, in Marmot’s convention.</p>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="grids.html" class="btn btn-neutral float-left" title="Grids" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="stencils.html" class="btn btn-neutral float-right" title="Stencils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,735 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Running a simulation &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="The model tree" href="models.html" />
+    <link rel="prev" title="Materials" href="materials.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="grids.html">Grids</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operators.html">Finite difference operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stencils.html">Stencils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Running a simulation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation"><code class="docutils literal notranslate"><span class="pre">FDSimulation</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addNodeFieldOutput"><code class="docutils literal notranslate"><span class="pre">FDSimulation.addNodeFieldOutput()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addOutputManager"><code class="docutils literal notranslate"><span class="pre">FDSimulation.addOutputManager()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addStencilFieldOutput"><code class="docutils literal notranslate"><span class="pre">FDSimulation.addStencilFieldOutput()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignNodalStencils"><code class="docutils literal notranslate"><span class="pre">FDSimulation.assignNodalStencils()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils"><code class="docutils literal notranslate"><span class="pre">FDSimulation.assignStencils()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createMaterial"><code class="docutils literal notranslate"><span class="pre">FDSimulation.createMaterial()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createNodeSet"><code class="docutils literal notranslate"><span class="pre">FDSimulation.createNodeSet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createSolver"><code class="docutils literal notranslate"><span class="pre">FDSimulation.createSolver()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStep"><code class="docutils literal notranslate"><span class="pre">FDSimulation.createStep()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStructuredGrid"><code class="docutils literal notranslate"><span class="pre">FDSimulation.createStructuredGrid()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.run"><code class="docutils literal notranslate"><span class="pre">FDSimulation.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.identification"><code class="docutils literal notranslate"><span class="pre">FDSimulation.identification</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep"><code class="docutils literal notranslate"><span class="pre">FDStep</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addBodyForce"><code class="docutils literal notranslate"><span class="pre">FDStep.addBodyForce()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet"><code class="docutils literal notranslate"><span class="pre">FDStep.addDirichlet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addIndirectControl"><code class="docutils literal notranslate"><span class="pre">FDStep.addIndirectControl()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNeumann"><code class="docutils literal notranslate"><span class="pre">FDStep.addNeumann()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNodeForces"><code class="docutils literal notranslate"><span class="pre">FDStep.addNodeForces()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addSolverOptions"><code class="docutils literal notranslate"><span class="pre">FDStep.addSolverOptions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.toStepDefinition"><code class="docutils literal notranslate"><span class="pre">FDStep.toStepDefinition()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.componentDefaults"><code class="docutils literal notranslate"><span class="pre">componentDefaults</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.dirichletDefaults"><code class="docutils literal notranslate"><span class="pre">dirichletDefaults</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.nodeForcesDefaults"><code class="docutils literal notranslate"><span class="pre">nodeForcesDefaults</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.stepDefaults"><code class="docutils literal notranslate"><span class="pre">stepDefaults</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.stepTypesBySolver"><code class="docutils literal notranslate"><span class="pre">stepTypesBySolver</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stepactions.tractionnodalload">Boundary conditions of a structured grid</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad"><code class="docutils literal notranslate"><span class="pre">TractionNodalLoad</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stepactions.tractionnodalload.stepActionModule"><code class="docutils literal notranslate"><span class="pre">stepActionModule</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">The model tree</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Documentation</a></li>
+      <li class="breadcrumb-item active">Running a simulation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/documentation/drivers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="running-a-simulation">
+<h1>Running a simulation<a class="headerlink" href="#running-a-simulation" title="Link to this heading"></a></h1>
+<p>Relevant module <code class="docutils literal notranslate"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation</span></code></p>
+<p id="module-edelweissfd.drivers.pythonscriptedsimulation">The Python scripting interface of EdelweissFD.</p>
+<p><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation"><code class="xref py py-class docutils literal notranslate"><span class="pre">FDSimulation</span></code></a> is the finite difference counterpart of
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/jobs.html#edelweissfe.drivers.inputfiledrivensimulation.finiteElementSimulation" title="(in EdelweissFE)"><code class="xref py py-func docutils literal notranslate"><span class="pre">edelweissfe.drivers.inputfiledrivensimulation.finiteElementSimulation()</span></code></a>. It follows
+the very same sequence – build the model, prepare the variables and fields, create the
+field outputs and output managers, load the solver configuration, then dequeue and solve
+the steps – but it constructs the objects directly instead of parsing an input file.</p>
+<p>A simulation is written as an ordinary Python script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sim</span> <span class="o">=</span> <span class="n">FDSimulation</span><span class="p">(</span><span class="n">domainSize</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"TensionBar1D"</span><span class="p">)</span>
+
+<span class="n">grid</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createStructuredGrid</span><span class="p">(</span><span class="n">lengths</span><span class="o">=</span><span class="p">[</span><span class="mf">100.0</span><span class="p">],</span> <span class="n">nGridPoints</span><span class="o">=</span><span class="p">[</span><span class="mi">101</span><span class="p">])</span>
+<span class="n">material</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createMaterial</span><span class="p">(</span><span class="s2">"LinearElastic"</span><span class="p">,</span> <span class="p">[</span><span class="mf">20000.0</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">])</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">assignStencils</span><span class="p">(</span><span class="n">DisplacementStencil</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">material</span><span class="o">=</span><span class="n">material</span><span class="p">,</span>
+                   <span class="n">stressState</span><span class="o">=</span><span class="s2">"uniaxial stress"</span><span class="p">)</span>
+
+<span class="n">step</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createStep</span><span class="p">(</span><span class="n">stepLength</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">maxInc</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+<span class="n">step</span><span class="o">.</span><span class="n">addDirichlet</span><span class="p">(</span><span class="s2">"clamped"</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="s2">"left"</span><span class="p">],</span> <span class="s2">"displacement"</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
+<span class="n">step</span><span class="o">.</span><span class="n">addNeumann</span><span class="p">(</span><span class="s2">"pulled"</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="s2">"right"</span><span class="p">,</span> <span class="s2">"displacement"</span><span class="p">,</span> <span class="p">[</span><span class="mf">10.0</span><span class="p">])</span>
+
+<span class="n">sim</span><span class="o">.</span><span class="n">addNodeFieldOutput</span><span class="p">(</span><span class="s2">"displacement"</span><span class="p">,</span> <span class="s2">"displacement"</span><span class="p">,</span> <span class="s2">"U"</span><span class="p">,</span>
+                       <span class="n">nodeSet</span><span class="o">=</span><span class="n">grid</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="s2">"all"</span><span class="p">])</span>
+
+<span class="n">model</span><span class="p">,</span> <span class="n">fieldOutputs</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">FDSimulation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">domainSize</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'edelweissfd'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">startTime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation" title="Link to this definition"></a></dt>
+<dd><p>A finite difference simulation, set up and run from a Python script.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>domainSize</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The spatial dimension of the simulation.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the job.</p></li>
+<li><p><strong>verbose</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Be verbose during the simulation.</p></li>
+<li><p><strong>startTime</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time the simulation starts at.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addNodeFieldOutput">
+<span class="sig-name descname"><span class="pre">addNodeFieldOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'U'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeSet</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveHistory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.addNodeFieldOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addNodeFieldOutput" title="Link to this definition"></a></dt>
+<dd><p>Request a field output of nodal values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the field output.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The field, e.g. <code class="docutils literal notranslate"><span class="pre">displacement</span></code>.</p></li>
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The result entry of the node field, i.e. <code class="docutils literal notranslate"><span class="pre">U</span></code> or <code class="docutils literal notranslate"><span class="pre">P</span></code>.</p></li>
+<li><p><strong>nodeSet</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/sets.html#edelweissfe.sets.nodeset.NodeSet" title="(in EdelweissFE)"><em>NodeSet</em></a>) – The node set to restrict the output to. Defaults to all nodes.</p></li>
+<li><p><strong>saveHistory</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Save the complete history instead of only the last result.</p></li>
+<li><p><strong>f_x</strong> – A callable post-processing the result.</p></li>
+<li><p><strong>export</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The base name of a csv file the result is exported to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addOutputManager">
+<span class="sig-name descname"><span class="pre">addOutputManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">managerType</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.addOutputManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addOutputManager" title="Link to this definition"></a></dt>
+<dd><p>Request an output manager, e.g. a monitor printing a field output every increment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>managerType</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The type of the output manager, e.g. <code class="docutils literal notranslate"><span class="pre">monitor</span></code> or <code class="docutils literal notranslate"><span class="pre">statusfile</span></code>.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the output manager.</p></li>
+<li><p><strong>options</strong> – Options passed on to the output manager, e.g. <code class="docutils literal notranslate"><span class="pre">fieldOutput</span></code> for a monitor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addStencilFieldOutput">
+<span class="sig-name descname"><span class="pre">addStencilFieldOutput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stencils</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">materialPoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveHistory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">f_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.addStencilFieldOutput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addStencilFieldOutput" title="Link to this definition"></a></dt>
+<dd><p>Request a field output of stencil results, e.g. the stress.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The result is shaped <code class="docutils literal notranslate"><span class="pre">(nStencils,</span> <span class="pre">nMaterialPoints,</span> <span class="pre">resultSize)</span></code> when more than one
+material point is collected, and squeezed to <code class="docutils literal notranslate"><span class="pre">(nStencils,</span> <span class="pre">resultSize)</span></code> when only
+one is, which is the case for every one dimensional grid. Reshaping with
+<code class="docutils literal notranslate"><span class="pre">.reshape(-1,</span> <span class="pre">resultSize)</span></code> covers both.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the field output.</p></li>
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The result the stencils provide, e.g. <code class="docutils literal notranslate"><span class="pre">stress</span></code> or a material state name.</p></li>
+<li><p><strong>stencils</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a>) – The stencils to collect from. Defaults to all stencils.</p></li>
+<li><p><strong>materialPoints</strong> – The indices of the material points to collect from. Defaults to <em>all</em> material
+points of a stencil, which in two and three dimensions is more than one.</p></li>
+<li><p><strong>saveHistory</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Save the complete history instead of only the last result.</p></li>
+<li><p><strong>f_x</strong> – A callable post-processing the result.</p></li>
+<li><p><strong>export</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The base name of a csv file the result is exported to.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignNodalStencils">
+<span class="sig-name descname"><span class="pre">assignNodalStencils</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencilClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">stencilOptions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.assignNodalStencils"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignNodalStencils" title="Link to this definition"></a></dt>
+<dd><p>Place one stencil on every grid point of a grid, rather than one per cell.</p>
+<p>For a stencil whose material point sits directly at the grid node – e.g. a Generalized
+Finite Difference stencil built from a per-node neighbour cloud, rather than a per-cell
+corner sampling – there is no cell to attach to. Otherwise identical to
+<a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assignStencils()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stencilClass</strong> – The stencil class, e.g.
+<code class="xref py py-class docutils literal notranslate"><span class="pre">GFDMGradientPlasticityStencil</span></code>.</p></li>
+<li><p><strong>grid</strong> (<a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><em>StructuredGrid</em></a>) – The grid to be covered.</p></li>
+<li><p><strong>material</strong> – See <a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assignStencils()</span></code></a>.</p></li>
+<li><p><strong>stencilOptions</strong> – Further keyword arguments passed on to the stencil constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The created stencils.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils">
+<span class="sig-name descname"><span class="pre">assignStencils</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencilClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">material</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">stencilOptions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.assignStencils"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils" title="Link to this definition"></a></dt>
+<dd><p>Place one stencil on every cell of a grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stencilClass</strong> – The stencil class, e.g.
+<a class="reference internal" href="stencils.html#edelweissfd.stencils.displacementstencil.DisplacementStencil" title="edelweissfd.stencils.displacementstencil.DisplacementStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">DisplacementStencil</span></code></a>.</p></li>
+<li><p><strong>grid</strong> (<a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><em>StructuredGrid</em></a>) – The grid to be covered.</p></li>
+<li><p><strong>material</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code>, or a callable taking the
+cell centre coordinates and returning one. The callable form allows a spatially
+varying material. Every stencil is given an instance of its own, because a material
+carries the state variable storage it operates on as mutable state and the solvers
+distribute stencils over threads – see
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code> for the failure this avoids.</p></li>
+<li><p><strong>stencilOptions</strong> – Further keyword arguments passed on to the stencil constructor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The created stencils.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createMaterial">
+<span class="sig-name descname"><span class="pre">createMaterial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">materialName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">materialProperties</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">provider</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'marmotmaterialpoint'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">baseClass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'hypoelastic'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.createMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createMaterial" title="Link to this definition"></a></dt>
+<dd><p>Describe a material, to be instantiated once per stencil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>materialName</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the material, e.g. <code class="docutils literal notranslate"><span class="pre">LinearElastic</span></code> for a Marmot material or
+<code class="docutils literal notranslate"><span class="pre">linearelastic</span></code> for a native one.</p></li>
+<li><p><strong>materialProperties</strong> – The material properties.</p></li>
+<li><p><strong>provider</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – <code class="docutils literal notranslate"><span class="pre">marmotmaterialpoint</span></code> for a Marmot material evaluated point-wise, or
+<code class="docutils literal notranslate"><span class="pre">edelweiss</span></code> for a native EdelweissFE material.</p></li>
+<li><p><strong>baseClass</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – For <code class="docutils literal notranslate"><span class="pre">marmotmaterialpoint</span></code>, the Marmot material base class, i.e. <code class="docutils literal notranslate"><span class="pre">hypoelastic</span></code>,
+<code class="docutils literal notranslate"><span class="pre">gradientEnhancedHypoElastic</span></code> or <code class="docutils literal notranslate"><span class="pre">gradientPlasticityHypoElastic</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A description of the material, not a material itself. See
+<code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code> for why every stencil needs
+an instance of its own.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>MaterialProvider</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createNodeSet">
+<span class="sig-name descname"><span class="pre">createNodeSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.createNodeSet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createNodeSet" title="Link to this definition"></a></dt>
+<dd><p>Create a node set and register it in the model, so boundary conditions can refer to
+it.</p>
+<p>The grids already provide their boundary sets; this is for anything else, e.g. the
+grid points along a symmetry line or a single control point:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">centre</span> <span class="o">=</span> <span class="n">sim</span><span class="o">.</span><span class="n">createNodeSet</span><span class="p">(</span><span class="s2">"centre"</span><span class="p">,</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+                                      <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mf">50.0</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">])</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the node set. It must not collide with an existing one.</p></li>
+<li><p><strong>nodes</strong> – The grid points of the set.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The node set.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>NodeSet</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createSolver">
+<span class="sig-name descname"><span class="pre">createSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solverName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NIST'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">solverOptions</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.createSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createSolver" title="Link to this definition"></a></dt>
+<dd><p>Create a solver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solverName</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the solver, e.g. <code class="docutils literal notranslate"><span class="pre">NIST</span></code>, <code class="docutils literal notranslate"><span class="pre">NISTParallel</span></code> or <code class="docutils literal notranslate"><span class="pre">NISTPArcLength</span></code>.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name to register the solver under. Defaults to <code class="docutils literal notranslate"><span class="pre">solverName</span></code>.</p></li>
+<li><p><strong>solverOptions</strong> – Options passed on to the solver.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>The solver instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStep">
+<span class="sig-name descname"><span class="pre">createStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepType</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.createStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStep" title="Link to this definition"></a></dt>
+<dd><p>Create a simulation step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solver</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the solver to be used. Defaults to the first solver, creating a
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/solvers.html#edelweissfe.solvers.nonlinearimplicitstatic.NIST" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">NIST</span></code></a> if none exists yet.</p></li>
+<li><p><strong>stepType</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The step module of EdelweissFE driving the incrementation, either <code class="docutils literal notranslate"><span class="pre">adaptive</span></code> or
+<code class="docutils literal notranslate"><span class="pre">adaptiveForExplicitSimulations</span></code>. Defaults to whichever the solver needs: the
+explicit solvers reduce the increment size through <code class="docutils literal notranslate"><span class="pre">changeIncrementSize</span></code>, which only
+the latter step provides, so choosing this by hand is only necessary for a solver this
+method does not know about.</p></li>
+<li><p><strong>options</strong> – The options of the step, e.g. <code class="docutils literal notranslate"><span class="pre">stepLength</span></code>, <code class="docutils literal notranslate"><span class="pre">maxInc</span></code>, <code class="docutils literal notranslate"><span class="pre">minInc</span></code>, <code class="docutils literal notranslate"><span class="pre">maxNumInc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">maxIter</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The step.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep" title="edelweissfd.drivers.pythonscriptedsimulation.FDStep">FDStep</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStructuredGrid">
+<span class="sig-name descname"><span class="pre">createStructuredGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nGridPoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.createStructuredGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStructuredGrid" title="Link to this definition"></a></dt>
+<dd><p>Create a structured grid and register it in the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lengths</strong> – The extent of the grid per direction.</p></li>
+<li><p><strong>nGridPoints</strong> – The number of grid points per direction.</p></li>
+<li><p><strong>origin</strong> – The coordinates of the lower left grid point.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the grid. Defaults to <code class="docutils literal notranslate"><span class="pre">grid</span></code> for the first grid.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The grid.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid">StructuredGrid</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDSimulation.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.run" title="Link to this definition"></a></dt>
+<dd><p>Prepare and solve the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The final model tree and the field output controller holding all results.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.identification">
+<span class="sig-name descname"><span class="pre">identification</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'fdCore'</span></span><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.identification" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">FDStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solverName</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepType</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'adaptive'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep" title="Link to this definition"></a></dt>
+<dd><p>A single step of a finite difference simulation.</p>
+<p>Instances are created by <a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStep" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStep"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FDSimulation.createStep()</span></code></a>; do not construct them
+directly.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>number</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The number of this step.</p></li>
+<li><p><strong>solverName</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the solver to be used.</p></li>
+<li><p><strong>options</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – The options of the adaptive step, e.g. <code class="docutils literal notranslate"><span class="pre">stepLength</span></code> or <code class="docutils literal notranslate"><span class="pre">maxInc</span></code>.</p></li>
+<li><p><strong>stepType</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addBodyForce">
+<span class="sig-name descname"><span class="pre">addBodyForce</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stencils</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceVector</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeExpression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.addBodyForce"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addBodyForce" title="Link to this definition"></a></dt>
+<dd><p>Apply a force per unit volume, e.g. gravity, to a set of stencils.</p>
+<p>Like <a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet" title="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addDirichlet()</span></code></a>, the value is the increment applied over this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the load. It doubles as the name of the stencil set registered in the
+model.</p></li>
+<li><p><strong>stencils</strong> – The stencils the load acts on, as returned by
+<a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FDSimulation.assignStencils()</span></code></a>.</p></li>
+<li><p><strong>forceVector</strong> – The increment of the force per unit volume, one entry per spatial direction.</p></li>
+<li><p><strong>amplitudeExpression</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – An optional expression in the step progress <code class="docutils literal notranslate"><span class="pre">t</span></code>, evaluated on <code class="docutils literal notranslate"><span class="pre">[0...1]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet">
+<span class="sig-name descname"><span class="pre">addDirichlet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeSet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeExpression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">analyticalField</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.addDirichlet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet" title="Link to this definition"></a></dt>
+<dd><p>Prescribe field components on a node set.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>Following EdelweissFE, the prescribed values are the <strong>increments applied over
+this step</strong>, not absolute targets. A value of <code class="docutils literal notranslate"><span class="pre">0.2</span></code> in the first step and again
+<code class="docutils literal notranslate"><span class="pre">0.2</span></code> in the second one therefore ends at <code class="docutils literal notranslate"><span class="pre">0.4</span></code>, and unloading back to zero
+takes a value of <code class="docutils literal notranslate"><span class="pre">-0.2</span></code>. A boundary condition which is not mentioned again in a
+later step holds the value it has reached.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the boundary condition. Reusing a name in a later step updates that
+boundary condition instead of creating a new one.</p></li>
+<li><p><strong>nodeSet</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/sets.html#edelweissfe.sets.nodeset.NodeSet" title="(in EdelweissFE)"><em>NodeSet</em></a>) – The node set the boundary condition acts on.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The field the boundary condition acts on, e.g. <code class="docutils literal notranslate"><span class="pre">displacement</span></code>.</p></li>
+<li><p><strong>components</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – The increments applied over this step, keyed by the zero based component index.</p></li>
+<li><p><strong>amplitudeExpression</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – An optional expression in the step progress <code class="docutils literal notranslate"><span class="pre">t</span></code>, evaluated on <code class="docutils literal notranslate"><span class="pre">[0...1]</span></code>.</p></li>
+<li><p><strong>analyticalField</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of an analytical field scaling the prescribed values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addIndirectControl">
+<span class="sig-name descname"><span class="pre">addIndirectControl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">firstNode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">firstWeights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secondNode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">secondWeights</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finalValue</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'displacement'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'indirectcontrol'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.addIndirectControl"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addIndirectControl" title="Link to this definition"></a></dt>
+<dd><p>Control the step by a prescribed relative displacement instead of by a load or a
+boundary displacement.</p>
+<p>This is what allows a softening structure to be followed past a snap-back, where the
+equilibrium path turns back in the controlled displacement and plain displacement
+control has no solution. It requires the arc-length solver, i.e.
+<code class="docutils literal notranslate"><span class="pre">createSolver(&quot;NISTPArcLength&quot;)</span></code>, and switches its controller to
+<code class="docutils literal notranslate"><span class="pre">indirectcontrol</span></code>.</p>
+<p>The controlled quantity is
+<code class="docutils literal notranslate"><span class="pre">firstWeights</span> <span class="pre">.</span> <span class="pre">u(firstNode)</span> <span class="pre">+</span> <span class="pre">secondWeights</span> <span class="pre">.</span> <span class="pre">u(secondNode)</span></code>, which is driven from
+zero to <code class="docutils literal notranslate"><span class="pre">finalValue</span></code> over the step; the classical choice is a pair of nodes on
+either side of the localizing zone with opposite weights, i.e. their relative opening.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>firstNode</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a>) – The first control grid point.</p></li>
+<li><p><strong>firstWeights</strong> – The weights of the first control grid point, one per field component.</p></li>
+<li><p><strong>secondNode</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a>) – The second control grid point.</p></li>
+<li><p><strong>secondWeights</strong> – The weights of the second control grid point, one per field component.</p></li>
+<li><p><strong>finalValue</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The value the controlled quantity reaches at the end of the step.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The field the control acts on.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the step action.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNeumann">
+<span class="sig-name descname"><span class="pre">addNeumann</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">boundary</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">traction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeExpression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.addNeumann"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNeumann" title="Link to this definition"></a></dt>
+<dd><p>Apply a traction on a boundary plane of a grid.</p>
+<p>The traction is converted into consistent nodal forces using the tributary areas of
+the grid points, see
+<a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid.boundaryNodeAreas" title="edelweissfd.grids.structuredgrid.StructuredGrid.boundaryNodeAreas"><code class="xref py py-meth docutils literal notranslate"><span class="pre">boundaryNodeAreas()</span></code></a>. In contrast
+to a fixed force per grid point, this is mesh independent: refining the grid keeps the
+total load the same.</p>
+<p>Like <a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet" title="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addDirichlet()</span></code></a>, the value is the increment applied over this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the load.</p></li>
+<li><p><strong>grid</strong> (<a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><em>StructuredGrid</em></a>) – The grid whose boundary is loaded.</p></li>
+<li><p><strong>boundary</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the boundary node set, e.g. <code class="docutils literal notranslate"><span class="pre">right</span></code> or <code class="docutils literal notranslate"><span class="pre">top</span></code>.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The field the load acts on.</p></li>
+<li><p><strong>traction</strong> – The traction increment applied over this step, one entry per field component.</p></li>
+<li><p><strong>amplitudeExpression</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – An optional expression in the step progress <code class="docutils literal notranslate"><span class="pre">t</span></code>, evaluated on <code class="docutils literal notranslate"><span class="pre">[0...1]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNodeForces">
+<span class="sig-name descname"><span class="pre">addNodeForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeSet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">components</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeExpression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.addNodeForces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNodeForces" title="Link to this definition"></a></dt>
+<dd><p>Apply the same nodal force to every node of a node set.</p>
+<p>Like <a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet" title="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addDirichlet()</span></code></a>, the values are the increments applied over this step, and a
+load which is not mentioned again in a later step is held constant.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the load.</p></li>
+<li><p><strong>nodeSet</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/sets.html#edelweissfe.sets.nodeset.NodeSet" title="(in EdelweissFE)"><em>NodeSet</em></a>) – The node set the load acts on.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The field the load acts on.</p></li>
+<li><p><strong>components</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)"><em>dict</em></a>) – The force increments applied over this step, keyed by the zero based component index.</p></li>
+<li><p><strong>amplitudeExpression</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – An optional expression in the step progress <code class="docutils literal notranslate"><span class="pre">t</span></code>, evaluated on <code class="docutils literal notranslate"><span class="pre">[0...1]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.addSolverOptions">
+<span class="sig-name descname"><span class="pre">addSolverOptions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.addSolverOptions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addSolverOptions" title="Link to this definition"></a></dt>
+<dd><p>Set solver specific options for this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>solver</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the solver the options apply to, as registered by
+<a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createSolver" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createSolver"><code class="xref py py-meth docutils literal notranslate"><span class="pre">FDSimulation.createSolver()</span></code></a>. Defaults to the solver of this step.</p></li>
+<li><p><strong>options</strong> – The options, e.g. <code class="docutils literal notranslate"><span class="pre">extrapolation=&quot;off&quot;</span></code>, validated against the option schema of
+that solver.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.FDStep.toStepDefinition">
+<span class="sig-name descname"><span class="pre">toStepDefinition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/drivers/pythonscriptedsimulation.html#FDStep.toStepDefinition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.FDStep.toStepDefinition" title="Link to this definition"></a></dt>
+<dd><p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">StepDefinition</span></code> of this step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>StepDefinition</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.componentDefaults">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">componentDefaults</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'1':</span> <span class="pre">None,</span> <span class="pre">'2':</span> <span class="pre">None,</span> <span class="pre">'3':</span> <span class="pre">None,</span> <span class="pre">'4':</span> <span class="pre">None,</span> <span class="pre">'5':</span> <span class="pre">None,</span> <span class="pre">'6':</span> <span class="pre">None}</span></span><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.componentDefaults" title="Link to this definition"></a></dt>
+<dd><p>The component keys every prescribed-value step action of EdelweissFE reads unconditionally.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.dirichletDefaults">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">dirichletDefaults</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'1':</span> <span class="pre">None,</span> <span class="pre">'2':</span> <span class="pre">None,</span> <span class="pre">'3':</span> <span class="pre">None,</span> <span class="pre">'4':</span> <span class="pre">None,</span> <span class="pre">'5':</span> <span class="pre">None,</span> <span class="pre">'6':</span> <span class="pre">None,</span> <span class="pre">'analyticalField':</span> <span class="pre">None,</span> <span class="pre">'components':</span> <span class="pre">None,</span> <span class="pre">'f(t)':</span> <span class="pre">None}</span></span><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.dirichletDefaults" title="Link to this definition"></a></dt>
+<dd><p>The defaults of a Dirichlet step action definition; every key is read unconditionally
+by <a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/stepactions.html#module-edelweissfe.stepactions.dirichlet" title="(in EdelweissFE)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.stepactions.dirichlet</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.nodeForcesDefaults">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">nodeForcesDefaults</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'1':</span> <span class="pre">None,</span> <span class="pre">'2':</span> <span class="pre">None,</span> <span class="pre">'3':</span> <span class="pre">None,</span> <span class="pre">'4':</span> <span class="pre">None,</span> <span class="pre">'5':</span> <span class="pre">None,</span> <span class="pre">'6':</span> <span class="pre">None,</span> <span class="pre">'components':</span> <span class="pre">None,</span> <span class="pre">'f(t)':</span> <span class="pre">None}</span></span><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.nodeForcesDefaults" title="Link to this definition"></a></dt>
+<dd><p>The defaults of a nodal force step action definition, cf.
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/stepactions.html#module-edelweissfe.stepactions.nodeforces" title="(in EdelweissFE)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.stepactions.nodeforces</span></code></a>, which knows no analytical field.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.stepDefaults">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">stepDefaults</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'criticalIter':</span> <span class="pre">5,</span> <span class="pre">'maxInc':</span> <span class="pre">1.0,</span> <span class="pre">'maxIter':</span> <span class="pre">25,</span> <span class="pre">'maxNumInc':</span> <span class="pre">1000,</span> <span class="pre">'minInc':</span> <span class="pre">1e-05,</span> <span class="pre">'stepLength':</span> <span class="pre">1.0}</span></span><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.stepDefaults" title="Link to this definition"></a></dt>
+<dd><p>The default options of an adaptive step.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.drivers.pythonscriptedsimulation.stepTypesBySolver">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.drivers.pythonscriptedsimulation.</span></span><span class="sig-name descname"><span class="pre">stepTypesBySolver</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'NED':</span> <span class="pre">'adaptiveForExplicitSimulations',</span> <span class="pre">'NEDParallel':</span> <span class="pre">'adaptiveForExplicitSimulations',</span> <span class="pre">'NEST':</span> <span class="pre">'adaptiveForExplicitSimulations',</span> <span class="pre">'NESTParallel':</span> <span class="pre">'adaptiveForExplicitSimulations'}</span></span><a class="headerlink" href="#edelweissfd.drivers.pythonscriptedsimulation.stepTypesBySolver" title="Link to this definition"></a></dt>
+<dd><p>The step module each solver needs to drive its incrementation.</p>
+<p>The explicit solvers ask the step to scale the increment size through <code class="docutils literal notranslate"><span class="pre">changeIncrementSize</span></code>,
+which only <code class="docutils literal notranslate"><span class="pre">adaptiveForExplicitSimulations</span></code> provides – with the plain <code class="docutils literal notranslate"><span class="pre">adaptive</span></code> step they
+fail with an <code class="docutils literal notranslate"><span class="pre">AttributeError</span></code> on the first increment. Anything not listed here gets the plain
+adaptive step.</p>
+</dd></dl>
+
+<section id="module-edelweissfd.stepactions.tractionnodalload">
+<span id="boundary-conditions-of-a-structured-grid"></span><h2>Boundary conditions of a structured grid<a class="headerlink" href="#module-edelweissfd.stepactions.tractionnodalload" title="Link to this heading"></a></h2>
+<p>A Neumann boundary condition for a structured grid.</p>
+<p>In the finite difference scheme of EdelweissFD a prescribed traction enters the momentum
+balance as equivalent nodal forces, obtained by multiplying the traction with the tributary
+area of each grid point of the boundary plane. Since these areas differ between the
+interior of a boundary plane and its rim, the loads are node-wise, which
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/stepactions.html#module-edelweissfe.stepactions.nodeforces" title="(in EdelweissFE)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.stepactions.nodeforces</span></code></a> cannot express – it applies the same load to
+every node of a set.</p>
+<p>The action is a plain
+<code class="xref py py-class docutils literal notranslate"><span class="pre">NodalLoadBase</span></code>, so the solvers of
+EdelweissFE consume it exactly like nodal forces. It is registered under the
+<code class="docutils literal notranslate"><span class="pre">nodeforces</span></code> module key of the step manager, which is the key the solvers read.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.TractionNodalLoad">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stepactions.tractionnodalload.</span></span><span class="sig-name descname"><span class="pre">TractionNodalLoad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">field</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodeSet</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodalLoads</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitudeExpression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stepactions/tractionnodalload.html#TractionNodalLoad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad" title="Link to this definition"></a></dt>
+<dd><p>A traction on a boundary plane of a structured grid, converted to consistent nodal
+forces.</p>
+<p>The load is ramped over the step progress, i.e. it grows linearly from zero at the
+beginning of the step to the full value at its end, unless an amplitude is given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the step action.</p></li>
+<li><p><strong>field</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The field the load acts on.</p></li>
+<li><p><strong>nodeSet</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/sets.html#edelweissfe.sets.nodeset.NodeSet" title="(in EdelweissFE)"><em>NodeSet</em></a>) – The node set of the boundary plane. Its order defines the order of the load array.</p></li>
+<li><p><strong>nodalLoads</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The nodal loads, shape <code class="docutils literal notranslate"><span class="pre">(len(nodeSet),</span> <span class="pre">fieldSize)</span></code>.</p></li>
+<li><p><strong>amplitudeExpression</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – An optional expression in the step progress <code class="docutils literal notranslate"><span class="pre">t</span></code>, evaluated on <code class="docutils literal notranslate"><span class="pre">[0...1]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.applyAtStepEnd">
+<span class="sig-name descname"><span class="pre">applyAtStepEnd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stepMagnitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stepactions/tractionnodalload.html#TractionNodalLoad.applyAtStepEnd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.applyAtStepEnd" title="Link to this definition"></a></dt>
+<dd><p>Freeze the load reached at the end of the step, so it is held constant in
+subsequent steps unless updated.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.getCurrentLoad">
+<span class="sig-name descname"><span class="pre">getCurrentLoad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeStep</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stepactions/tractionnodalload.html#TractionNodalLoad.getCurrentLoad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.getCurrentLoad" title="Link to this definition"></a></dt>
+<dd><p>The nodal loads at the end of the current increment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timeStep</strong> (<em>TimeStep</em>) – The current time step.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The nodal loads, shape <code class="docutils literal notranslate"><span class="pre">(len(nodeSet),</span> <span class="pre">fieldSize)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.updateStepAction">
+<span class="sig-name descname"><span class="pre">updateStepAction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">action</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jobInfo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fieldOutputController</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">journal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stepactions/tractionnodalload.html#TractionNodalLoad.updateStepAction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.updateStepAction" title="Link to this definition"></a></dt>
+<dd><p>Continue with the load reached at the end of the previous step.</p>
+<p>The signature is the one the step manager uses; <code class="docutils literal notranslate"><span class="pre">action</span></code> may carry the keys
+<code class="docutils literal notranslate"><span class="pre">nodalLoads</span></code> and <code class="docutils literal notranslate"><span class="pre">f(t)</span></code> to change the load in a subsequent step.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.field">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">field</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a></span><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.field" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.nodeSet">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nodeSet</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/sets.html#edelweissfe.sets.nodeset.NodeSet" title="(in EdelweissFE)"><span class="pre">NodeSet</span></a></span><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.TractionNodalLoad.nodeSet" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stepactions.tractionnodalload.stepActionModule">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stepactions.tractionnodalload.</span></span><span class="sig-name descname"><span class="pre">stepActionModule</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'nodeforces'</span></span><a class="headerlink" href="#edelweissfd.stepactions.tractionnodalload.stepActionModule" title="Link to this definition"></a></dt>
+<dd><p>The step manager module key the solvers read nodal loads from.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="materials.html" class="btn btn-neutral float-left" title="Materials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="models.html" class="btn btn-neutral float-right" title="The model tree" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

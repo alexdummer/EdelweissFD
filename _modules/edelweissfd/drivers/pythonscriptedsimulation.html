@@ -1,0 +1,1255 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edelweissfd.drivers.pythonscriptedsimulation &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">edelweissfd.drivers.pythonscriptedsimulation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for edelweissfd.drivers.pythonscriptedsimulation</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1">#  _____    _      _              _         _____ _____ ____</span>
+<span class="c1"># | ____|__| | ___| |_      _____(_)___ ___|  ___|  ___|  _ \</span>
+<span class="c1"># |  _| / _` |/ _ \ \ \ /\ / / _ \ / __/ __| |_  | |_  | | | |</span>
+<span class="c1"># | |__| (_| |  __/ |\ V  V /  __/ \__ \__ \  _| |  _| | |_| |</span>
+<span class="c1"># |_____\__,_|\___|_| \_/\_/ \___|_|___/___/_|   |_|   |____/</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#  Unit of Strength of Materials and Structural Analysis</span>
+<span class="c1">#  University of Innsbruck,</span>
+<span class="c1">#  2017 - today</span>
+<span class="c1">#</span>
+<span class="c1">#  Alexander Dummer alexander.dummer@uibk.ac.at</span>
+<span class="c1">#</span>
+<span class="c1">#  This file is part of EdelweissFD.</span>
+<span class="c1">#</span>
+<span class="c1">#  This library is free software; you can redistribute it and/or</span>
+<span class="c1">#  modify it under the terms of the GNU Lesser General Public</span>
+<span class="c1">#  License as published by the Free Software Foundation; either</span>
+<span class="c1">#  version 2.1 of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  The full text of the license can be found in the file LICENSE.md at</span>
+<span class="c1">#  the top level directory of EdelweissFD.</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+
+<span class="sd">"""</span>
+<span class="sd">The Python scripting interface of EdelweissFD.</span>
+
+<span class="sd">:class:`FDSimulation` is the finite difference counterpart of</span>
+<span class="sd">:func:`edelweissfe.drivers.inputfiledrivensimulation.finiteElementSimulation`. It follows</span>
+<span class="sd">the very same sequence -- build the model, prepare the variables and fields, create the</span>
+<span class="sd">field outputs and output managers, load the solver configuration, then dequeue and solve</span>
+<span class="sd">the steps -- but it constructs the objects directly instead of parsing an input file.</span>
+
+<span class="sd">A simulation is written as an ordinary Python script::</span>
+
+<span class="sd">    sim = FDSimulation(domainSize=1, name="TensionBar1D")</span>
+
+<span class="sd">    grid = sim.createStructuredGrid(lengths=[100.0], nGridPoints=[101])</span>
+<span class="sd">    material = sim.createMaterial("LinearElastic", [20000.0, 0.2])</span>
+
+<span class="sd">    sim.assignStencils(DisplacementStencil, grid, material=material,</span>
+<span class="sd">                       stressState="uniaxial stress")</span>
+
+<span class="sd">    step = sim.createStep(stepLength=1.0, maxInc=0.5)</span>
+<span class="sd">    step.addDirichlet("clamped", grid.nodeSets["left"], "displacement", {0: 0.0})</span>
+<span class="sd">    step.addNeumann("pulled", grid, "right", "displacement", [10.0])</span>
+
+<span class="sd">    sim.addNodeFieldOutput("displacement", "displacement", "U",</span>
+<span class="sd">                           nodeSet=grid.nodeSets["all"])</span>
+
+<span class="sd">    model, fieldOutputs = sim.run()</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">time</span> <span class="k">as</span> <span class="n">getCurrentTime</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">registry</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.config.configurator</span><span class="w"> </span><span class="kn">import</span> <span class="n">loadConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.config.materiallibrary</span><span class="w"> </span><span class="kn">import</span> <span class="n">getMaterialClass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.config.solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">getSolverByName</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.journal.journal</span><span class="w"> </span><span class="kn">import</span> <span class="n">Journal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.points.node</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.sets.nodeset</span><span class="w"> </span><span class="kn">import</span> <span class="n">NodeSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.steps.stepmanager</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">StepActionDefinition</span><span class="p">,</span>
+    <span class="n">StepDefinition</span><span class="p">,</span>
+    <span class="n">StepManager</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.utils.exceptions</span><span class="w"> </span><span class="kn">import</span> <span class="n">StepFailed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.utils.fieldoutput</span><span class="w"> </span><span class="kn">import</span> <span class="n">FieldOutputController</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.utils.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">buildSchemaFromOptions</span><span class="p">,</span> <span class="n">optionNames</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.grids.structuredgrid</span><span class="w"> </span><span class="kn">import</span> <span class="n">StructuredGrid</span><span class="p">,</span> <span class="n">boundarySetNames</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.materials.provider</span><span class="w"> </span><span class="kn">import</span> <span class="n">MaterialProvider</span><span class="p">,</span> <span class="n">materialInstanceFrom</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.models.fdmodel</span><span class="w"> </span><span class="kn">import</span> <span class="n">FDModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.sets.stencilset</span><span class="w"> </span><span class="kn">import</span> <span class="n">StencilSet</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.stepactions</span><span class="w"> </span><span class="kn">import</span> <span class="n">tractionnodalload</span>
+
+<span class="c1">#: The component keys every prescribed-value step action of EdelweissFE reads unconditionally.</span>
+<span class="n">componentDefaults</span> <span class="o">=</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">component</span><span class="p">):</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)}</span>
+
+<span class="c1">#: The defaults of a Dirichlet step action definition; every key is read unconditionally</span>
+<span class="c1">#: by :mod:`edelweissfe.stepactions.dirichlet`.</span>
+<span class="n">dirichletDefaults</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"components"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"analyticalField"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"f(t)"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">componentDefaults</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: The defaults of a nodal force step action definition, cf.</span>
+<span class="c1">#: :mod:`edelweissfe.stepactions.nodeforces`, which knows no analytical field.</span>
+<span class="n">nodeForcesDefaults</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"components"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">"f(t)"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">componentDefaults</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: The step module each solver needs to drive its incrementation.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The explicit solvers ask the step to scale the increment size through ``changeIncrementSize``,</span>
+<span class="c1">#: which only ``adaptiveForExplicitSimulations`` provides -- with the plain ``adaptive`` step they</span>
+<span class="c1">#: fail with an ``AttributeError`` on the first increment. Anything not listed here gets the plain</span>
+<span class="c1">#: adaptive step.</span>
+<span class="n">stepTypesBySolver</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"NEST"</span><span class="p">:</span> <span class="s2">"adaptiveForExplicitSimulations"</span><span class="p">,</span>
+    <span class="s2">"NESTParallel"</span><span class="p">:</span> <span class="s2">"adaptiveForExplicitSimulations"</span><span class="p">,</span>
+    <span class="s2">"NED"</span><span class="p">:</span> <span class="s2">"adaptiveForExplicitSimulations"</span><span class="p">,</span>
+    <span class="s2">"NEDParallel"</span><span class="p">:</span> <span class="s2">"adaptiveForExplicitSimulations"</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="c1">#: The default options of an adaptive step.</span>
+<span class="n">stepDefaults</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"stepLength"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="s2">"maxInc"</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="s2">"minInc"</span><span class="p">:</span> <span class="mf">1e-5</span><span class="p">,</span>
+    <span class="s2">"maxNumInc"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">"maxIter"</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+    <span class="s2">"criticalIter"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="FDStep">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FDStep</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A single step of a finite difference simulation.</span>
+
+<span class="sd">    Instances are created by :meth:`FDSimulation.createStep`; do not construct them</span>
+<span class="sd">    directly.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    number</span>
+<span class="sd">        The number of this step.</span>
+<span class="sd">    solverName</span>
+<span class="sd">        The name of the solver to be used.</span>
+<span class="sd">    options</span>
+<span class="sd">        The options of the adaptive step, e.g. ``stepLength`` or ``maxInc``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">number</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">solverName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">options</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">stepType</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"adaptive"</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="n">number</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solverName</span> <span class="o">=</span> <span class="n">solverName</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stepType</span> <span class="o">=</span> <span class="n">stepType</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">stepDefaults</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prebuiltActions</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1">#: Stencil sets which have to exist in ``model.elementSets`` before the step actions</span>
+        <span class="c1">#: of this step are created, since a body force refers to its set by name.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stencilSetsToRegister</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="FDStep.addDirichlet">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addDirichlet">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addDirichlet</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nodeSet</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">components</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">amplitudeExpression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">analyticalField</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Prescribe field components on a node set.</span>
+
+<span class="sd">        .. important::</span>
+<span class="sd">            Following EdelweissFE, the prescribed values are the **increments applied over</span>
+<span class="sd">            this step**, not absolute targets. A value of ``0.2`` in the first step and again</span>
+<span class="sd">            ``0.2`` in the second one therefore ends at ``0.4``, and unloading back to zero</span>
+<span class="sd">            takes a value of ``-0.2``. A boundary condition which is not mentioned again in a</span>
+<span class="sd">            later step holds the value it has reached.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the boundary condition. Reusing a name in a later step updates that</span>
+<span class="sd">            boundary condition instead of creating a new one.</span>
+<span class="sd">        nodeSet</span>
+<span class="sd">            The node set the boundary condition acts on.</span>
+<span class="sd">        field</span>
+<span class="sd">            The field the boundary condition acts on, e.g. ``displacement``.</span>
+<span class="sd">        components</span>
+<span class="sd">            The increments applied over this step, keyed by the zero based component index.</span>
+<span class="sd">        amplitudeExpression</span>
+<span class="sd">            An optional expression in the step progress ``t``, evaluated on ``[0...1]``.</span>
+<span class="sd">        analyticalField</span>
+<span class="sd">            The name of an analytical field scaling the prescribed values.</span>
+<span class="sd">        """</span>
+
+        <span class="n">action</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dirichletDefaults</span><span class="p">)</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"nSet"</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodeSet</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"field"</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"f(t)"</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitudeExpression</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"analyticalField"</span><span class="p">]</span> <span class="o">=</span> <span class="n">analyticalField</span>
+
+        <span class="k">for</span> <span class="n">component</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">action</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StepActionDefinition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"dirichlet"</span><span class="p">,</span> <span class="n">action</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="FDStep.addNodeForces">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNodeForces">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addNodeForces</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">nodeSet</span><span class="p">:</span> <span class="n">NodeSet</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">components</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">amplitudeExpression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply the same nodal force to every node of a node set.</span>
+
+<span class="sd">        Like :meth:`addDirichlet`, the values are the increments applied over this step, and a</span>
+<span class="sd">        load which is not mentioned again in a later step is held constant.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the load.</span>
+<span class="sd">        nodeSet</span>
+<span class="sd">            The node set the load acts on.</span>
+<span class="sd">        field</span>
+<span class="sd">            The field the load acts on.</span>
+<span class="sd">        components</span>
+<span class="sd">            The force increments applied over this step, keyed by the zero based component index.</span>
+<span class="sd">        amplitudeExpression</span>
+<span class="sd">            An optional expression in the step progress ``t``, evaluated on ``[0...1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="n">action</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">nodeForcesDefaults</span><span class="p">)</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"nSet"</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodeSet</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"field"</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"f(t)"</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitudeExpression</span>
+
+        <span class="k">for</span> <span class="n">component</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">components</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">action</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">component</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">value</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StepActionDefinition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"nodeforces"</span><span class="p">,</span> <span class="n">action</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="FDStep.addNeumann">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addNeumann">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addNeumann</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">grid</span><span class="p">:</span> <span class="n">StructuredGrid</span><span class="p">,</span>
+        <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">traction</span><span class="p">,</span>
+        <span class="n">amplitudeExpression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply a traction on a boundary plane of a grid.</span>
+
+<span class="sd">        The traction is converted into consistent nodal forces using the tributary areas of</span>
+<span class="sd">        the grid points, see</span>
+<span class="sd">        :meth:`~edelweissfd.grids.structuredgrid.StructuredGrid.boundaryNodeAreas`. In contrast</span>
+<span class="sd">        to a fixed force per grid point, this is mesh independent: refining the grid keeps the</span>
+<span class="sd">        total load the same.</span>
+
+<span class="sd">        Like :meth:`addDirichlet`, the value is the increment applied over this step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the load.</span>
+<span class="sd">        grid</span>
+<span class="sd">            The grid whose boundary is loaded.</span>
+<span class="sd">        boundary</span>
+<span class="sd">            The name of the boundary node set, e.g. ``right`` or ``top``.</span>
+<span class="sd">        field</span>
+<span class="sd">            The field the load acts on.</span>
+<span class="sd">        traction</span>
+<span class="sd">            The traction increment applied over this step, one entry per field component.</span>
+<span class="sd">        amplitudeExpression</span>
+<span class="sd">            An optional expression in the step progress ``t``, evaluated on ``[0...1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="n">direction</span><span class="p">,</span> <span class="n">index</span> <span class="o">=</span> <span class="n">_locateBoundary</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">boundary</span><span class="p">)</span>
+
+        <span class="n">nodeSet</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="n">boundary</span><span class="p">]</span>
+        <span class="n">areas</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">boundaryNodeAreas</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span>
+
+        <span class="n">traction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">traction</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">nodalLoads</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">areas</span><span class="p">[</span><span class="n">node</span><span class="p">]</span> <span class="o">*</span> <span class="n">traction</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">nodeSet</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prebuiltActions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">tractionnodalload</span><span class="o">.</span><span class="n">stepActionModule</span><span class="p">,</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">tractionnodalload</span><span class="o">.</span><span class="n">TractionNodalLoad</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">nodeSet</span><span class="p">,</span> <span class="n">nodalLoads</span><span class="p">,</span> <span class="n">amplitudeExpression</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="FDStep.addBodyForce">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addBodyForce">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addBodyForce</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">stencils</span><span class="p">,</span>
+        <span class="n">forceVector</span><span class="p">,</span>
+        <span class="n">amplitudeExpression</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Apply a force per unit volume, e.g. gravity, to a set of stencils.</span>
+
+<span class="sd">        Like :meth:`addDirichlet`, the value is the increment applied over this step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the load. It doubles as the name of the stencil set registered in the</span>
+<span class="sd">            model.</span>
+<span class="sd">        stencils</span>
+<span class="sd">            The stencils the load acts on, as returned by</span>
+<span class="sd">            :meth:`FDSimulation.assignStencils`.</span>
+<span class="sd">        forceVector</span>
+<span class="sd">            The increment of the force per unit volume, one entry per spatial direction.</span>
+<span class="sd">        amplitudeExpression</span>
+<span class="sd">            An optional expression in the step progress ``t``, evaluated on ``[0...1]``.</span>
+<span class="sd">        """</span>
+
+        <span class="n">forceVector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">forceVector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="n">action</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"elSet"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="c1"># the step action parses this with numpy.fromstring, so plain decimals only</span>
+            <span class="s2">"forceVector"</span><span class="p">:</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">"</span><span class="si">{:.17g}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">component</span><span class="p">))</span> <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="n">forceVector</span><span class="p">),</span>
+            <span class="s2">"f(t)"</span><span class="p">:</span> <span class="n">amplitudeExpression</span><span class="p">,</span>
+            <span class="s2">"delta"</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stencilSetsToRegister</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">stencils</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StepActionDefinition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"bodyforce"</span><span class="p">,</span> <span class="n">action</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="FDStep.addIndirectControl">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addIndirectControl">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addIndirectControl</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">firstNode</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span>
+        <span class="n">firstWeights</span><span class="p">,</span>
+        <span class="n">secondNode</span><span class="p">:</span> <span class="n">Node</span><span class="p">,</span>
+        <span class="n">secondWeights</span><span class="p">,</span>
+        <span class="n">finalValue</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"displacement"</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"indirectcontrol"</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Control the step by a prescribed relative displacement instead of by a load or a</span>
+<span class="sd">        boundary displacement.</span>
+
+<span class="sd">        This is what allows a softening structure to be followed past a snap-back, where the</span>
+<span class="sd">        equilibrium path turns back in the controlled displacement and plain displacement</span>
+<span class="sd">        control has no solution. It requires the arc-length solver, i.e.</span>
+<span class="sd">        ``createSolver("NISTPArcLength")``, and switches its controller to</span>
+<span class="sd">        ``indirectcontrol``.</span>
+
+<span class="sd">        The controlled quantity is</span>
+<span class="sd">        ``firstWeights . u(firstNode) + secondWeights . u(secondNode)``, which is driven from</span>
+<span class="sd">        zero to ``finalValue`` over the step; the classical choice is a pair of nodes on</span>
+<span class="sd">        either side of the localizing zone with opposite weights, i.e. their relative opening.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        firstNode</span>
+<span class="sd">            The first control grid point.</span>
+<span class="sd">        firstWeights</span>
+<span class="sd">            The weights of the first control grid point, one per field component.</span>
+<span class="sd">        secondNode</span>
+<span class="sd">            The second control grid point.</span>
+<span class="sd">        secondWeights</span>
+<span class="sd">            The weights of the second control grid point, one per field component.</span>
+<span class="sd">        finalValue</span>
+<span class="sd">            The value the controlled quantity reaches at the end of the step.</span>
+<span class="sd">        field</span>
+<span class="sd">            The field the control acts on.</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the step action.</span>
+<span class="sd">        """</span>
+
+        <span class="n">action</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span>
+            <span class="s2">"dof1"</span><span class="p">:</span> <span class="s1">'model.nodes[</span><span class="si">{:}</span><span class="s1">].fields["</span><span class="si">{:}</span><span class="s1">"]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">firstNode</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">field</span><span class="p">),</span>
+            <span class="s2">"dof2"</span><span class="p">:</span> <span class="s1">'model.nodes[</span><span class="si">{:}</span><span class="s1">].fields["</span><span class="si">{:}</span><span class="s1">"]'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">secondNode</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">field</span><span class="p">),</span>
+            <span class="s2">"cVector1"</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">firstWeights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))),</span>
+            <span class="s2">"cVector2"</span><span class="p">:</span> <span class="nb">repr</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">secondWeights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))),</span>
+            <span class="s2">"L"</span><span class="p">:</span> <span class="nb">float</span><span class="p">(</span><span class="n">finalValue</span><span class="p">),</span>
+            <span class="s2">"exportCVector"</span><span class="p">:</span> <span class="s2">""</span><span class="p">,</span>
+            <span class="s2">"absolute"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StepActionDefinition</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"indirectcontrol"</span><span class="p">,</span> <span class="n">action</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">addSolverOptions</span><span class="p">(</span><span class="n">arcLengthController</span><span class="o">=</span><span class="s2">"indirectcontrol"</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="FDStep.addSolverOptions">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.addSolverOptions">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addSolverOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Set solver specific options for this step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        solver</span>
+<span class="sd">            The name of the solver the options apply to, as registered by</span>
+<span class="sd">            :meth:`FDSimulation.createSolver`. Defaults to the solver of this step.</span>
+<span class="sd">        options</span>
+<span class="sd">            The options, e.g. ``extrapolation="off"``, validated against the option schema of</span>
+<span class="sd">            that solver.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">solver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solverName</span>
+
+        <span class="n">action</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">action</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">=</span> <span class="n">solver</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">StepActionDefinition</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="s2">"options"</span><span class="p">,</span> <span class="n">action</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="FDStep.toStepDefinition">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDStep.toStepDefinition">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toStepDefinition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StepDefinition</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The :class:`~edelweissfe.steps.stepmanager.StepDefinition` of this step."""</span>
+
+        <span class="n">stepOptions</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">)</span>
+        <span class="n">stepOptions</span><span class="p">[</span><span class="s2">"solver"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solverName</span>
+
+        <span class="k">return</span> <span class="n">StepDefinition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stepType</span><span class="p">,</span> <span class="n">stepOptions</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_actionDefinitions</span><span class="p">))</span></div>
+</div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_locateBoundary</span><span class="p">(</span><span class="n">grid</span><span class="p">:</span> <span class="n">StructuredGrid</span><span class="p">,</span> <span class="n">boundary</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The direction normal to a named boundary of a grid and the grid index of that plane.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grid</span>
+<span class="sd">        The grid.</span>
+<span class="sd">    boundary</span>
+<span class="sd">        The name of the boundary node set.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        The normal direction and the grid index along it.</span>
+<span class="sd">    """</span>
+
+    <span class="k">for</span> <span class="n">direction</span><span class="p">,</span> <span class="p">(</span><span class="n">lowerName</span><span class="p">,</span> <span class="n">upperName</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">boundarySetNames</span><span class="p">[:</span> <span class="n">grid</span><span class="o">.</span><span class="n">nDim</span><span class="p">]):</span>
+        <span class="k">if</span> <span class="n">boundary</span> <span class="o">==</span> <span class="n">lowerName</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">direction</span><span class="p">,</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">boundary</span> <span class="o">==</span> <span class="n">upperName</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">direction</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="n">validNames</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">names</span> <span class="ow">in</span> <span class="n">boundarySetNames</span><span class="p">[:</span> <span class="n">grid</span><span class="o">.</span><span class="n">nDim</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">]</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"'</span><span class="si">{:}</span><span class="s2">' is not a boundary of this grid; valid are </span><span class="si">{:}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">boundary</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">validNames</span><span class="p">)))</span>
+
+
+<div class="viewcode-block" id="FDSimulation">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FDSimulation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A finite difference simulation, set up and run from a Python script.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    domainSize</span>
+<span class="sd">        The spatial dimension of the simulation.</span>
+<span class="sd">    name</span>
+<span class="sd">        The name of the job.</span>
+<span class="sd">    verbose</span>
+<span class="sd">        Be verbose during the simulation.</span>
+<span class="sd">    startTime</span>
+<span class="sd">        The time the simulation starts at.</span>
+<span class="sd">    """</span>
+
+    <span class="n">identification</span> <span class="o">=</span> <span class="s2">"fdCore"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domainSize</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"edelweissfd"</span><span class="p">,</span> <span class="n">verbose</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">startTime</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">startTime</span> <span class="o">=</span> <span class="n">startTime</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">journal</span> <span class="o">=</span> <span class="n">Journal</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">FDModel</span><span class="p">(</span><span class="n">domainSize</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solvers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_solverTypes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodeFieldOutputRequests</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stencilFieldOutputRequests</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outputManagerRequests</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nextStencilNumber</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nextNodeLabel</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="c1"># The default tolerances and solver options; solvers read them at construction, so</span>
+        <span class="c1"># the configuration has to be in place before the first solver is created.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">jobInfo</span> <span class="o">=</span> <span class="n">loadConfiguration</span><span class="p">({</span><span class="s2">"name"</span><span class="p">:</span> <span class="n">name</span><span class="p">,</span> <span class="s2">"domainSize"</span><span class="p">:</span> <span class="n">domainSize</span><span class="p">,</span> <span class="s2">"computationTime"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">})</span>
+
+    <span class="c1"># -- model construction -------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="FDSimulation.createStructuredGrid">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStructuredGrid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">createStructuredGrid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">nGridPoints</span><span class="p">,</span> <span class="n">origin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StructuredGrid</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a structured grid and register it in the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lengths</span>
+<span class="sd">            The extent of the grid per direction.</span>
+<span class="sd">        nGridPoints</span>
+<span class="sd">            The number of grid points per direction.</span>
+<span class="sd">        origin</span>
+<span class="sd">            The coordinates of the lower left grid point.</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the grid. Defaults to ``grid`` for the first grid.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        StructuredGrid</span>
+<span class="sd">            The grid.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">"grid"</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">grids</span> <span class="k">else</span> <span class="s2">"grid</span><span class="si">{:}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">grids</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">grid</span> <span class="o">=</span> <span class="n">StructuredGrid</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">lengths</span><span class="p">,</span>
+            <span class="n">nGridPoints</span><span class="p">,</span>
+            <span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span>
+            <span class="n">firstNodeLabel</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_nextNodeLabel</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nextNodeLabel</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">addGrid</span><span class="p">(</span><span class="n">grid</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s2">"Created </span><span class="si">{:}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">grid</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">grid</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.createNodeSet">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createNodeSet">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">createNodeSet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">nodes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">NodeSet</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a node set and register it in the model, so boundary conditions can refer to</span>
+<span class="sd">        it.</span>
+
+<span class="sd">        The grids already provide their boundary sets; this is for anything else, e.g. the</span>
+<span class="sd">        grid points along a symmetry line or a single control point::</span>
+
+<span class="sd">            centre = sim.createNodeSet("centre", [n for n in grid.nodes.values()</span>
+<span class="sd">                                                  if abs(n.coordinates[1] - 50.0) &lt; 1e-12])</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the node set. It must not collide with an existing one.</span>
+<span class="sd">        nodes</span>
+<span class="sd">            The grid points of the set.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        NodeSet</span>
+<span class="sd">            The node set.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A node set named '</span><span class="si">{:}</span><span class="s2">' already exists in this model."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">nodeSet</span> <span class="o">=</span> <span class="n">NodeSet</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">nodes</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodeSet</span>
+
+        <span class="k">return</span> <span class="n">nodeSet</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.createMaterial">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createMaterial">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">createMaterial</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">materialName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">materialProperties</span><span class="p">,</span>
+        <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"marmotmaterialpoint"</span><span class="p">,</span>
+        <span class="n">baseClass</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"hypoelastic"</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MaterialProvider</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Describe a material, to be instantiated once per stencil.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        materialName</span>
+<span class="sd">            The name of the material, e.g. ``LinearElastic`` for a Marmot material or</span>
+<span class="sd">            ``linearelastic`` for a native one.</span>
+<span class="sd">        materialProperties</span>
+<span class="sd">            The material properties.</span>
+<span class="sd">        provider</span>
+<span class="sd">            ``marmotmaterialpoint`` for a Marmot material evaluated point-wise, or</span>
+<span class="sd">            ``edelweiss`` for a native EdelweissFE material.</span>
+<span class="sd">        baseClass</span>
+<span class="sd">            For ``marmotmaterialpoint``, the Marmot material base class, i.e. ``hypoelastic``,</span>
+<span class="sd">            ``gradientEnhancedHypoElastic`` or ``gradientPlasticityHypoElastic``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        MaterialProvider</span>
+<span class="sd">            A description of the material, not a material itself. See</span>
+<span class="sd">            :class:`~edelweissfd.materials.provider.MaterialProvider` for why every stencil needs</span>
+<span class="sd">            an instance of its own.</span>
+<span class="sd">        """</span>
+
+        <span class="n">materialProperties</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">materialProperties</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">provider</span> <span class="o">==</span> <span class="s2">"marmotmaterialpoint"</span><span class="p">:</span>
+            <span class="n">materialClass</span> <span class="o">=</span> <span class="n">getMaterialClass</span><span class="p">(</span><span class="n">baseClass</span><span class="p">,</span> <span class="n">provider</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">MaterialProvider</span><span class="p">(</span><span class="n">materialClass</span><span class="p">,</span> <span class="p">(</span><span class="n">materialName</span><span class="o">.</span><span class="n">upper</span><span class="p">(),</span> <span class="n">materialProperties</span><span class="p">))</span>
+
+        <span class="n">materialClass</span> <span class="o">=</span> <span class="n">getMaterialClass</span><span class="p">(</span><span class="n">materialName</span><span class="p">,</span> <span class="n">provider</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">MaterialProvider</span><span class="p">(</span><span class="n">materialClass</span><span class="p">,</span> <span class="p">(</span><span class="n">materialProperties</span><span class="p">,))</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.assignStencils">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assignStencils</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stencilClass</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">StructuredGrid</span><span class="p">,</span> <span class="n">material</span><span class="p">,</span> <span class="o">**</span><span class="n">stencilOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Place one stencil on every cell of a grid.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stencilClass</span>
+<span class="sd">            The stencil class, e.g.</span>
+<span class="sd">            :class:`~edelweissfd.stencils.displacementstencil.DisplacementStencil`.</span>
+<span class="sd">        grid</span>
+<span class="sd">            The grid to be covered.</span>
+<span class="sd">        material</span>
+<span class="sd">            A :class:`~edelweissfd.materials.provider.MaterialProvider`, or a callable taking the</span>
+<span class="sd">            cell centre coordinates and returning one. The callable form allows a spatially</span>
+<span class="sd">            varying material. Every stencil is given an instance of its own, because a material</span>
+<span class="sd">            carries the state variable storage it operates on as mutable state and the solvers</span>
+<span class="sd">            distribute stencils over threads -- see</span>
+<span class="sd">            :mod:`edelweissfd.materials.provider` for the failure this avoids.</span>
+<span class="sd">        stencilOptions</span>
+<span class="sd">            Further keyword arguments passed on to the stencil constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            The created stencils.</span>
+<span class="sd">        """</span>
+
+        <span class="n">stencils</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># a MaterialProvider is not callable, so the two forms cannot be confused</span>
+        <span class="n">materialFactory</span> <span class="o">=</span> <span class="n">material</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">material</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">cellIndex</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">cellIndices</span><span class="p">():</span>
+            <span class="n">stencil</span> <span class="o">=</span> <span class="n">stencilClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nextStencilNumber</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">spacings</span><span class="p">,</span> <span class="o">**</span><span class="n">stencilOptions</span><span class="p">)</span>
+
+            <span class="c1"># setCell rather than setNodes, so that a stencil needing more than the corners of</span>
+            <span class="c1"># its cell -- a Laplacian reaches one grid point further -- can widen its molecule</span>
+            <span class="n">stencil</span><span class="o">.</span><span class="n">setCell</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">cellIndex</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">materialFactory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">provider</span> <span class="o">=</span> <span class="n">materialFactory</span><span class="p">(</span><span class="n">stencil</span><span class="o">.</span><span class="n">getCoordinatesAtCenter</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">provider</span> <span class="o">=</span> <span class="n">material</span>
+
+            <span class="c1"># a fresh instance per stencil, never a shared one</span>
+            <span class="n">stencil</span><span class="o">.</span><span class="n">setMaterial</span><span class="p">(</span><span class="n">materialInstanceFrom</span><span class="p">(</span><span class="n">provider</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">addStencil</span><span class="p">(</span><span class="n">stencil</span><span class="p">)</span>
+
+            <span class="n">stencils</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stencil</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nextStencilNumber</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="o">.</span><span class="n">message</span><span class="p">(</span>
+            <span class="s2">"Assigned </span><span class="si">{:}</span><span class="s2"> </span><span class="si">{:}</span><span class="s2"> stencils on grid '</span><span class="si">{:}</span><span class="s2">'"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stencils</span><span class="p">),</span> <span class="n">stencilClass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stencils</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.assignNodalStencils">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignNodalStencils">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">assignNodalStencils</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stencilClass</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">StructuredGrid</span><span class="p">,</span> <span class="n">material</span><span class="p">,</span> <span class="o">**</span><span class="n">stencilOptions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Place one stencil on every grid point of a grid, rather than one per cell.</span>
+
+<span class="sd">        For a stencil whose material point sits directly at the grid node -- e.g. a Generalized</span>
+<span class="sd">        Finite Difference stencil built from a per-node neighbour cloud, rather than a per-cell</span>
+<span class="sd">        corner sampling -- there is no cell to attach to. Otherwise identical to</span>
+<span class="sd">        :meth:`assignStencils`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        stencilClass</span>
+<span class="sd">            The stencil class, e.g.</span>
+<span class="sd">            :class:`~edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil`.</span>
+<span class="sd">        grid</span>
+<span class="sd">            The grid to be covered.</span>
+<span class="sd">        material</span>
+<span class="sd">            See :meth:`assignStencils`.</span>
+<span class="sd">        stencilOptions</span>
+<span class="sd">            Further keyword arguments passed on to the stencil constructor.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            The created stencils.</span>
+<span class="sd">        """</span>
+
+        <span class="n">stencils</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">materialFactory</span> <span class="o">=</span> <span class="n">material</span> <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">material</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">grid</span><span class="o">.</span><span class="n">nodes</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">stencil</span> <span class="o">=</span> <span class="n">stencilClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nextStencilNumber</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">spacings</span><span class="p">,</span> <span class="o">**</span><span class="n">stencilOptions</span><span class="p">)</span>
+
+            <span class="n">stencil</span><span class="o">.</span><span class="n">setNode</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">materialFactory</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">provider</span> <span class="o">=</span> <span class="n">materialFactory</span><span class="p">(</span><span class="n">stencil</span><span class="o">.</span><span class="n">getCoordinatesAtCenter</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">provider</span> <span class="o">=</span> <span class="n">material</span>
+
+            <span class="n">stencil</span><span class="o">.</span><span class="n">setMaterial</span><span class="p">(</span><span class="n">materialInstanceFrom</span><span class="p">(</span><span class="n">provider</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">addStencil</span><span class="p">(</span><span class="n">stencil</span><span class="p">)</span>
+
+            <span class="n">stencils</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stencil</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nextStencilNumber</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="o">.</span><span class="n">message</span><span class="p">(</span>
+            <span class="s2">"Assigned </span><span class="si">{:}</span><span class="s2"> </span><span class="si">{:}</span><span class="s2"> nodal stencils on grid '</span><span class="si">{:}</span><span class="s2">'"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stencils</span><span class="p">),</span> <span class="n">stencilClass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">grid</span><span class="o">.</span><span class="n">name</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">stencils</span></div>
+
+
+    <span class="c1"># -- steps --------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="FDSimulation.createSolver">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createSolver">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">createSolver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solverName</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"NIST"</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">solverOptions</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create a solver.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        solverName</span>
+<span class="sd">            The name of the solver, e.g. ``NIST``, ``NISTParallel`` or ``NISTPArcLength``.</span>
+<span class="sd">        name</span>
+<span class="sd">            The name to register the solver under. Defaults to ``solverName``.</span>
+<span class="sd">        solverOptions</span>
+<span class="sd">            Options passed on to the solver.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The solver instance.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">solverName</span>
+
+        <span class="n">solverClass</span> <span class="o">=</span> <span class="n">getSolverByName</span><span class="p">(</span><span class="n">solverName</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">solverClass</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jobInfo</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="p">,</span> <span class="o">**</span><span class="n">solverOptions</span><span class="p">)</span>
+
+        <span class="c1"># remembered so that createStep can pick the step module the solver needs, even when the</span>
+        <span class="c1"># solver was registered under a different name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_solverTypes</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">solverName</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="p">[</span><span class="n">name</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.createStep">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.createStep">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">createStep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">solver</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">stepType</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FDStep</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a simulation step.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        solver</span>
+<span class="sd">            The name of the solver to be used. Defaults to the first solver, creating a</span>
+<span class="sd">            :class:`~edelweissfe.solvers.nonlinearimplicitstatic.NIST` if none exists yet.</span>
+<span class="sd">        stepType</span>
+<span class="sd">            The step module of EdelweissFE driving the incrementation, either ``adaptive`` or</span>
+<span class="sd">            ``adaptiveForExplicitSimulations``. Defaults to whichever the solver needs: the</span>
+<span class="sd">            explicit solvers reduce the increment size through ``changeIncrementSize``, which only</span>
+<span class="sd">            the latter step provides, so choosing this by hand is only necessary for a solver this</span>
+<span class="sd">            method does not know about.</span>
+<span class="sd">        options</span>
+<span class="sd">            The options of the step, e.g. ``stepLength``, ``maxInc``, ``minInc``, ``maxNumInc``,</span>
+<span class="sd">            ``maxIter``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        FDStep</span>
+<span class="sd">            The step.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">solver</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">createSolver</span><span class="p">(</span><span class="s2">"NIST"</span><span class="p">)</span>
+
+            <span class="n">solver</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">stepType</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">stepType</span> <span class="o">=</span> <span class="n">stepTypesBySolver</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_solverTypes</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">solver</span><span class="p">,</span> <span class="n">solver</span><span class="p">),</span> <span class="s2">"adaptive"</span><span class="p">)</span>
+
+        <span class="n">step</span> <span class="o">=</span> <span class="n">FDStep</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">),</span> <span class="n">solver</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">stepType</span><span class="o">=</span><span class="n">stepType</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">step</span></div>
+
+
+    <span class="c1"># -- output -------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="FDSimulation.addNodeFieldOutput">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addNodeFieldOutput">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addNodeFieldOutput</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">field</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">result</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"U"</span><span class="p">,</span>
+        <span class="n">nodeSet</span><span class="p">:</span> <span class="n">NodeSet</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">saveHistory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">f_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">export</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Request a field output of nodal values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the field output.</span>
+<span class="sd">        field</span>
+<span class="sd">            The field, e.g. ``displacement``.</span>
+<span class="sd">        result</span>
+<span class="sd">            The result entry of the node field, i.e. ``U`` or ``P``.</span>
+<span class="sd">        nodeSet</span>
+<span class="sd">            The node set to restrict the output to. Defaults to all nodes.</span>
+<span class="sd">        saveHistory</span>
+<span class="sd">            Save the complete history instead of only the last result.</span>
+<span class="sd">        f_x</span>
+<span class="sd">            A callable post-processing the result.</span>
+<span class="sd">        export</span>
+<span class="sd">            The base name of a csv file the result is exported to.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodeFieldOutputRequests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">field</span><span class="o">=</span><span class="n">field</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                <span class="n">nodeSet</span><span class="o">=</span><span class="n">nodeSet</span><span class="p">,</span>
+                <span class="n">saveHistory</span><span class="o">=</span><span class="n">saveHistory</span><span class="p">,</span>
+                <span class="n">f_x</span><span class="o">=</span><span class="n">f_x</span><span class="p">,</span>
+                <span class="n">export</span><span class="o">=</span><span class="n">export</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.addStencilFieldOutput">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addStencilFieldOutput">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addStencilFieldOutput</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">result</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">stencils</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">materialPoints</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">saveHistory</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">f_x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">export</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Request a field output of stencil results, e.g. the stress.</span>
+
+<span class="sd">        .. note::</span>
+<span class="sd">            The result is shaped ``(nStencils, nMaterialPoints, resultSize)`` when more than one</span>
+<span class="sd">            material point is collected, and squeezed to ``(nStencils, resultSize)`` when only</span>
+<span class="sd">            one is, which is the case for every one dimensional grid. Reshaping with</span>
+<span class="sd">            ``.reshape(-1, resultSize)`` covers both.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the field output.</span>
+<span class="sd">        result</span>
+<span class="sd">            The result the stencils provide, e.g. ``stress`` or a material state name.</span>
+<span class="sd">        stencils</span>
+<span class="sd">            The stencils to collect from. Defaults to all stencils.</span>
+<span class="sd">        materialPoints</span>
+<span class="sd">            The indices of the material points to collect from. Defaults to *all* material</span>
+<span class="sd">            points of a stencil, which in two and three dimensions is more than one.</span>
+<span class="sd">        saveHistory</span>
+<span class="sd">            Save the complete history instead of only the last result.</span>
+<span class="sd">        f_x</span>
+<span class="sd">            A callable post-processing the result.</span>
+<span class="sd">        export</span>
+<span class="sd">            The base name of a csv file the result is exported to.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stencilFieldOutputRequests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                <span class="n">stencils</span><span class="o">=</span><span class="n">stencils</span><span class="p">,</span>
+                <span class="n">materialPoints</span><span class="o">=</span><span class="n">materialPoints</span><span class="p">,</span>
+                <span class="n">saveHistory</span><span class="o">=</span><span class="n">saveHistory</span><span class="p">,</span>
+                <span class="n">f_x</span><span class="o">=</span><span class="n">f_x</span><span class="p">,</span>
+                <span class="n">export</span><span class="o">=</span><span class="n">export</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FDSimulation.addOutputManager">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.addOutputManager">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">addOutputManager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">managerType</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Request an output manager, e.g. a monitor printing a field output every increment.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        managerType</span>
+<span class="sd">            The type of the output manager, e.g. ``monitor`` or ``statusfile``.</span>
+<span class="sd">        name</span>
+<span class="sd">            The name of the output manager.</span>
+<span class="sd">        options</span>
+<span class="sd">            Options passed on to the output manager, e.g. ``fieldOutput`` for a monitor.</span>
+<span class="sd">        """</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_outputManagerRequests</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="nb">dict</span><span class="p">(</span><span class="n">managerType</span><span class="o">=</span><span class="n">managerType</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">managerType</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="n">options</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># -- execution ----------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="FDSimulation.run">
+<a class="viewcode-back" href="../../../documentation/drivers.html#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Prepare and solve the simulation.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple</span>
+<span class="sd">            The final model tree and the field output controller holding all results.</span>
+<span class="sd">        """</span>
+
+        <span class="n">journal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">journal</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="n">journal</span><span class="o">.</span><span class="n">printSeperationLine</span><span class="p">()</span>
+        <span class="n">journal</span><span class="o">.</span><span class="n">message</span><span class="p">(</span><span class="s2">"Setting up finite difference model"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+        <span class="n">tic</span> <span class="o">=</span> <span class="n">getCurrentTime</span><span class="p">()</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">prepareYourself</span><span class="p">(</span><span class="n">journal</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">advanceToTime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startTime</span><span class="p">)</span>
+        <span class="n">toc</span> <span class="o">=</span> <span class="n">getCurrentTime</span><span class="p">()</span>
+
+        <span class="n">journal</span><span class="o">.</span><span class="n">printTable</span><span class="p">([(</span><span class="s2">"Model setup time "</span><span class="p">,</span> <span class="s2">"</span><span class="si">{:10.4f}</span><span class="s2">s"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">toc</span> <span class="o">-</span> <span class="n">tic</span><span class="p">))],</span> <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_printModelSummary</span><span class="p">()</span>
+
+        <span class="n">jobInfo</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">jobInfo</span>
+        <span class="n">jobInfo</span><span class="p">[</span><span class="s2">"computationTime"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="c1"># the entries every solver and output manager expects on a node field</span>
+        <span class="k">for</span> <span class="n">nodeField</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">nodeFields</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">nodeField</span><span class="o">.</span><span class="n">createFieldValueEntry</span><span class="p">(</span><span class="s2">"U"</span><span class="p">)</span>
+            <span class="n">nodeField</span><span class="o">.</span><span class="n">createFieldValueEntry</span><span class="p">(</span><span class="s2">"P"</span><span class="p">)</span>
+
+        <span class="n">model</span><span class="o">.</span><span class="n">_linkFieldVariableObjects</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">nodeSets</span><span class="p">[</span><span class="s2">"all"</span><span class="p">])</span>
+
+        <span class="n">fieldOutputController</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_createFieldOutputController</span><span class="p">()</span>
+        <span class="n">fieldOutputController</span><span class="o">.</span><span class="n">initializeJob</span><span class="p">()</span>
+
+        <span class="c1"># kept accessible, so that the results gathered up to a failed step can be inspected</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fieldOutputController</span> <span class="o">=</span> <span class="n">fieldOutputController</span>
+
+        <span class="n">outputManagers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_createOutputManagers</span><span class="p">(</span><span class="n">fieldOutputController</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">outputManager</span> <span class="ow">in</span> <span class="n">outputManagers</span><span class="p">:</span>
+            <span class="n">outputManager</span><span class="o">.</span><span class="n">initializeJob</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">createSolver</span><span class="p">(</span><span class="s2">"NIST"</span><span class="p">)</span>
+
+        <span class="n">solvers</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="p">)</span>
+        <span class="n">solvers</span><span class="p">[</span><span class="s2">"default"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solvers</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+
+        <span class="c1"># the options step action resolves the solver or output manager it configures by name</span>
+        <span class="c1"># against these, see edelweissfe.stepactions.options</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">solvers</span> <span class="o">=</span> <span class="n">solvers</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">outputManagers</span> <span class="o">=</span> <span class="p">{</span><span class="n">outputManager</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">outputManager</span> <span class="k">for</span> <span class="n">outputManager</span> <span class="ow">in</span> <span class="n">outputManagers</span><span class="p">}</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fieldOutputController</span> <span class="o">=</span> <span class="n">fieldOutputController</span>
+
+        <span class="n">stepManager</span> <span class="o">=</span> <span class="n">StepManager</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">steps</span><span class="p">:</span>
+            <span class="n">stepManager</span><span class="o">.</span><span class="n">enqueueStepDefinition</span><span class="p">(</span><span class="n">step</span><span class="o">.</span><span class="n">toStepDefinition</span><span class="p">())</span>
+
+            <span class="k">for</span> <span class="n">setName</span><span class="p">,</span> <span class="n">stencils</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">_stencilSetsToRegister</span><span class="p">:</span>
+                <span class="n">model</span><span class="o">.</span><span class="n">elementSets</span><span class="p">[</span><span class="n">setName</span><span class="p">]</span> <span class="o">=</span> <span class="n">StencilSet</span><span class="p">(</span><span class="n">setName</span><span class="p">,</span> <span class="n">stencils</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">action</span> <span class="ow">in</span> <span class="n">step</span><span class="o">.</span><span class="n">_prebuiltActions</span><span class="p">:</span>
+                <span class="n">stepManager</span><span class="o">.</span><span class="n">stepActions</span><span class="p">[</span><span class="n">module</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">action</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="n">stepManager</span><span class="o">.</span><span class="n">generateSteps</span><span class="p">(</span>
+                <span class="n">jobInfo</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">fieldOutputController</span><span class="p">,</span> <span class="n">journal</span><span class="p">,</span> <span class="n">solvers</span><span class="p">,</span> <span class="n">outputManagers</span>
+            <span class="p">):</span>
+                <span class="n">tic</span> <span class="o">=</span> <span class="n">getCurrentTime</span><span class="p">()</span>
+                <span class="n">step</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
+                <span class="n">toc</span> <span class="o">=</span> <span class="n">getCurrentTime</span><span class="p">()</span>
+
+                <span class="n">jobInfo</span><span class="p">[</span><span class="s2">"computationTime"</span><span class="p">]</span> <span class="o">+=</span> <span class="n">toc</span> <span class="o">-</span> <span class="n">tic</span>
+
+                <span class="n">journal</span><span class="o">.</span><span class="n">printTable</span><span class="p">(</span>
+                    <span class="p">[(</span><span class="s2">"Step computation time"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{:10.4f}</span><span class="s2">s"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">toc</span> <span class="o">-</span> <span class="n">tic</span><span class="p">))],</span> <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="mi">0</span>
+                <span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">KeyboardInterrupt</span><span class="p">:</span>
+            <span class="n">journal</span><span class="o">.</span><span class="n">errorMessage</span><span class="p">(</span><span class="s2">"Interrupted by user"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="n">StepFailed</span><span class="p">:</span>
+            <span class="n">journal</span><span class="o">.</span><span class="n">errorMessage</span><span class="p">(</span><span class="s2">"Simulation failed"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">)</span>
+            <span class="k">raise</span>
+
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">journal</span><span class="o">.</span><span class="n">printTable</span><span class="p">(</span>
+                <span class="p">[(</span><span class="s2">"Job computation time"</span><span class="p">,</span> <span class="s2">"</span><span class="si">{:10.4f}</span><span class="s2">s"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">jobInfo</span><span class="p">[</span><span class="s2">"computationTime"</span><span class="p">]))],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span>
+                <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">fieldOutputController</span><span class="o">.</span><span class="n">finalizeJob</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">outputManager</span> <span class="ow">in</span> <span class="n">outputManagers</span><span class="p">:</span>
+                <span class="n">outputManager</span><span class="o">.</span><span class="n">finalizeJob</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">model</span><span class="p">,</span> <span class="n">fieldOutputController</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_createFieldOutputController</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FieldOutputController</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Materialize the requested field outputs, now that the node fields exist."""</span>
+
+        <span class="n">fieldOutputController</span> <span class="o">=</span> <span class="n">FieldOutputController</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodeFieldOutputRequests</span><span class="p">:</span>
+            <span class="n">nodeField</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">nodeFields</span><span class="p">[</span><span class="n">request</span><span class="p">[</span><span class="s2">"field"</span><span class="p">]]</span>
+
+            <span class="k">if</span> <span class="n">request</span><span class="p">[</span><span class="s2">"nodeSet"</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">nodeField</span> <span class="o">=</span> <span class="n">nodeField</span><span class="o">.</span><span class="n">subset</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="s2">"nodeSet"</span><span class="p">])</span>
+
+            <span class="n">fieldOutputController</span><span class="o">.</span><span class="n">addPerNodeFieldOutput</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                <span class="n">nodeField</span><span class="o">=</span><span class="n">nodeField</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"result"</span><span class="p">],</span>
+                <span class="n">saveHistory</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"saveHistory"</span><span class="p">],</span>
+                <span class="n">f_x</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"f_x"</span><span class="p">],</span>
+                <span class="n">export</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"export"</span><span class="p">],</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stencilFieldOutputRequests</span><span class="p">:</span>
+            <span class="n">stencils</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s2">"stencils"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">stencils</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">stencils</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">stencils</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+            <span class="n">materialPoints</span> <span class="o">=</span> <span class="n">request</span><span class="p">[</span><span class="s2">"materialPoints"</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">materialPoints</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">materialPoints</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">stencils</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">getNumberOfQuadraturePoints</span><span class="p">()))</span>
+
+            <span class="n">fieldOutputController</span><span class="o">.</span><span class="n">addPerElementFieldOutput</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                <span class="n">elSet</span><span class="o">=</span><span class="n">StencilSet</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span> <span class="o">+</span> <span class="s2">"_stencils"</span><span class="p">,</span> <span class="n">stencils</span><span class="p">),</span>
+                <span class="n">result</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"result"</span><span class="p">],</span>
+                <span class="n">saveHistory</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"saveHistory"</span><span class="p">],</span>
+                <span class="n">f_x</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"f_x"</span><span class="p">],</span>
+                <span class="n">export</span><span class="o">=</span><span class="n">request</span><span class="p">[</span><span class="s2">"export"</span><span class="p">],</span>
+                <span class="n">quadraturePoints</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">materialPoints</span><span class="p">),</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fieldOutputController</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_createOutputManagers</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fieldOutputController</span><span class="p">:</span> <span class="n">FieldOutputController</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Materialize the requested output managers."""</span>
+
+        <span class="n">outputManagers</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">request</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outputManagerRequests</span><span class="p">:</span>
+            <span class="n">managerClass</span><span class="p">,</span> <span class="n">managerSchema</span> <span class="o">=</span> <span class="n">registry</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="s2">"outputmanager"</span><span class="p">,</span> <span class="n">request</span><span class="p">[</span><span class="s2">"managerType"</span><span class="p">])</span>
+
+            <span class="n">options</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">request</span><span class="p">[</span><span class="s2">"options"</span><span class="p">])</span>
+            <span class="n">moduleOptions</span> <span class="o">=</span> <span class="n">options</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"moduleOptions"</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+
+            <span class="c1"># the name doubles as the label, for the output managers which have one</span>
+            <span class="k">if</span> <span class="s2">"label"</span> <span class="ow">in</span> <span class="p">{</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">optionNames</span><span class="p">(</span><span class="n">managerSchema</span><span class="p">)}:</span>
+                <span class="n">options</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"label"</span><span class="p">,</span> <span class="n">request</span><span class="p">[</span><span class="s2">"name"</span><span class="p">])</span>
+
+            <span class="n">configuration</span> <span class="o">=</span> <span class="n">buildSchemaFromOptions</span><span class="p">(</span><span class="n">managerSchema</span><span class="p">,</span> <span class="n">options</span><span class="p">,</span> <span class="n">moduleOptions</span><span class="p">)</span>
+
+            <span class="n">outputManagers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">managerClass</span><span class="p">(</span>
+                    <span class="n">request</span><span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+                    <span class="n">fieldOutputController</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="p">,</span>
+                    <span class="kc">None</span><span class="p">,</span>
+                    <span class="n">configuration</span><span class="o">=</span><span class="n">configuration</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">outputManagers</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_printModelSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Log the size of the model."""</span>
+
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">journal</span><span class="o">.</span><span class="n">printTable</span><span class="p">(</span>
+            <span class="p">[(</span><span class="s2">"Grids"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">grids</span><span class="p">)),</span> <span class="p">(</span><span class="s2">"Grid points"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">nodes</span><span class="p">)),</span> <span class="p">(</span><span class="s2">"Stencils"</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">stencils</span><span class="p">))]</span>
+            <span class="o">+</span> <span class="p">[</span>
+                <span class="p">(</span><span class="s2">"Field '</span><span class="si">{:}</span><span class="s2">'"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">),</span> <span class="s2">"</span><span class="si">{:}</span><span class="s2"> grid points"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nodeField</span><span class="o">.</span><span class="n">nodes</span><span class="p">)))</span>
+                <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">nodeField</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">nodeFields</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">identification</span><span class="p">,</span>
+            <span class="n">level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grids &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Finite difference operators" href="operators.html" />
+    <link rel="prev" title="Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Grids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#structuredgrid-a-uniform-structured-collocated-grid"><code class="docutils literal notranslate"><span class="pre">structuredgrid</span></code> - A uniform structured collocated grid</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.grids.structuredgrid.StructuredGrid"><code class="docutils literal notranslate"><span class="pre">StructuredGrid</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.grids.structuredgrid.boundarySetNames"><code class="docutils literal notranslate"><span class="pre">boundarySetNames</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="operators.html">Finite difference operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stencils.html">Stencils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="materials.html">Materials</a></li>
+<li class="toctree-l2"><a class="reference internal" href="drivers.html">Running a simulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">The model tree</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Documentation</a></li>
+      <li class="breadcrumb-item active">Grids</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/documentation/grids.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="grids">
+<h1>Grids<a class="headerlink" href="#grids" title="Link to this heading"></a></h1>
+<section id="structuredgrid-a-uniform-structured-collocated-grid">
+<h2><code class="docutils literal notranslate"><span class="pre">structuredgrid</span></code> - A uniform structured collocated grid<a class="headerlink" href="#structuredgrid-a-uniform-structured-collocated-grid" title="Link to this heading"></a></h2>
+<p>Relevant module <code class="docutils literal notranslate"><span class="pre">edelweissfd.grids.structuredgrid</span></code></p>
+<p id="module-edelweissfd.grids.structuredgrid">A uniform, structured, collocated grid in one, two or three dimensions.</p>
+<p>The grid points are plain <a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></a> instances, so all
+machinery of EdelweissFE which operates on nodes and node sets, in particular the
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/dofmanager.html#edelweissfe.numerics.dofmanager.DofManager" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">DofManager</span></code></a> and every step action, applies
+unchanged. All fields live on all grid points, i.e. the grid is collocated.</p>
+<p>The node sets are named after the ones the <code class="docutils literal notranslate"><span class="pre">planeRectQuad</span></code> and <code class="docutils literal notranslate"><span class="pre">boxGen</span></code> generators of
+EdelweissFE create, so boundary conditions read the same in both packages:</p>
+<p><code class="docutils literal notranslate"><span class="pre">all</span></code>, <code class="docutils literal notranslate"><span class="pre">interior</span></code>, <code class="docutils literal notranslate"><span class="pre">boundary</span></code>, <code class="docutils literal notranslate"><span class="pre">left</span></code> / <code class="docutils literal notranslate"><span class="pre">right</span></code> (<span class="math notranslate nohighlight">\(x\)</span>),
+<code class="docutils literal notranslate"><span class="pre">bottom</span></code> / <code class="docutils literal notranslate"><span class="pre">top</span></code> (<span class="math notranslate nohighlight">\(y\)</span>), <code class="docutils literal notranslate"><span class="pre">back</span></code> / <code class="docutils literal notranslate"><span class="pre">front</span></code> (<span class="math notranslate nohighlight">\(z\)</span>), and all pairwise
+intersections of the boundary planes, e.g. <code class="docutils literal notranslate"><span class="pre">leftBottom</span></code> and <code class="docutils literal notranslate"><span class="pre">bottomLeft</span></code>.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.grids.structuredgrid.</span></span><span class="sig-name descname"><span class="pre">StructuredGrid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nGridPoints</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">origin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">firstNodeLabel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid" title="Link to this definition"></a></dt>
+<dd><p>A uniform structured grid of collocated grid points.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the grid, used to prefix the node sets registered in the model.</p></li>
+<li><p><strong>lengths</strong> – The extent of the grid per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p></li>
+<li><p><strong>nGridPoints</strong> – The number of grid points per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>. Each entry must be at
+least two.</p></li>
+<li><p><strong>origin</strong> – The coordinates of the lower left grid point, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>. Defaults to the
+origin.</p></li>
+<li><p><strong>firstNodeLabel</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The label of the first grid point. Labels are assigned consecutively.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.boundaryNodeAreas">
+<span class="sig-name descname"><span class="pre">boundaryNodeAreas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.boundaryNodeAreas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.boundaryNodeAreas" title="Link to this definition"></a></dt>
+<dd><p>The share of the boundary surface belonging to each grid point of a boundary plane.</p>
+<p>The shares are the tributary areas of a vertex centred discretization, i.e. a grid
+point in the interior of the plane owns a full cell face, one on an edge of the
+plane owns one half of it and one in a corner one quarter. They sum up to the total
+area of the boundary plane, which makes them the consistent factors for turning a
+traction into equivalent nodal forces.</p>
+<p>For a one dimensional grid the boundary plane is a point and the area is one, i.e.
+a traction is then a force per unit cross section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The direction normal to the boundary plane.</p></li>
+<li><p><strong>index</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The grid index along that direction.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tributary area, keyed by grid point.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.cellCornerNodes">
+<span class="sig-name descname"><span class="pre">cellCornerNodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cellIndex</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cornerOffsets</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.cellCornerNodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.cellCornerNodes" title="Link to this definition"></a></dt>
+<dd><p>The corner grid points of a cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>cellIndex</strong> – The grid index of the cell’s lower left corner.</p></li>
+<li><p><strong>cornerOffsets</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The corner offsets, shape <code class="docutils literal notranslate"><span class="pre">(nCorners,</span> <span class="pre">nDim)</span></code>, as returned by
+<a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellCornerOffsets" title="edelweissfd.operators.differences.cellCornerOffsets"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The corner grid points, in the order of <code class="docutils literal notranslate"><span class="pre">cornerOffsets</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[Node]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.cellIndices">
+<span class="sig-name descname"><span class="pre">cellIndices</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.cellIndices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.cellIndices" title="Link to this definition"></a></dt>
+<dd><p>Iterate over the grid indices of the lower left corner of every cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Yields<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>tuple</em> – The grid index of a cell’s lower left corner.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.gridIndexOf">
+<span class="sig-name descname"><span class="pre">gridIndexOf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.gridIndexOf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.gridIndexOf" title="Link to this definition"></a></dt>
+<dd><p>The grid index of a grid point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a>) – The grid point.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The grid index.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.isOnBoundary">
+<span class="sig-name descname"><span class="pre">isOnBoundary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.isOnBoundary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.isOnBoundary" title="Link to this definition"></a></dt>
+<dd><p>Whether a grid point lies on the boundary of the grid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a>) – The grid point.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the grid point lies on any boundary plane.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)">bool</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.laplacianAt">
+<span class="sig-name descname"><span class="pre">laplacianAt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.laplacianAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.laplacianAt" title="Link to this definition"></a></dt>
+<dd><p>The compact finite difference Laplacian centred at a grid point.</p>
+<p>The Laplacian is the sum over all directions of the symmetric three point second
+difference quotient</p>
+<div class="math notranslate nohighlight">
+\[\left. \frac{\partial^2 u}{\partial x_d^2} \right|_i
+= \frac{u_{i-1} - 2 u_i + u_{i+1}}{h_d^2}\]</div>
+<p>Being able to write this down is the reason EdelweissFD needs no auxiliary field for
+the gradient of a nonlocal variable: a difference operator is not restricted to first
+derivatives the way a C0 finite element shape function is, so no penalty and no extra
+unknowns are required.</p>
+<p>At a boundary the homogeneous Neumann condition <span class="math notranslate nohighlight">\(\partial u / \partial n = 0\)</span>
+has to be built into the formula some other way, since there is no neighbour past the
+boundary. Mirroring the missing neighbour onto the grid point on the opposite side of
+the centre, <span class="math notranslate nohighlight">\(u_{ghost} = u_{i+1}\)</span>, turning the quotient into
+<span class="math notranslate nohighlight">\(2 (u_{i+1} - u_i) / h_d^2\)</span>, is the obvious choice, and does make the discrete
+Neumann condition itself second order accurate – but plugging a ghost value into the
+<em>unmodified</em> three point formula is not the same as a genuine second derivative there:
+Taylor expanding <span class="math notranslate nohighlight">\(u(h)\)</span> about the boundary under <span class="math notranslate nohighlight">\(u'(0) = 0\)</span> gives</p>
+<div class="math notranslate nohighlight">
+\[\frac{2 \left(u(h) - u(0)\right)}{h^2}
+    = u''(0) + \frac{h}{3} u'''(0) + O(h^2),\]</div>
+<p>an uncancelled first order term, because the two “neighbours” the formula sums are
+really the same physical point counted twice, unlike the interior formula’s genuine,
+symmetry-cancelling pair. The fix used here instead fits a cubic through the boundary
+point and its two real interior neighbours with <span class="math notranslate nohighlight">\(u'(0) = 0\)</span> imposed exactly –
+no ghost node at all – which gives the second order accurate, one-sided formula</p>
+<div class="math notranslate nohighlight">
+\[u''(0) \approx \frac{-7 u_0 + 8 u_1 - u_2}{2 h^2}.\]</div>
+<p>See <code class="docutils literal notranslate"><span class="pre">tests/test_laplacian.py</span></code> for both orders verified numerically. Falls back to the
+ghost mirror rule when the grid is too thin in a direction to have two real interior
+neighbours (<code class="docutils literal notranslate"><span class="pre">shape[d]</span> <span class="pre">&lt;</span> <span class="pre">3</span></code>), since the one-sided formula needs them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a>) – The grid point the Laplacian is centred at.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The coefficient of the Laplacian per contributing grid point.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.nodeAt">
+<span class="sig-name descname"><span class="pre">nodeAt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/grids/structuredgrid.html#StructuredGrid.nodeAt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.nodeAt" title="Link to this definition"></a></dt>
+<dd><p>The grid point at the given grid index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> – The grid index, one entry per direction.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The grid point.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Node</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.cellShape">
+<span class="sig-name descname"><span class="pre">cellShape</span></span><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.cellShape" title="Link to this definition"></a></dt>
+<dd><p>The number of cells per direction.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.cellVolume">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cellVolume</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.cellVolume" title="Link to this definition"></a></dt>
+<dd><p>The volume of a single grid cell.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.StructuredGrid.spacings">
+<span class="sig-name descname"><span class="pre">spacings</span></span><a class="headerlink" href="#edelweissfd.grids.structuredgrid.StructuredGrid.spacings" title="Link to this definition"></a></dt>
+<dd><p>The grid spacing per direction.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.grids.structuredgrid.boundarySetNames">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.grids.structuredgrid.</span></span><span class="sig-name descname"><span class="pre">boundarySetNames</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(('left',</span> <span class="pre">'right'),</span> <span class="pre">('bottom',</span> <span class="pre">'top'),</span> <span class="pre">('back',</span> <span class="pre">'front'))</span></span><a class="headerlink" href="#edelweissfd.grids.structuredgrid.boundarySetNames" title="Link to this definition"></a></dt>
+<dd><p>The node set name of the lower and the upper boundary per direction.</p>
+<p>The naming follows the <code class="docutils literal notranslate"><span class="pre">planeRectQuad</span></code> and <code class="docutils literal notranslate"><span class="pre">boxGen</span></code> generators of EdelweissFE, which
+means that <code class="docutils literal notranslate"><span class="pre">front</span></code> is at the <em>upper</em> end of the third direction and <code class="docutils literal notranslate"><span class="pre">back</span></code> at its
+lower end, opposite to the first two directions.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="operators.html" class="btn btn-neutral float-right" title="Finite difference operators" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

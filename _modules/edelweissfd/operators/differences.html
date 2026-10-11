@@ -1,0 +1,692 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edelweissfd.operators.differences &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">edelweissfd.operators.differences</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for edelweissfd.operators.differences</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1">#  _____    _      _              _         _____ _____ ____</span>
+<span class="c1"># | ____|__| | ___| |_      _____(_)___ ___|  ___|  ___|  _ \</span>
+<span class="c1"># |  _| / _` |/ _ \ \ \ /\ / / _ \ / __/ __| |_  | |_  | | | |</span>
+<span class="c1"># | |__| (_| |  __/ |\ V  V /  __/ \__ \__ \  _| |  _| | |_| |</span>
+<span class="c1"># |_____\__,_|\___|_| \_/\_/ \___|_|___/___/_|   |_|   |____/</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#  Unit of Strength of Materials and Structural Analysis</span>
+<span class="c1">#  University of Innsbruck,</span>
+<span class="c1">#  2017 - today</span>
+<span class="c1">#</span>
+<span class="c1">#  Alexander Dummer alexander.dummer@uibk.ac.at</span>
+<span class="c1">#</span>
+<span class="c1">#  This file is part of EdelweissFD.</span>
+<span class="c1">#</span>
+<span class="c1">#  This library is free software; you can redistribute it and/or</span>
+<span class="c1">#  modify it under the terms of the GNU Lesser General Public</span>
+<span class="c1">#  License as published by the Free Software Foundation; either</span>
+<span class="c1">#  version 2.1 of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  The full text of the license can be found in the file LICENSE.md at</span>
+<span class="c1">#  the top level directory of EdelweissFD.</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+
+<span class="sd">"""</span>
+<span class="sd">Finite difference operators on a uniform structured grid.</span>
+
+<span class="sd">Two groups of functions live here.</span>
+
+<span class="sd">**General difference quotients.** :func:`finiteDifferenceCoefficients` returns the</span>
+<span class="sd">coefficients of an arbitrary difference quotient for an arbitrary set of grid offsets, and</span>
+<span class="sd">:func:`stencilOffsets` picks the offsets: a symmetric window whenever the grid allows it,</span>
+<span class="sd">a shifted window near the boundaries. These are used for post-processing, for boundary</span>
+<span class="sd">expressions and by the tests which verify the formal order of accuracy.</span>
+
+<span class="sd">**Cell operators.** The stencils of EdelweissFD evaluate the material at the *centre* of a</span>
+<span class="sd">grid cell and difference the nodal values over the cell's corners. The reason is the</span>
+<span class="sd">classical one: the wide, node-centred quotient :math:`(u_{i+1} - u_{i-1}) / 2h` decouples</span>
+<span class="sd">the even from the odd grid points and admits spurious checkerboard modes, whereas the</span>
+<span class="sd">compact quotient :math:`(u_{i+1} - u_{i}) / h` over a cell does not. Evaluating the</span>
+<span class="sd">material once per cell moreover gives every material point, and thus every set of history</span>
+<span class="sd">variables, exactly one owner.</span>
+
+<span class="sd">:func:`cellGradientOperator` builds the gradient at the cell centre,</span>
+<span class="sd">:func:`cellAverageOperator` the value at the cell centre, and :func:`cellStrainOperator`</span>
+<span class="sd">the small strain operator in Voigt notation.</span>
+
+<span class="sd">.. note::</span>
+<span class="sd">    The Voigt convention used throughout EdelweissFD is the one of Marmot,</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        (\\;11,\\; 22,\\; 33,\\; 12,\\; 13,\\; 23\\;)</span>
+
+<span class="sd">    with engineering shear strains. It deliberately does **not** go through</span>
+<span class="sd">    :mod:`edelweissfe.utils.voigtnotation`, whose native helpers order the shear</span>
+<span class="sd">    components as ``12, 23, 13``.</span>
+<span class="sd">"""</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">math</span><span class="w"> </span><span class="kn">import</span> <span class="n">factorial</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1">#: The tensor index pair belonging to each Voigt component, in Marmot's convention.</span>
+<span class="n">voigtIndexPairs</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="c1">#: The number of components of a symmetric second order tensor in Voigt notation.</span>
+<span class="n">nVoigtComponents</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">voigtIndexPairs</span><span class="p">)</span>
+
+<span class="c1">#: The Voigt index of the out-of-plane normal component (zz), in the order above.</span>
+<span class="n">outOfPlaneVoigtIndex</span> <span class="o">=</span> <span class="mi">2</span>
+
+
+<div class="viewcode-block" id="condensePlaneStressTangents">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.condensePlaneStressTangents">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">condensePlaneStressTangents</span><span class="p">(</span>
+    <span class="n">D</span><span class="p">,</span> <span class="n">dLambda</span><span class="p">,</span> <span class="n">dLaplacian</span><span class="p">,</span> <span class="n">dFdStrain</span><span class="p">,</span> <span class="n">dFdLambda</span><span class="p">,</span> <span class="n">dFdLaplacian</span><span class="p">,</span> <span class="n">zz</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">outOfPlaneVoigtIndex</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Statically condense out the zz row/column Marmot's ``computePlaneStress`` leaves in.</span>
+
+<span class="sd">    Marmot's plane stress routine correctly condenses the *stress* -- sigma_zz = 0 is enforced by</span>
+<span class="sd">    solving for the corresponding strain internally, verified directly against the closed form</span>
+<span class="sd">    plane stress modulus -- but the algorithmic tangent blocks it returns are the raw, uncondensed</span>
+<span class="sd">    ones: at nu=0.49, the returned ``dStress_dStrain`` is the full 3D elastic tangent, about 13x</span>
+<span class="sd">    stiffer than the correct plane stress modulus E/(1-nu^2) (confirmed by differencing the</span>
+<span class="sd">    material response directly). Left uncorrected, Newton's search direction is systematically</span>
+<span class="sd">    too small everywhere plane stress is used, which shows up as slow (linear, not quadratic)</span>
+<span class="sd">    convergence rather than an outright wrong answer -- easy to mistake for a genuine structural</span>
+<span class="sd">    instability, since it can exceed the iteration budget right where the physics gets interesting</span>
+<span class="sd">    (e.g. at the onset of yielding).</span>
+
+<span class="sd">    The fix is the standard implicit function theorem static condensation: since sigma_zz is</span>
+<span class="sd">    identically zero for every combination of the (in-plane strain, plastic multiplier increment,</span>
+<span class="sd">    its Laplacian) ``computePlaneStress`` is called with, differentiating that identity through</span>
+<span class="sd">    gives the dependence of the implicitly eliminated eps_zz on each of them, which every other</span>
+<span class="sd">    tangent block must include to stay consistent. Verified to reduce the deviation from a central</span>
+<span class="sd">    difference of the material response from order one down to 1e-8..1e-13 across the yield</span>
+<span class="sd">    transition, at several plastic multiplier increments each.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    D</span>
+<span class="sd">        ``dStress_dStrain``, shape ``(..., 6, 6)``.</span>
+<span class="sd">    dLambda, dLaplacian</span>
+<span class="sd">        ``dStress_dLambda`` and ``dStress_dLaplacian``, shape ``(..., 6)``.</span>
+<span class="sd">    dFdStrain</span>
+<span class="sd">        Shape ``(..., 6)``.</span>
+<span class="sd">    dFdLambda, dFdLaplacian</span>
+<span class="sd">        Shape ``(...,)``.</span>
+<span class="sd">    zz</span>
+<span class="sd">        The Voigt index to condense out.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        The six condensed arrays, in the same shapes as given.</span>
+<span class="sd">    """</span>
+
+    <span class="n">Dzz</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="n">zz</span><span class="p">]</span>
+
+    <span class="n">Dcond</span> <span class="o">=</span> <span class="n">D</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">"...i,...j-&gt;...ij"</span><span class="p">,</span> <span class="n">D</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="n">zz</span><span class="p">],</span> <span class="n">D</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="p">:])</span> <span class="o">/</span> <span class="n">Dzz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">dLambdaCond</span> <span class="o">=</span> <span class="n">dLambda</span> <span class="o">-</span> <span class="n">D</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="n">zz</span><span class="p">]</span> <span class="o">*</span> <span class="n">dLambda</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="n">Dzz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">dLapCond</span> <span class="o">=</span> <span class="n">dLaplacian</span> <span class="o">-</span> <span class="n">D</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="p">:,</span> <span class="n">zz</span><span class="p">]</span> <span class="o">*</span> <span class="n">dLaplacian</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">/</span> <span class="n">Dzz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">dFdEcond</span> <span class="o">=</span> <span class="n">dFdStrain</span> <span class="o">-</span> <span class="n">dFdStrain</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">][</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">D</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="n">Dzz</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+    <span class="n">dFdLambdaCond</span> <span class="o">=</span> <span class="n">dFdLambda</span> <span class="o">-</span> <span class="n">dFdStrain</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">]</span> <span class="o">*</span> <span class="n">dLambda</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">]</span> <span class="o">/</span> <span class="n">Dzz</span>
+    <span class="n">dFdLapCond</span> <span class="o">=</span> <span class="n">dFdLaplacian</span> <span class="o">-</span> <span class="n">dFdStrain</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">]</span> <span class="o">*</span> <span class="n">dLaplacian</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">zz</span><span class="p">]</span> <span class="o">/</span> <span class="n">Dzz</span>
+
+    <span class="k">return</span> <span class="n">Dcond</span><span class="p">,</span> <span class="n">dLambdaCond</span><span class="p">,</span> <span class="n">dLapCond</span><span class="p">,</span> <span class="n">dFdEcond</span><span class="p">,</span> <span class="n">dFdLambdaCond</span><span class="p">,</span> <span class="n">dFdLapCond</span></div>
+
+
+
+<div class="viewcode-block" id="finiteDifferenceCoefficients">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.finiteDifferenceCoefficients">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">finiteDifferenceCoefficients</span><span class="p">(</span><span class="n">offsets</span><span class="p">,</span> <span class="n">derivativeOrder</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">spacing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The coefficients of a finite difference quotient.</span>
+
+<span class="sd">    The returned coefficients :math:`c_i` approximate</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \\frac{d^m f}{dx^m}(x) \\approx \\sum_i c_i \\, f(x + o_i \\, h)</span>
+
+<span class="sd">    for the requested derivative order :math:`m`, the given offsets :math:`o_i` and the</span>
+<span class="sd">    grid spacing :math:`h`. They are obtained by requiring the quotient to be exact for</span>
+<span class="sd">    all monomials up to degree ``len(offsets) - 1``, which is the classical Vandermonde</span>
+<span class="sd">    construction.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    offsets</span>
+<span class="sd">        The grid offsets of the stencil, in multiples of the spacing. Must be distinct.</span>
+<span class="sd">    derivativeOrder</span>
+<span class="sd">        The order of the derivative to be approximated.</span>
+<span class="sd">    spacing</span>
+<span class="sd">        The grid spacing.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The coefficients, one per offset.</span>
+<span class="sd">    """</span>
+
+    <span class="n">offsets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">offsets</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">offsets</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">offsets</span><span class="o">.</span><span class="n">size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The offsets must be a non-empty one dimensional sequence."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">offsets</span><span class="p">))</span> <span class="o">!=</span> <span class="n">offsets</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The offsets must be distinct."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">derivativeOrder</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The derivative order must not be negative."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">offsets</span><span class="o">.</span><span class="n">size</span> <span class="o">&lt;=</span> <span class="n">derivativeOrder</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"A derivative of order </span><span class="si">{:}</span><span class="s2"> needs at least </span><span class="si">{:}</span><span class="s2"> offsets, </span><span class="si">{:}</span><span class="s2"> were given."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">derivativeOrder</span><span class="p">,</span> <span class="n">derivativeOrder</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">offsets</span><span class="o">.</span><span class="n">size</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="c1"># taylorSystem[k, i] = offsets[i]**k, i.e. the condition that the quotient reproduces</span>
+    <span class="c1"># the k-th monomial exactly</span>
+    <span class="n">taylorSystem</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vander</span><span class="p">(</span><span class="n">offsets</span><span class="p">,</span> <span class="n">offsets</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">increasing</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">rightHandSide</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">offsets</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">rightHandSide</span><span class="p">[</span><span class="n">derivativeOrder</span><span class="p">]</span> <span class="o">=</span> <span class="n">factorial</span><span class="p">(</span><span class="n">derivativeOrder</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">taylorSystem</span><span class="p">,</span> <span class="n">rightHandSide</span><span class="p">)</span> <span class="o">/</span> <span class="n">spacing</span><span class="o">**</span><span class="n">derivativeOrder</span></div>
+
+
+
+<div class="viewcode-block" id="stencilOffsets">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.stencilOffsets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">stencilOffsets</span><span class="p">(</span>
+    <span class="n">derivativeOrder</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">accuracyOrder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
+    <span class="n">nAvailableLeft</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">nAvailableRight</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The grid offsets of a difference quotient of the requested accuracy.</span>
+
+<span class="sd">    A symmetric window is returned whenever enough neighbours are available on both</span>
+<span class="sd">    sides, since symmetry buys one order of accuracy for free. Otherwise the window is</span>
+<span class="sd">    shifted into the domain, which is the usual treatment at a boundary.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    derivativeOrder</span>
+<span class="sd">        The order of the derivative to be approximated.</span>
+<span class="sd">    accuracyOrder</span>
+<span class="sd">        The requested formal order of accuracy.</span>
+<span class="sd">    nAvailableLeft</span>
+<span class="sd">        The number of available neighbours towards smaller coordinates. ``None`` means</span>
+<span class="sd">        unlimited, i.e. an interior point.</span>
+<span class="sd">    nAvailableRight</span>
+<span class="sd">        The number of available neighbours towards larger coordinates. ``None`` means</span>
+<span class="sd">        unlimited.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The offsets, in ascending order.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="n">accuracyOrder</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The accuracy order must be at least one."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nAvailableLeft</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nAvailableLeft</span> <span class="o">=</span> <span class="n">derivativeOrder</span> <span class="o">+</span> <span class="n">accuracyOrder</span>
+    <span class="k">if</span> <span class="n">nAvailableRight</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">nAvailableRight</span> <span class="o">=</span> <span class="n">derivativeOrder</span> <span class="o">+</span> <span class="n">accuracyOrder</span>
+
+    <span class="c1"># A symmetric window of half width p spans 2p+1 points and, thanks to symmetry,</span>
+    <span class="c1"># reaches an even order of accuracy of 2*ceil((2p+1-m)/2). Requesting order a</span>
+    <span class="c1"># therefore needs p = ceil((a+m-2)/2).</span>
+    <span class="n">halfWidth</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">accuracyOrder</span> <span class="o">+</span> <span class="n">derivativeOrder</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">halfWidth</span> <span class="o">&lt;=</span> <span class="n">nAvailableLeft</span> <span class="ow">and</span> <span class="n">halfWidth</span> <span class="o">&lt;=</span> <span class="n">nAvailableRight</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">halfWidth</span><span class="p">,</span> <span class="n">halfWidth</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># A shifted window has no symmetry to exploit and needs m + a points.</span>
+    <span class="n">nPoints</span> <span class="o">=</span> <span class="n">derivativeOrder</span> <span class="o">+</span> <span class="n">accuracyOrder</span>
+
+    <span class="k">if</span> <span class="n">nPoints</span> <span class="o">&gt;</span> <span class="n">nAvailableLeft</span> <span class="o">+</span> <span class="n">nAvailableRight</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"A derivative of order </span><span class="si">{:}</span><span class="s2"> with accuracy order </span><span class="si">{:}</span><span class="s2"> needs </span><span class="si">{:}</span><span class="s2"> grid points, "</span>
+            <span class="s2">"but only </span><span class="si">{:}</span><span class="s2"> are available."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">derivativeOrder</span><span class="p">,</span> <span class="n">accuracyOrder</span><span class="p">,</span> <span class="n">nPoints</span><span class="p">,</span> <span class="n">nAvailableLeft</span> <span class="o">+</span> <span class="n">nAvailableRight</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">left</span> <span class="o">=</span> <span class="nb">min</span><span class="p">((</span><span class="n">nPoints</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">,</span> <span class="n">nAvailableLeft</span><span class="p">)</span>
+    <span class="n">right</span> <span class="o">=</span> <span class="n">nPoints</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">left</span>
+
+    <span class="k">if</span> <span class="n">right</span> <span class="o">&gt;</span> <span class="n">nAvailableRight</span><span class="p">:</span>
+        <span class="n">right</span> <span class="o">=</span> <span class="n">nAvailableRight</span>
+        <span class="n">left</span> <span class="o">=</span> <span class="n">nPoints</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">right</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cellCornerOffsets">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.cellCornerOffsets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cellCornerOffsets</span><span class="p">(</span><span class="n">nDim</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The offsets of the corners of a grid cell, relative to its lower left corner.</span>
+
+<span class="sd">    The corners are ordered such that the last axis varies fastest, i.e. in 2D</span>
+<span class="sd">    ``(0,0), (0,1), (1,0), (1,1)``. Everything else in EdelweissFD relies on this order.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nDim</span>
+<span class="sd">        The spatial dimension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The corner offsets, shape ``(2**nDim, nDim)``.</span>
+<span class="sd">    """</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">product</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">repeat</span><span class="o">=</span><span class="n">nDim</span><span class="p">)),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cellAverageOperator">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.cellAverageOperator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cellAverageOperator</span><span class="p">(</span><span class="n">nDim</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The operator evaluating a field at the centre of a grid cell.</span>
+
+<span class="sd">    The centre value is the plain average of the corner values, which is the compact,</span>
+<span class="sd">    second order accurate choice.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nDim</span>
+<span class="sd">        The spatial dimension.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The coefficients, shape ``(2**nDim,)``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">nCorners</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">nDim</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">nCorners</span><span class="p">,</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">nCorners</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="cellGradientOperator">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.cellGradientOperator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cellGradientOperator</span><span class="p">(</span><span class="n">spacings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The operator evaluating the gradient of a field at the centre of a grid cell.</span>
+
+<span class="sd">    The derivative along a direction is the average of the compact difference quotients</span>
+<span class="sd">    along all cell edges parallel to that direction,</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \\left. \\frac{\\partial f}{\\partial x_d} \\right|_{centre}</span>
+<span class="sd">        = \\frac{1}{2^{n-1}} \\sum_{\\text{edges} \\parallel x_d}</span>
+<span class="sd">          \\frac{f_{far} - f_{near}}{h_d}</span>
+
+<span class="sd">    which is second order accurate at the cell centre.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spacings</span>
+<span class="sd">        The grid spacing per direction, shape ``(nDim,)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The coefficients, shape ``(nDim, 2**nDim)``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">spacings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spacings</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">nDim</span> <span class="o">=</span> <span class="n">spacings</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">spacings</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All grid spacings must be positive."</span><span class="p">)</span>
+
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">cellCornerOffsets</span><span class="p">(</span><span class="n">nDim</span><span class="p">)</span>
+    <span class="n">nEdgesPerDirection</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">**</span> <span class="p">(</span><span class="n">nDim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDim</span><span class="p">,</span> <span class="n">corners</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+    <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">):</span>
+        <span class="c1"># a corner sits at the far end of its edge if its offset along d is one</span>
+        <span class="n">sign</span> <span class="o">=</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">corners</span><span class="p">[:,</span> <span class="n">d</span><span class="p">]</span> <span class="o">-</span> <span class="mf">1.0</span>
+        <span class="n">gradient</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">sign</span> <span class="o">/</span> <span class="p">(</span><span class="n">spacings</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">*</span> <span class="n">nEdgesPerDirection</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gradient</span></div>
+
+
+
+<div class="viewcode-block" id="cellCornerGradientOperators">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.cellCornerGradientOperators">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cellCornerGradientOperators</span><span class="p">(</span><span class="n">spacings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The one-sided gradient operators at the corners of a grid cell.</span>
+
+<span class="sd">    The derivative along a direction is the plain one-sided difference quotient along the</span>
+<span class="sd">    single cell edge which starts at that corner and points along that direction,</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \\left. \\frac{\\partial f}{\\partial x_d} \\right|_{corner}</span>
+<span class="sd">        = \\frac{f_{next} - f_{previous}}{h_d}</span>
+
+<span class="sd">    Each operator therefore involves only :math:`n+1` of the :math:`2^n` corners.</span>
+
+<span class="sd">    In contrast to :func:`cellGradientOperator`, which averages over all parallel edges,</span>
+<span class="sd">    these operators do **not** annihilate the hourglass (checkerboard) mode. Sampling a</span>
+<span class="sd">    cell at its corners instead of only at its centre is what makes the two and three</span>
+<span class="sd">    dimensional schemes of EdelweissFD free of spurious zero energy modes; in one</span>
+<span class="sd">    dimension both choices coincide.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spacings</span>
+<span class="sd">        The grid spacing per direction, shape ``(nDim,)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        One operator of shape ``(nDim, 2**nDim)`` per corner, ordered like</span>
+<span class="sd">        :func:`cellCornerOffsets`.</span>
+<span class="sd">    """</span>
+
+    <span class="n">spacings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spacings</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">nDim</span> <span class="o">=</span> <span class="n">spacings</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">spacings</span> <span class="o">&lt;=</span> <span class="mf">0.0</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All grid spacings must be positive."</span><span class="p">)</span>
+
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">cellCornerOffsets</span><span class="p">(</span><span class="n">nDim</span><span class="p">)</span>
+    <span class="n">cornerIndices</span> <span class="o">=</span> <span class="p">{</span><span class="nb">tuple</span><span class="p">(</span><span class="n">corner</span><span class="p">):</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">corner</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">corners</span><span class="p">)}</span>
+
+    <span class="n">operators</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="n">corners</span><span class="p">:</span>
+        <span class="n">gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDim</span><span class="p">,</span> <span class="n">corners</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">):</span>
+            <span class="n">previous</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">previous</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">following</span> <span class="o">=</span> <span class="n">corner</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">following</span><span class="p">[</span><span class="n">d</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="n">gradient</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">cornerIndices</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">following</span><span class="p">)]]</span> <span class="o">+=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">spacings</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+            <span class="n">gradient</span><span class="p">[</span><span class="n">d</span><span class="p">,</span> <span class="n">cornerIndices</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">previous</span><span class="p">)]]</span> <span class="o">-=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">spacings</span><span class="p">[</span><span class="n">d</span><span class="p">]</span>
+
+        <span class="n">operators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">operators</span></div>
+
+
+
+<div class="viewcode-block" id="cellStrainOperator">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.cellStrainOperator">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">cellStrainOperator</span><span class="p">(</span><span class="n">gradient</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The small strain operator of a grid cell in Voigt notation.</span>
+
+<span class="sd">    Maps the displacement degrees of freedom of the cell's corners onto the six component</span>
+<span class="sd">    Voigt strain at the cell centre. The degrees of freedom are ordered corner-major and</span>
+<span class="sd">    component-minor, i.e. ``[corner 0 - x, corner 0 - y, corner 1 - x, ...]``, which is</span>
+<span class="sd">    the layout the solvers of EdelweissFE expect.</span>
+
+<span class="sd">    Components which do not exist for the given spatial dimension stay zero, so a 2D</span>
+<span class="sd">    operator describes a state of plane strain and a 1D operator a state of uniaxial</span>
+<span class="sd">    strain. Whether the out-of-plane components are subsequently condensed out is decided</span>
+<span class="sd">    by the stencil, by choosing the corresponding material routine.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gradient</span>
+<span class="sd">        The gradient operator of the cell, shape ``(nDim, nCorners)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The strain operator, shape ``(6, nCorners * nDim)``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">nDim</span><span class="p">,</span> <span class="n">nCorners</span> <span class="o">=</span> <span class="n">gradient</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="n">strainOperator</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nVoigtComponents</span><span class="p">,</span> <span class="n">nCorners</span> <span class="o">*</span> <span class="n">nDim</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">voigtIndexPairs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="n">nDim</span> <span class="ow">or</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="n">nDim</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">corner</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nCorners</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                <span class="n">strainOperator</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="n">corner</span> <span class="o">*</span> <span class="n">nDim</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">gradient</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">corner</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># engineering shear strain, 2 * eps_ij</span>
+                <span class="n">strainOperator</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="n">corner</span> <span class="o">*</span> <span class="n">nDim</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="n">gradient</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">corner</span><span class="p">]</span>
+                <span class="n">strainOperator</span><span class="p">[</span><span class="n">v</span><span class="p">,</span> <span class="n">corner</span> <span class="o">*</span> <span class="n">nDim</span> <span class="o">+</span> <span class="n">j</span><span class="p">]</span> <span class="o">+=</span> <span class="n">gradient</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">corner</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">strainOperator</span></div>
+
+
+
+<div class="viewcode-block" id="hourglassVector">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.hourglassVector">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">hourglassVector</span><span class="p">(</span><span class="n">spacings</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The Flanagan-Belytschko orthogonal hourglass shape vector of a 2D grid cell.</span>
+
+<span class="sd">    Single point quadrature at the cell centre -- :func:`cellGradientOperator` sampled once,</span>
+<span class="sd">    rather than :func:`cellCornerGradientOperators` sampled at every corner -- is second order</span>
+<span class="sd">    accurate and does not lock volumetrically, but the bilinear cell then has one zero energy</span>
+<span class="sd">    mode left uncontrolled: the alternating corner pattern ``(1, -1, -1, 1)``, the "hourglass"</span>
+<span class="sd">    mode, which the single sampling point cannot see at all.</span>
+
+<span class="sd">    Flanagan and Belytschko's remedy [1]_ projects the constant and linear parts out of that</span>
+<span class="sd">    pattern,</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \\boldsymbol \\gamma = \\boldsymbol h</span>
+<span class="sd">            - \\left(\\boldsymbol h \\cdot \\boldsymbol x\\right) \\boldsymbol b_x</span>
+<span class="sd">            - \\left(\\boldsymbol h \\cdot \\boldsymbol y\\right) \\boldsymbol b_y</span>
+
+<span class="sd">    with :math:`\\boldsymbol h = (1, -1, -1, 1)` and :math:`\\boldsymbol b_x, \\boldsymbol b_y`</span>
+<span class="sd">    the centre gradient's corner weights. The result is, by construction, orthogonal to any</span>
+<span class="sd">    constant or linear field -- :math:`\\boldsymbol \\gamma \\cdot \\boldsymbol u` is exactly</span>
+<span class="sd">    zero for such a field and :math:`O(h^2)` for a smooth one with curvature, so a stabilization</span>
+<span class="sd">    stiffness built from it, :math:`c \\, \\boldsymbol \\gamma \\boldsymbol \\gamma^T`, resists</span>
+<span class="sd">    the hourglass mode without spoiling the second order accuracy of the underlying operator --</span>
+<span class="sd">    see ``tests/test_hourglassstabilization.py`` for both properties verified numerically.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spacings</span>
+<span class="sd">        The grid spacing per direction, shape ``(2,)``. Only two dimensions are supported: a</span>
+<span class="sd">        trilinear hexahedron has three independent hourglass modes per component, not one, which</span>
+<span class="sd">        is a materially larger extension than this single mode.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.ndarray</span>
+<span class="sd">        The hourglass vector, shape ``(4,)``, ordered like :func:`cellCornerOffsets`.</span>
+
+<span class="sd">    References</span>
+<span class="sd">    ----------</span>
+<span class="sd">    .. [1] D.P. Flanagan, T. Belytschko, "A uniform strain hexahedron and quadrilateral with</span>
+<span class="sd">       orthogonal hourglass control", IJNME 17, 1981, 679-706.</span>
+<span class="sd">    """</span>
+
+    <span class="n">spacings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spacings</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">spacings</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The orthogonal hourglass vector is only implemented in two dimensions."</span><span class="p">)</span>
+
+    <span class="n">pattern</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+    <span class="n">corners</span> <span class="o">=</span> <span class="n">cellCornerOffsets</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+    <span class="n">coordinates</span> <span class="o">=</span> <span class="n">corners</span> <span class="o">*</span> <span class="n">spacings</span>
+
+    <span class="n">gradient</span> <span class="o">=</span> <span class="n">cellGradientOperator</span><span class="p">(</span><span class="n">spacings</span><span class="p">)</span>
+    <span class="n">bx</span><span class="p">,</span> <span class="n">by</span> <span class="o">=</span> <span class="n">gradient</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:],</span> <span class="n">gradient</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="k">return</span> <span class="n">pattern</span> <span class="o">-</span> <span class="p">(</span><span class="n">pattern</span> <span class="o">@</span> <span class="n">coordinates</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">bx</span> <span class="o">-</span> <span class="p">(</span><span class="n">pattern</span> <span class="o">@</span> <span class="n">coordinates</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">*</span> <span class="n">by</span></div>
+
+
+
+<div class="viewcode-block" id="volumetricallyAveragedStrainOperators">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">volumetricallyAveragedStrainOperators</span><span class="p">(</span><span class="n">strainOperators</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Replace the volumetric part of each strain operator by the average over the cell.</span>
+
+<span class="sd">    The corner sampled strain operators of a cell are the bilinear ones evaluated at the cell's</span>
+<span class="sd">    vertices, so they constrain the volumetric strain at every corner separately: one constraint</span>
+<span class="sd">    per corner against, in the limit, one displacement degree of freedom per grid point. As</span>
+<span class="sd">    Poisson's ratio approaches one half that over-constrains the cell and it locks -- the cell</span>
+<span class="sd">    can no longer deform at constant volume, which is exactly what a shear band has to do, so the</span>
+<span class="sd">    band does not form and the response comes out too stiff instead.</span>
+
+<span class="sd">    Averaging the volumetric part over the cell, the classical B-bar or mean dilatation treatment,</span>
+<span class="sd">    leaves one volumetric constraint per cell and cures it. The deviatoric part stays sampled at</span>
+<span class="sd">    the corners, so the hourglass mode is still controlled -- see</span>
+<span class="sd">    :func:`cellCornerGradientOperators` for why that sampling is used in the first place.</span>
+
+<span class="sd">    Writing ``m`` for the Voigt trace vector, the volumetric part of an operator is</span>
+<span class="sd">    ``B_vol = m m^T B / 3`` and</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \\bar{\\boldsymbol B}_p = \\boldsymbol B_p - \\boldsymbol B_{vol,p}</span>
+<span class="sd">                                 + \\sum_q w_q \\boldsymbol B_{vol,q}</span>
+
+<span class="sd">    Note that the trace has to be taken over all three normal components even in two dimensions:</span>
+<span class="sd">    under plane strain ``eps_33`` vanishes and the third row of the operator is zero, so it drops</span>
+<span class="sd">    out of the sum by itself, and the volumetric strain is still ``eps_11 + eps_22``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    strainOperators</span>
+<span class="sd">        The strain operators of the cell's material points, each of shape</span>
+<span class="sd">        ``(6, nCorners * nDim)``.</span>
+<span class="sd">    weights</span>
+<span class="sd">        The weights to average with, one per material point. Defaults to equal weights, which is</span>
+<span class="sd">        what equal material point volumes call for.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        The averaged strain operators, same shapes as the input.</span>
+<span class="sd">    """</span>
+
+    <span class="n">strainOperators</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">B</span> <span class="ow">in</span> <span class="n">strainOperators</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">weights</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">strainOperators</span><span class="p">),</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">strainOperators</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="n">weights</span> <span class="o">/</span> <span class="n">weights</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+
+    <span class="c1"># the Voigt trace vector: the first three components are the normal ones</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nVoigtComponents</span><span class="p">)</span>
+    <span class="n">trace</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">volumetricPart</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">trace</span> <span class="o">@</span> <span class="n">B</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.0</span>
+
+    <span class="n">averaged</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">weight</span> <span class="o">*</span> <span class="n">volumetricPart</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="k">for</span> <span class="n">weight</span><span class="p">,</span> <span class="n">B</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">strainOperators</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="p">[</span><span class="n">B</span> <span class="o">-</span> <span class="n">volumetricPart</span><span class="p">(</span><span class="n">B</span><span class="p">)</span> <span class="o">+</span> <span class="n">averaged</span> <span class="k">for</span> <span class="n">B</span> <span class="ow">in</span> <span class="n">strainOperators</span><span class="p">]</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
