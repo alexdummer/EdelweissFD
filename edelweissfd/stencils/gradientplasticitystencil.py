@@ -74,11 +74,17 @@ import os
 from time import perf_counter_ns
 
 import numpy as np
-from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
-    GradientPlasticityIncrement,
-    GradientPlasticityResponse,
-    GradientPlasticityTangents,
-)
+
+try:
+    from edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial import (
+        GradientPlasticityIncrement,
+        GradientPlasticityResponse,
+        GradientPlasticityTangents,
+    )
+except ImportError:  # pragma: no cover - depends on whether EdelweissFE ships the material family
+    # The gradient plasticity material family is not (yet) part of every EdelweissFE release, so
+    # this module stays importable without it; constructing a stencil then fails explicitly.
+    GradientPlasticityIncrement = GradientPlasticityResponse = GradientPlasticityTangents = None
 from edelweissfe.points.node import Node
 
 from edelweissfd.operators.differences import (
@@ -95,11 +101,11 @@ from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
 
 try:
-    from edelweissfe.kernels.gradientplasticitykernel import GradientPlasticityKernel
-except ImportError:  # pragma: no cover - depends on whether EdelweissFE built its extensions
+    from edelweissfd.kernels.gradientplasticitykernel import GradientPlasticityKernel
+except ImportError:  # pragma: no cover - depends on whether EdelweissFD built its extensions
     GradientPlasticityKernel = None
 
-#: Use the compiled kernel of EdelweissFE when it is available.
+#: Use the compiled kernel when it is available.
 #:
 #: The cell couples few degrees of freedom and its blocks are small -- a six by six tangent,
 #: operators of six by twelve -- so at those sizes a numpy call costs more in dispatch than in
@@ -323,6 +329,9 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
             self._hourglassStiffnessMatrix = Khg
 
         self._materialRoutineName = stressStates[stressState]
+
+        if GradientPlasticityResponse is None:
+            raise ImportError("The gradient plasticity material family is not available in the installed EdelweissFE.")
 
         self._response = GradientPlasticityResponse.createZero(1)
         self._tangents = GradientPlasticityTangents.createZero(1)
@@ -565,8 +574,8 @@ class GradientPlasticityStencil(BaseStencil, NumericalTangentMixin):
     def _createCompiledKernel(self):
         """The compiled kernel for this cell, or ``None`` to fall back to Python.
 
-        Returns ``None`` when EdelweissFE was installed without its Marmot extensions, when the
-        compiled kernel has been switched off, when the material is not a Marmot one -- the
+        Returns ``None`` when EdelweissFD was built without its compiled kernel extension, when
+        the compiled kernel has been switched off, when the material is not a Marmot one -- the
         kernel reaches Marmot's C++ shim directly, so it cannot drive a material that only exists
         in Python --, when hourglass stabilization is in use, which the compiled kernel does not
         yet know about, or when the stress state is plane stress: Marmot's ``computePlaneStress``

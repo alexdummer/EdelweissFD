@@ -31,15 +31,3 @@ EdelweissFD, a finite difference framework for multifield problems.
 
 See :mod:`edelweissfd.drivers.pythonscriptedsimulation` for the scripting interface.
 """
-
-from edelweissfe.utils.inputlanguage import InputLanguage
-
-# EdelweissFE registers its input language keywords as an import side effect of its input
-# file parser, and several of its modules -- among them the solvers and every step action --
-# look those keywords up at *import* time. The registry therefore has to be populated before
-# any of them is imported, which holds even though EdelweissFD never reads an input file.
-#
-# This has to happen from a clean import context, i.e. before the first `edelweissfe` module
-# that the parser itself imports is loaded, which is why it lives here rather than in the
-# driver module.
-InputLanguage().ensureParserLoaded()

@@ -75,11 +75,11 @@ from edelweissfd.stencils.base.basestencil import BaseStencil
 from edelweissfd.stencils.numericaltangent import NumericalTangentMixin
 
 try:
-    from edelweissfe.kernels.displacementkernel import DisplacementKernel
-except ImportError:  # pragma: no cover - depends on whether EdelweissFE built its extensions
+    from edelweissfd.kernels.displacementkernel import DisplacementKernel
+except ImportError:  # pragma: no cover - depends on whether EdelweissFD built its extensions
     DisplacementKernel = None
 
-#: Use the compiled kernel of EdelweissFE when it is available, see
+#: Use the compiled kernel when it is available, see
 #: :mod:`edelweissfd.stencils.gradientplasticitystencil` for the measurements that motivate it.
 #: Set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment to force the Python implementation.
 useCompiledKernel = os.environ.get("EDELWEISSFD_NO_COMPILED_KERNEL", "") not in ("1", "true", "True")
@@ -326,9 +326,10 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
     def _createCompiledKernel(self):
         """The compiled kernel for this cell, or ``None`` to fall back to Python.
 
-        ``None`` when EdelweissFE was installed without its Marmot extensions, when the compiled
-        kernel has been switched off, or when the material is not a Marmot one -- the kernel
-        creates its own Marmot material, so it cannot drive a material that only exists in Python.
+        ``None`` when EdelweissFD was built without its compiled kernel extension, when the
+        compiled kernel has been switched off, or when the material is not a Marmot one -- the
+        kernel creates its own Marmot material, so it cannot drive a material that only exists
+        in Python.
         """
 
         if DisplacementKernel is None or not useCompiledKernel:

@@ -66,6 +66,7 @@ def buildSingleCellGrid(nGridPoints=(5, 5), lengths=(12.0, 12.0), stressState="p
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 def test_onlyTwoFieldsAreInvolved():
     """The stencil must not introduce a field for the gradient of the plastic multiplier."""
 
@@ -81,6 +82,7 @@ def test_onlyTwoFieldsAreInvolved():
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 def test_moleculeReachesBeyondTheCellAndCarriesOnlyTheMultiplier():
     """The Laplacian reaches one grid point past the cell. Those outer grid points take part
     through the plastic multiplier alone, which is what keeps the block small."""
@@ -108,6 +110,7 @@ def test_moleculeReachesBeyondTheCellAndCarriesOnlyTheMultiplier():
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("cellPosition", ["corner", "interior"])
 def test_tangentIsConsistent(cellPosition):
     """All four coupling blocks, including the ones going through the Laplacian."""
@@ -131,6 +134,7 @@ def test_tangentIsConsistent(cellPosition):
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 def test_homogeneousStateReproducesTheSofteningLaw():
     """A sharp check of the whole chain.
 
@@ -195,6 +199,7 @@ def test_homogeneousStateReproducesTheSofteningLaw():
 
 
 @pytest.mark.marmot
+@pytest.mark.gradientplasticity
 def test_plasticMultiplierStaysZeroWhileElastic():
     """Below yield the plastic multiplier must not be activated anywhere, which is what the
     complementarity formulation of the material has to deliver."""

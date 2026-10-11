@@ -58,9 +58,9 @@ A simulation is written as an ordinary Python script::
 from time import time as getCurrentTime
 
 import numpy as np
+from edelweissfe.config import registry
 from edelweissfe.config.configurator import loadConfiguration
 from edelweissfe.config.materiallibrary import getMaterialClass
-from edelweissfe.config.outputmanagers import getOutputManagerFactoryByName
 from edelweissfe.config.solvers import getSolverByName
 from edelweissfe.journal.journal import Journal
 from edelweissfe.points.node import Node
@@ -72,6 +72,7 @@ from edelweissfe.steps.stepmanager import (
 )
 from edelweissfe.utils.exceptions import StepFailed
 from edelweissfe.utils.fieldoutput import FieldOutputController
+from edelweissfe.utils.schema import buildSchemaFromOptions, optionNames
 
 from edelweissfd.grids.structuredgrid import StructuredGrid, boundarySetNames
 from edelweissfd.materials.provider import MaterialProvider, materialInstanceFrom
@@ -324,7 +325,6 @@ class FDStep:
         forceVector = np.asarray(forceVector, dtype=float)
 
         action = {
-            "name": name,
             "elSet": name,
             # the step action parses this with numpy.fromstring, so plain decimals only
             "forceVector": ", ".join("{:.17g}".format(float(component)) for component in forceVector),
@@ -392,26 +392,30 @@ class FDStep:
 
         self._actionDefinitions.append(StepActionDefinition(name, "indirectcontrol", action))
 
-        self.addSolverOptions("NISTArcLength", arcLengthController="indirectcontrol", stopCondition=None)
+        self.addSolverOptions(arcLengthController="indirectcontrol")
 
         return self
 
-    def addSolverOptions(self, category: str, **options):
+    def addSolverOptions(self, solver: str = None, **options):
         """Set solver specific options for this step.
 
         Parameters
         ----------
-        category
-            The option category, e.g. ``NISTSolver``.
+        solver
+            The name of the solver the options apply to, as registered by
+            :meth:`FDSimulation.createSolver`. Defaults to the solver of this step.
         options
-            The options, e.g. ``extrapolation="off"``.
+            The options, e.g. ``extrapolation="off"``, validated against the option schema of
+            that solver.
         """
 
-        action = dict(options)
-        action["name"] = category
-        action["category"] = category
+        if solver is None:
+            solver = self.solverName
 
-        self._actionDefinitions.append(StepActionDefinition(category, "options", action))
+        action = dict(options)
+        action["name"] = solver
+
+        self._actionDefinitions.append(StepActionDefinition(solver, "options", action))
 
         return self
 
@@ -952,6 +956,12 @@ class FDSimulation:
         solvers = dict(self.solvers)
         solvers["default"] = next(iter(self.solvers.values()))
 
+        # the options step action resolves the solver or output manager it configures by name
+        # against these, see edelweissfe.stepactions.options
+        model.solvers = solvers
+        model.outputManagers = {outputManager.name: outputManager for outputManager in outputManagers}
+        model.fieldOutputController = fieldOutputController
+
         stepManager = StepManager()
         for step in self.steps:
             stepManager.enqueueStepDefinition(step.toStepDefinition())
@@ -963,7 +973,7 @@ class FDSimulation:
                 stepManager.stepActions[module][name] = action
 
         try:
-            for step in stepManager.dequeueStep(
+            for step in stepManager.generateSteps(
                 jobInfo, model, fieldOutputController, journal, solvers, outputManagers
             ):
                 tic = getCurrentTime()
@@ -1043,21 +1053,25 @@ class FDSimulation:
         outputManagers = []
 
         for request in self._outputManagerRequests:
-            factory = getOutputManagerFactoryByName(request["managerType"])
+            managerClass, managerSchema = registry.lookup("outputmanager", request["managerType"])
 
             options = dict(request["options"])
-            options.setdefault("label", request["name"])
             moduleOptions = options.pop("moduleOptions", dict())
 
+            # the name doubles as the label, for the output managers which have one
+            if "label" in {name.lower() for name in optionNames(managerSchema)}:
+                options.setdefault("label", request["name"])
+
+            configuration = buildSchemaFromOptions(managerSchema, options, moduleOptions)
+
             outputManagers.append(
-                factory(
+                managerClass(
                     request["name"],
                     self.model,
                     fieldOutputController,
-                    moduleOptions,
                     self.journal,
                     None,
-                    **options,
+                    configuration=configuration,
                 )
             )
 

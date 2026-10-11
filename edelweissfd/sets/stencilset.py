@@ -55,6 +55,10 @@ class StencilSet(ImmutableOrderedSet):
 
         super().__init__(label, stencils)
 
+        # The field output and step actions of EdelweissFE detect in-place changes of a set (AMR)
+        # by its version, which ImmutableOrderedSet does not initialize; immutable, it never changes.
+        self._version = 0
+
         self.stencils = self.items
 
     @property

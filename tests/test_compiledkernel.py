@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The compiled gradient plasticity kernel must agree with the Python one exactly.
 
-The stencil delegates its inner loop to EdelweissFE's compiled kernel when that is available and
+The stencil delegates its inner loop to a compiled kernel when that is available and
 falls back to the Python implementation otherwise, so both paths are live and both have to give
 the same answer. The bound is round-off rather than an accuracy tolerance: the two evaluate the
 same expressions over the same material and differ only in the order the sums are accumulated --
@@ -24,7 +24,7 @@ def kernelAvailable() -> bool:
     return gps.GradientPlasticityKernel is not None
 
 
-needsKernel = pytest.mark.skipif(not kernelAvailable(), reason="EdelweissFE was built without the compiled kernel")
+needsKernel = pytest.mark.skipif(not kernelAvailable(), reason="EdelweissFD was built without the compiled kernel")
 
 
 #: Relative bound for two evaluations that differ only in summation order.
@@ -91,6 +91,7 @@ def randomIncrement(stencil, scale=4e-3, seed=7) -> np.ndarray:
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("cellPosition", ["interior", "corner"])
 def test_theTwoPathsAgreeToMachinePrecision(cellPosition):
     """The whole point. Both the interior molecule and a boundary one, where the ghost node
@@ -108,6 +109,7 @@ def test_theTwoPathsAgreeToMachinePrecision(cellPosition):
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 def test_theStateVariablesAgreeAsWell():
     """Not just the returned tangent and flux: the stress, strain, multiplier and yield value the
     kernel leaves behind in the state variables are what the next increment starts from and what
@@ -129,6 +131,7 @@ def test_theStateVariablesAgreeAsWell():
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 def test_repeatedEvaluationsAgree():
     """A Newton iteration evaluates the same cell many times from the same accepted state. Both
     paths reset the trial state variables at the top of every evaluation, so repeating one has to
@@ -149,6 +152,7 @@ def test_repeatedEvaluationsAgree():
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 def test_acceptingAndResettingStillWork():
     """The state variable bookkeeping stayed in Python, so it must still act on what the compiled
     kernel wrote."""
@@ -170,6 +174,7 @@ def test_acceptingAndResettingStillWork():
 
 
 @needsKernel
+@pytest.mark.gradientplasticity
 @pytest.mark.parametrize("cellPosition", ["interior", "corner"])
 def test_theCompiledTangentIsConsistent(cellPosition):
     """The numerical tangent checker drives the compiled path through the same contract, so it
@@ -183,6 +188,7 @@ def test_theCompiledTangentIsConsistent(cellPosition):
     compiled.assertTangentConsistent(dU, dU, 1.0, 1.0, perturbation=1e-9, relativeTolerance=1e-5)
 
 
+@pytest.mark.gradientplasticity
 def test_theStencilRunsWithoutTheCompiledKernel():
     """The package has to stay usable when EdelweissFE was installed without its extensions."""
 
@@ -263,7 +269,7 @@ def test_theDisplacementKernelAgrees(spacings, stressState, linearElasticPropert
         DisplacementStencil.__module__
         and getattr(sys.modules[DisplacementStencil.__module__], "DisplacementKernel", None) is None
     ):
-        pytest.skip("EdelweissFE was built without the compiled displacement kernel")
+        pytest.skip("EdelweissFD was built without the compiled displacement kernel")
 
     def makeMaterial():
         return MarmotHypoElasticMaterial("LINEARELASTIC", linearElasticProperties)
@@ -281,6 +287,35 @@ def test_theDisplacementKernelAgrees(spacings, stressState, linearElasticPropert
     assertClose(compiled._stateVarsTemp, interpreted._stateVarsTemp, "state variables disagree")
 
 
+def test_theDisplacementKernelAcceptsAMixedCaseMaterialName(linearElasticProperties):
+    """EdelweissFE's material accepts a name Marmot only registers upper-case, and keeps it as
+    given; the compiled kernel has to accept every material the Python path accepts."""
+
+    from edelweissfe.materials.marmot.marmothypoelastic import MarmotHypoElasticMaterial
+
+    from edelweissfd.stencils.displacementstencil import DisplacementStencil
+
+    if getattr(sys.modules[DisplacementStencil.__module__], "DisplacementKernel", None) is None:
+        pytest.skip("EdelweissFD was built without the compiled displacement kernel")
+
+    def makeMaterial():
+        return MarmotHypoElasticMaterial("LinearElastic", linearElasticProperties)
+
+    compiled, interpreted = buildStencilBothPaths(
+        DisplacementStencil, [1.0, 2.0], makeMaterial, stressState="plane strain"
+    )
+
+    assert compiled._kernel is not None
+
+    dU = np.random.default_rng(3).normal(scale=1e-3, size=compiled.nDof)
+
+    KCompiled, PCompiled = evaluate(compiled, dU, dU)
+    KInterpreted, PInterpreted = evaluate(interpreted, dU, dU)
+
+    assertClose(KCompiled, KInterpreted, "tangents disagree")
+    assertClose(PCompiled, PInterpreted, "fluxes disagree")
+
+
 def test_theDisplacementKernelAgreesForAPlasticMaterial(vonMisesProperties):
     """A yielding material, so the state variable round trip through the compiled kernel is
     exercised rather than only the elastic tangent."""
@@ -290,7 +325,7 @@ def test_theDisplacementKernelAgreesForAPlasticMaterial(vonMisesProperties):
     from edelweissfd.stencils.displacementstencil import DisplacementStencil
 
     if getattr(sys.modules[DisplacementStencil.__module__], "DisplacementKernel", None) is None:
-        pytest.skip("EdelweissFE was built without the compiled displacement kernel")
+        pytest.skip("EdelweissFD was built without the compiled displacement kernel")
 
     def makeMaterial():
         return MarmotHypoElasticMaterial("VONMISES", np.asarray(vonMisesProperties, dtype=float))
@@ -331,7 +366,7 @@ def test_theGradientEnhancedKernelAgrees(spacings, stressState, at2PhaseFieldPro
         getattr(sys.modules[GradientEnhancedDisplacementStencil.__module__], "GradientEnhancedDisplacementKernel", None)
         is None
     ):
-        pytest.skip("EdelweissFE was built without the compiled gradient enhanced kernel")
+        pytest.skip("EdelweissFD was built without the compiled gradient enhanced kernel")
 
     def makeMaterial():
         return MarmotGradientEnhancedHypoElasticMaterial("AT2PHASEFIELD", at2PhaseFieldProperties)

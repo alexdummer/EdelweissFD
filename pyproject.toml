@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "Cython", "numpy"]
 build-backend = "setuptools.build_meta"
 
 
@@ -43,4 +43,5 @@ profile = "black"
 testpaths = ["tests"]
 markers = [
     "marmot: requires the compiled Marmot material interfaces of EdelweissFE",
+    "gradientplasticity: requires the point-wise gradient plasticity material of EdelweissFE",
 ]
