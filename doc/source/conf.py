@@ -3,14 +3,6 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-# EdelweissFE registers its input language keywords as an import side effect of its input
-# file parser, and several of its modules look those keywords up at import time. autodoc
-# imports modules standalone, which does not trigger the registration, so it is done here
-# once from a clean import context.
-from edelweissfe.utils.inputlanguage import InputLanguage
-
-InputLanguage().ensureParserLoaded()
-
 project = "EdelweissFD"
 copyright = "2026, Alexander Dummer"
 author = "Alexander Dummer"
