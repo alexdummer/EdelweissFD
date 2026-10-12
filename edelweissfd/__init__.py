@@ -31,3 +31,10 @@ EdelweissFD, a finite difference framework for multifield problems.
 
 See :mod:`edelweissfd.drivers.pythonscriptedsimulation` for the scripting interface.
 """
+
+import importlib.metadata
+
+try:
+    __version__ = importlib.metadata.version("EdelweissFD")
+except importlib.metadata.PackageNotFoundError:  # imported from a source tree that was never installed
+    __version__ = "unknown"
