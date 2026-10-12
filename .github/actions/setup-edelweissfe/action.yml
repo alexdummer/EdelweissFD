@@ -21,15 +21,15 @@ runs:
       env:
         HEAD_REF: ${{ github.head_ref }}
         BASE_REF: ${{ github.base_ref }}
+        REF_NAME: ${{ github.ref_name }}
       run: |
         # Try, in order: the branch actually under test (github.head_ref, set for a pull_request
-        # event), the PR's base branch (github.base_ref), then next_v26.11, the shared development
-        # branch -- not the dependency's default branch, since an EdelweissFD branch name
-        # essentially never matches one over there and silently building against a stale, possibly
-        # API incompatible revision is worse than failing.
+        # event), the PR's base branch (github.base_ref), the pushed branch (github.ref_name, for a
+        # push to a branch with same-named companions in EdelweissFE and Marmot), then master, the
+        # shared development branch of all three projects.
         resolve() {
           local repository=$1
-          for candidate in "$HEAD_REF" "$BASE_REF" "next_v26.11"; do
+          for candidate in "$HEAD_REF" "$BASE_REF" "$REF_NAME" "master"; do
             [ -n "$candidate" ] || continue
             sha=$(git ls-remote "https://github.com/$repository.git" "refs/heads/$candidate" | cut -f1)
             if [ -n "$sha" ]; then

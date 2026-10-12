@@ -17,7 +17,7 @@ Requires Python >= 3.14 and targets the free-threaded ("nogil") CPython build (`
 
 ## Setup & Installation
 
-EdelweissFE `next_v26.11` (including its compiled Marmot material interfaces, built against Marmot `next_v26.11`) must already be installed. Then:
+EdelweissFE `v26.11` (including its compiled Marmot material interfaces, built against Marmot `v26.11`) must already be installed; for development, use the `master` branches of both. Then:
 
 ```bash
 pip install -e .
@@ -67,7 +67,7 @@ pre-commit run --all-files
 
 See [CONTRIBUTING.md](CONTRIBUTING.md#pre-commit-hooks) for hook details, and [CONTRIBUTING.md](CONTRIBUTING.md#conventional-commits) for Conventional Commit types and scopes (`feat`, `fix`, `refactor`, `perf`, `test`, `docs`, `chore`).
 
-See [CONTRIBUTING.md](CONTRIBUTING.md#pull-requests) for PR workflows and branch conventions (`master` for bugfixes, `next_v<YY>.<MM>` for features).
+See [CONTRIBUTING.md](CONTRIBUTING.md#pull-requests) for PR workflows and branch conventions (every PR targets `master`; releases are `v<YY>.<MM>` tags).
 
 ## Workspace Skills (`.agents/skills/`)
 

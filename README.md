@@ -65,7 +65,7 @@ raise on construction, and their tests are skipped.
 
 ## Installation
 
-EdelweissFE `next_v26.11` (including its compiled Marmot material interfaces, built against Marmot `next_v26.11`) must be installed first.
+EdelweissFE `v26.11` (including its compiled Marmot material interfaces, built against Marmot `v26.11`) must be installed first. For development against the latest state, use the `master` branches of both.
 
 ```bash
 pip install -e .
