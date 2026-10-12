@@ -8,7 +8,7 @@
 
 EdelweissFD is a light-weight finite difference framework for **multifield** (coupled
 physics) problems. It is the finite difference sibling of
-[EdelweissFE](https://github.com/EdelweissFE/EdelweissFE) and reuses its complete
+[EdelweissFE](https://github.com/Edelweiss-Numerics/EdelweissFE) and reuses its complete
 solution machinery; the constitutive models come from
 [Marmot](https://github.com/MAteRialMOdelingToolbox/Marmot).
 
@@ -57,7 +57,7 @@ sim = FDSimulation(domainSize=1, name="TensionBar1D")
 grid = sim.createStructuredGrid(lengths=[100.0], nGridPoints=[101])
 material = sim.createMaterial("LinearElastic", [20000.0, 0.2])
 
-sim.assignStencils(DisplacementStencil, grid, material=material)
+sim.assignStencils(DisplacementStencil, grid, material=material, stressState="uniaxial stress")
 
 step = sim.createStep(stepLength=1.0)
 step.addDirichlet("clamped", grid.nodeSets["left"], "displacement", {0: 0.0})

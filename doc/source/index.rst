@@ -3,7 +3,7 @@ EdelweissFD
 
 EdelweissFD is a light-weight finite difference framework for **multifield** (coupled
 physics) problems. It is the finite difference sibling of `EdelweissFE
-<https://github.com/EdelweissFE/EdelweissFE>`_ and reuses its complete solution machinery;
+<https://github.com/Edelweiss-Numerics/EdelweissFE>`_ and reuses its complete solution machinery;
 the constitutive models come from `Marmot
 <https://github.com/MAteRialMOdelingToolbox/Marmot>`_.
 
