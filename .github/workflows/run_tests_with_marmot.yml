@@ -112,3 +112,6 @@ jobs:
         run: |
           python examples/TensionBar1D/run.py
           python examples/SimpleBeam2D/run.py
+          python examples/AT2PhaseFieldBar/run.py
+          # CompressedPanel2D needs the gradient plasticity material family, which is not part of
+          # EdelweissFE and Marmot next_v26.11; tests/test_widthconvergence.py covers it when present.
