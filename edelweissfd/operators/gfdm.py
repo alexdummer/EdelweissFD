@@ -46,7 +46,8 @@ corner operator's need to choose between accuracy and hourglass control in the f
 single, uniform stencil at every node is both second order accurate (interior, verified down to
 machine precision on a cubic test field) and free of the checkerboard zero energy mode (verified
 by direct eigenvalue inspection of a small elastic patch under the panel's own boundary
-conditions) -- see the session notes for both checks.
+conditions). Both checks were done by hand during development and are not part of the test
+suite; :func:`gfdmWeights` reproducing a quadratic field exactly is.
 
 Two things a naive implementation gets wrong, both encountered and fixed while prototyping this:
 

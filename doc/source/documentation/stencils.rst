@@ -25,6 +25,20 @@ The stencil interface
    :members:
    :undoc-members:
 
+``gradientplasticitystencil`` - Gradient plasticity on cells
+------------------------------------------------------------
+
+.. automodule:: edelweissfd.stencils.gradientplasticitystencil
+   :members:
+   :undoc-members:
+
+``gfdmgradientplasticitystencil`` - Gradient plasticity with GFDM
+-----------------------------------------------------------------
+
+.. automodule:: edelweissfd.stencils.gfdmgradientplasticitystencil
+   :members:
+   :undoc-members:
+
 Verifying a tangent
 -------------------
 

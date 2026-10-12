@@ -36,8 +36,9 @@ instead owns exactly one material point -- the grid point itself -- and builds b
 operator and the plastic multiplier Laplacian from the *same* weighted-least-squares neighbour
 cloud, see :mod:`edelweissfd.operators.gfdm`. There is no cell, no corner, and no hourglass mode
 to control in the first place: verified by direct eigenvalue inspection of a small elastic patch
-under the panel example's own boundary conditions (see the session notes), and second order
-accurate in the interior, verified against a manufactured field down to machine precision.
+under the panel example's own boundary conditions, and second order accurate in the interior,
+verified against a manufactured field down to machine precision. Both checks were done by hand
+during development and are not part of the test suite.
 
 The trade-off is a wider, denser molecule (each node couples to roughly eight neighbours rather
 than the four corners of one cell) and a boundary treatment that is only as accurate as a
