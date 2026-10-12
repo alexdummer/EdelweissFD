@@ -46,7 +46,6 @@ Handing out a fresh instance per stencil removes the sharing rather than guardin
 invariant holds no matter how the solver schedules its threads.
 """
 
-
 import numpy as np
 
 
