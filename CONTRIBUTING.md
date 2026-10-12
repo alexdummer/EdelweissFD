@@ -115,27 +115,27 @@ Before opening a new issue, search existing issues and pull requests to avoid du
 We follow the GitHub flow: **fork → branch → PR → review → merge**.
 
 ### Target Branches
-- **Bug fixes (`fix`)**: Open pull requests targeting the `master` branch.
-- **Features, enhancements, and refactoring (`feat`, `refactor`, `perf`, etc.)**: Open pull requests targeting the upcoming release branch: `next_v<YY>.<MM>` (e.g., `next_v26.11`).
+All pull requests (fixes, features, refactoring) target `master`, the development branch. Releases are tags on
+`master` (`v<YY>.<MM>`, e.g. `v26.11`), made in lockstep with EdelweissFE and Marmot.
 
 ### Workflow
-1. **Fork** the repository and create a feature/bugfix branch from the appropriate target base (`master` for fixes, `next_v<YY>.<MM>` for features):
+1. **Fork** the repository and create a feature/bugfix branch from `master`:
    ```bash
    # For a bug fix:
    git checkout -b fix/<short-scope>-<concise-topic> origin/master
 
    # For a new feature / refactoring:
-   git checkout -b feat/<short-scope>-<concise-topic> origin/next_v26.11
+   git checkout -b feat/<short-scope>-<concise-topic> origin/master
    ```
 2. **Develop & Format**: Make your changes and verify that `pre-commit run --all-files` passes locally.
 3. **Test**: Ensure all tests pass (`pytest` and `EDELWEISSFD_NO_COMPILED_KERNEL=1 pytest`).
-4. **Open a PR**: Target the correct branch (`master` for bug fixes, `next_v<YY>.<MM>` for features), provide a clear title following Conventional Commits, and describe your changes.
+4. **Open a PR**: Target `master`, provide a clear title following Conventional Commits, and describe your changes.
 
 ### Synchronizing with EdelweissFE & Marmot
 If your changes depend on features or fixes in [EdelweissFE](https://github.com/EdelweissFE/EdelweissFE) or [Marmot](https://github.com/MAteRialMOdelingToolbox/Marmot/), ensure the sibling branches are named identically. CI automatically resolves and checks out matching branches during test workflows.
 
 ### PR Checklist
-- [ ] PR targets the correct branch (`master` for bugfixes, `next_v<YY>.<MM>` for features/enhancements).
+- [ ] PR targets `master`.
 - [ ] PR title follows Conventional Commits format.
 - [ ] `pre-commit run --all-files` passes cleanly.
 - [ ] Full test suite passes locally via `pytest` (and `pytest -m "not marmot"`).
