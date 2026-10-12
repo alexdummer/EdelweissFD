@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""The compiled gradient plasticity kernel must agree with the Python one exactly.
+"""The compiled cell kernels must agree with the Python ones exactly.
 
-The stencil delegates its inner loop to a compiled kernel when that is available and
+A stencil delegates its inner loop to a compiled kernel when that is available and
 falls back to the Python implementation otherwise, so both paths are live and both have to give
 the same answer. The bound is round-off rather than an accuracy tolerance: the two evaluate the
 same expressions over the same material and differ only in the order the sums are accumulated --
