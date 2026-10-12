@@ -1,0 +1,64 @@
+name: Release
+
+# On a version tag, check that it matches pyproject.toml, build the source distribution and
+# publish a GitHub release with the tag's section of CHANGELOG.md as notes. Only an sdist: the
+# compiled kernels link against the user's own Marmot install, so a prebuilt wheel would not fit.
+
+on:
+  push:
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Check that the tag matches the package version
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::tag ${GITHUB_REF_NAME} does not match version ${version} in pyproject.toml"
+            exit 1
+          fi
+
+      - name: Extract the release notes from CHANGELOG.md
+        run: |
+          # everything between this version's heading and the next one
+          awk -v heading="## ${GITHUB_REF_NAME}" '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## / { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::CHANGELOG.md has no section starting with '## ${GITHUB_REF_NAME}'"
+            exit 1
+          fi
+
+      - name: Build the source distribution
+        run: |
+          # EdelweissFE is not installed here, so setup.py skips the compiled kernels, as intended
+          # for an sdist.
+          python -m pip install build
+          python -m build --sdist
+          # a kernel source missing from the sdist would silently leave every install from it on
+          # the Python fallback
+          for kernel in edelweissfd/kernels/*.pyx; do
+            tar tzf dist/*.tar.gz | grep -q "/${kernel}$" || { echo "::error::${kernel} is missing from the sdist"; exit 1; }
+          done
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/*.tar.gz \
+            --title "EdelweissFD ${GITHUB_REF_NAME}" \
+            --notes-file release-notes.md
