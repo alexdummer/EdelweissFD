@@ -233,7 +233,7 @@ corner sampling – there is no cell to attach to. Otherwise identical to
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>stencilClass</strong> – The stencil class, e.g.
-<code class="xref py py-class docutils literal notranslate"><span class="pre">GFDMGradientPlasticityStencil</span></code>.</p></li>
+<a class="reference internal" href="stencils.html#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil" title="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">GFDMGradientPlasticityStencil</span></code></a>.</p></li>
 <li><p><strong>grid</strong> (<a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><em>StructuredGrid</em></a>) – The grid to be covered.</p></li>
 <li><p><strong>material</strong> – See <a class="reference internal" href="#edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils" title="edelweissfd.drivers.pythonscriptedsimulation.FDSimulation.assignStencils"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assignStencils()</span></code></a>.</p></li>
 <li><p><strong>stencilOptions</strong> – Further keyword arguments passed on to the stencil constructor.</p></li>
@@ -258,12 +258,12 @@ corner sampling – there is no cell to attach to. Otherwise identical to
 <li><p><strong>stencilClass</strong> – The stencil class, e.g.
 <a class="reference internal" href="stencils.html#edelweissfd.stencils.displacementstencil.DisplacementStencil" title="edelweissfd.stencils.displacementstencil.DisplacementStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">DisplacementStencil</span></code></a>.</p></li>
 <li><p><strong>grid</strong> (<a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><em>StructuredGrid</em></a>) – The grid to be covered.</p></li>
-<li><p><strong>material</strong> – A <code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code>, or a callable taking the
+<li><p><strong>material</strong> – A <a class="reference internal" href="materials.html#edelweissfd.materials.provider.MaterialProvider" title="edelweissfd.materials.provider.MaterialProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code></a>, or a callable taking the
 cell centre coordinates and returning one. The callable form allows a spatially
 varying material. Every stencil is given an instance of its own, because a material
 carries the state variable storage it operates on as mutable state and the solvers
 distribute stencils over threads – see
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code> for the failure this avoids.</p></li>
+<a class="reference internal" href="materials.html#module-edelweissfd.materials.provider" title="edelweissfd.materials.provider"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code></a> for the failure this avoids.</p></li>
 <li><p><strong>stencilOptions</strong> – Further keyword arguments passed on to the stencil constructor.</p></li>
 </ul>
 </dd>
@@ -294,11 +294,11 @@ distribute stencils over threads – see
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A description of the material, not a material itself. See
-<code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code> for why every stencil needs
+<a class="reference internal" href="materials.html#edelweissfd.materials.provider.MaterialProvider" title="edelweissfd.materials.provider.MaterialProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code></a> for why every stencil needs
 an instance of its own.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>MaterialProvider</p>
+<dd class="field-odd"><p><a class="reference internal" href="materials.html#edelweissfd.materials.provider.MaterialProvider" title="edelweissfd.materials.provider.MaterialProvider">MaterialProvider</a></p>
 </dd>
 </dl>
 </dd></dl>

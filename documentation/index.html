@@ -89,29 +89,21 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="operators.html">Finite difference operators</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellAverageOperator"><code class="docutils literal notranslate"><span class="pre">cellAverageOperator()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellCornerGradientOperators"><code class="docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellCornerOffsets"><code class="docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellGradientOperator"><code class="docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellStrainOperator"><code class="docutils literal notranslate"><span class="pre">cellStrainOperator()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.condensePlaneStressTangents"><code class="docutils literal notranslate"><span class="pre">condensePlaneStressTangents()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.finiteDifferenceCoefficients"><code class="docutils literal notranslate"><span class="pre">finiteDifferenceCoefficients()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.hourglassVector"><code class="docutils literal notranslate"><span class="pre">hourglassVector()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.stencilOffsets"><code class="docutils literal notranslate"><span class="pre">stencilOffsets()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators"><code class="docutils literal notranslate"><span class="pre">volumetricallyAveragedStrainOperators()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.nVoigtComponents"><code class="docutils literal notranslate"><span class="pre">nVoigtComponents</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.outOfPlaneVoigtIndex"><code class="docutils literal notranslate"><span class="pre">outOfPlaneVoigtIndex</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="operators.html#edelweissfd.operators.differences.voigtIndexPairs"><code class="docutils literal notranslate"><span class="pre">voigtIndexPairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="operators.html#module-edelweissfd.operators.differences">Cell-based differences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operators.html#module-edelweissfd.operators.gfdm">Generalized finite differences (GFDM)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="stencils.html">Stencils</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="stencils.html#module-edelweissfd.stencils.base.basestencil">The stencil interface</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stencils.html#module-edelweissfd.stencils.displacementstencil"><code class="docutils literal notranslate"><span class="pre">displacementstencil</span></code> - The balance of linear momentum</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stencils.html#module-edelweissfd.stencils.gradientenhanceddisplacementstencil"><code class="docutils literal notranslate"><span class="pre">gradientenhanceddisplacementstencil</span></code> - A gradient-enhanced continuum</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stencils.html#module-edelweissfd.stencils.gradientplasticitystencil"><code class="docutils literal notranslate"><span class="pre">gradientplasticitystencil</span></code> - Gradient plasticity on cells</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stencils.html#module-edelweissfd.stencils.gfdmgradientplasticitystencil"><code class="docutils literal notranslate"><span class="pre">gfdmgradientplasticitystencil</span></code> - Gradient plasticity with GFDM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stencils.html#module-edelweissfd.stencils.numericaltangent">Verifying a tangent</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="materials.html">Materials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="materials.html#module-edelweissfd.materials.provider">One material instance per stencil</a></li>
 <li class="toctree-l2"><a class="reference internal" href="materials.html#small-strain-materials">Small strain materials</a></li>
 <li class="toctree-l2"><a class="reference internal" href="materials.html#module-edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial">Gradient-enhanced materials</a></li>
 </ul>

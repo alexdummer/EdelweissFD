@@ -49,19 +49,28 @@
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="grids.html">Grids</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Finite difference operators</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellAverageOperator"><code class="docutils literal notranslate"><span class="pre">cellAverageOperator()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellCornerGradientOperators"><code class="docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellCornerOffsets"><code class="docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellGradientOperator"><code class="docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.cellStrainOperator"><code class="docutils literal notranslate"><span class="pre">cellStrainOperator()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.condensePlaneStressTangents"><code class="docutils literal notranslate"><span class="pre">condensePlaneStressTangents()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.finiteDifferenceCoefficients"><code class="docutils literal notranslate"><span class="pre">finiteDifferenceCoefficients()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.hourglassVector"><code class="docutils literal notranslate"><span class="pre">hourglassVector()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.stencilOffsets"><code class="docutils literal notranslate"><span class="pre">stencilOffsets()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators"><code class="docutils literal notranslate"><span class="pre">volumetricallyAveragedStrainOperators()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.nVoigtComponents"><code class="docutils literal notranslate"><span class="pre">nVoigtComponents</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.outOfPlaneVoigtIndex"><code class="docutils literal notranslate"><span class="pre">outOfPlaneVoigtIndex</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#edelweissfd.operators.differences.voigtIndexPairs"><code class="docutils literal notranslate"><span class="pre">voigtIndexPairs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.operators.differences">Cell-based differences</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.cellAverageOperator"><code class="docutils literal notranslate"><span class="pre">cellAverageOperator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.cellCornerGradientOperators"><code class="docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.cellCornerOffsets"><code class="docutils literal notranslate"><span class="pre">cellCornerOffsets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.cellGradientOperator"><code class="docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.cellStrainOperator"><code class="docutils literal notranslate"><span class="pre">cellStrainOperator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.condensePlaneStressTangents"><code class="docutils literal notranslate"><span class="pre">condensePlaneStressTangents()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.finiteDifferenceCoefficients"><code class="docutils literal notranslate"><span class="pre">finiteDifferenceCoefficients()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.hourglassVector"><code class="docutils literal notranslate"><span class="pre">hourglassVector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.stencilOffsets"><code class="docutils literal notranslate"><span class="pre">stencilOffsets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators"><code class="docutils literal notranslate"><span class="pre">volumetricallyAveragedStrainOperators()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.nVoigtComponents"><code class="docutils literal notranslate"><span class="pre">nVoigtComponents</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.outOfPlaneVoigtIndex"><code class="docutils literal notranslate"><span class="pre">outOfPlaneVoigtIndex</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.differences.voigtIndexPairs"><code class="docutils literal notranslate"><span class="pre">voigtIndexPairs</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.operators.gfdm">Generalized finite differences (GFDM)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.gfdm.gatherCloud"><code class="docutils literal notranslate"><span class="pre">gatherCloud()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.gfdm.gfdmWeights"><code class="docutils literal notranslate"><span class="pre">gfdmWeights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.operators.gfdm.nDerivatives"><code class="docutils literal notranslate"><span class="pre">nDerivatives</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="stencils.html">Stencils</a></li>
@@ -99,8 +108,9 @@
              
   <section id="finite-difference-operators">
 <h1>Finite difference operators<a class="headerlink" href="#finite-difference-operators" title="Link to this heading"></a></h1>
-<p>Relevant module <code class="docutils literal notranslate"><span class="pre">edelweissfd.operators.differences</span></code></p>
-<p id="module-edelweissfd.operators.differences">Finite difference operators on a uniform structured grid.</p>
+<section id="module-edelweissfd.operators.differences">
+<span id="cell-based-differences"></span><h2>Cell-based differences<a class="headerlink" href="#module-edelweissfd.operators.differences" title="Link to this heading"></a></h2>
+<p>Finite difference operators on a uniform structured grid.</p>
 <p>Two groups of functions live here.</p>
 <p><strong>General difference quotients.</strong> <a class="reference internal" href="#edelweissfd.operators.differences.finiteDifferenceCoefficients" title="edelweissfd.operators.differences.finiteDifferenceCoefficients"><code class="xref py py-func docutils literal notranslate"><span class="pre">finiteDifferenceCoefficients()</span></code></a> returns the
 coefficients of an arbitrary difference quotient for an arbitrary set of grid offsets, and
@@ -442,6 +452,104 @@ what equal material point volumes call for.</p></li>
 <dd><p>The tensor index pair belonging to each Voigt component, in Marmot’s convention.</p>
 </dd></dl>
 
+</section>
+<section id="module-edelweissfd.operators.gfdm">
+<span id="generalized-finite-differences-gfdm"></span><h2>Generalized finite differences (GFDM)<a class="headerlink" href="#module-edelweissfd.operators.gfdm" title="Link to this heading"></a></h2>
+<p>A Generalized Finite Difference (GFDM) nodal differentiation operator.</p>
+<p>The operators here (<a class="reference internal" href="#edelweissfd.operators.gfdm.gatherCloud" title="edelweissfd.operators.gfdm.gatherCloud"><code class="xref py py-func docutils literal notranslate"><span class="pre">gatherCloud()</span></code></a>, <a class="reference internal" href="#edelweissfd.operators.gfdm.gfdmWeights" title="edelweissfd.operators.gfdm.gfdmWeights"><code class="xref py py-func docutils literal notranslate"><span class="pre">gfdmWeights()</span></code></a>) work in any number of
+dimensions; the stencil built from them,
+<a class="reference internal" href="stencils.html#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil" title="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">GFDMGradientPlasticityStencil</span></code></a>,
+currently only wires up one and two.</p>
+<p>The corner-sampled strain operator used by
+<a class="reference internal" href="stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil" title="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradientPlasticityStencil</span></code></a>
+is only first order accurate at the corner itself, and the price of second order accuracy
+there without hourglassing would be a fundamentally different (staggered) grid topology. GFDM
+offers a third way: at every grid node directly, fit a local quadratic Taylor polynomial through
+a cloud of neighbours by <em>weighted least squares</em> rather than reading a derivative off two or
+three points exactly. Consistency (correct derivatives in the limit) does not depend on the
+cloud being small, symmetric, or exactly matching a monomial count, which is what removes the
+corner operator’s need to choose between accuracy and hourglass control in the first place: a
+single, uniform stencil at every node is both second order accurate (interior, verified down to
+machine precision on a cubic test field) and free of the checkerboard zero energy mode (verified
+by direct eigenvalue inspection of a small elastic patch under the panel’s own boundary
+conditions). Both checks were done by hand during development and are not part of the test
+suite; <a class="reference internal" href="#edelweissfd.operators.gfdm.gfdmWeights" title="edelweissfd.operators.gfdm.gfdmWeights"><code class="xref py py-func docutils literal notranslate"><span class="pre">gfdmWeights()</span></code></a> reproducing a quadratic field exactly is.</p>
+<p>Two things a naive implementation gets wrong, both encountered and fixed while prototyping this:</p>
+<ul class="simple">
+<li><p>Weights must be applied to <em>differences</em> from the centre’s own value, not to the neighbours’
+absolute values – the constant term of the local Taylor model is the centre value itself, and
+skipping the subtraction silently reintroduces an error that looks like a consistency failure
+but is really just a wrong centre-of-expansion.</p></li>
+<li><p>The neighbour cloud can be <strong>rank deficient</strong> for a chosen polynomial degree on a regular
+lattice, invisibly – a well counted but badly shaped cloud solves to a numerically-unstable,
+wildly wrong answer rather than raising an error. <a class="reference internal" href="#edelweissfd.operators.gfdm.gfdmWeights" title="edelweissfd.operators.gfdm.gfdmWeights"><code class="xref py py-func docutils literal notranslate"><span class="pre">gfdmWeights()</span></code></a> checks the rank
+explicitly and <a class="reference internal" href="#edelweissfd.operators.gfdm.gatherCloud" title="edelweissfd.operators.gfdm.gatherCloud"><code class="xref py py-func docutils literal notranslate"><span class="pre">gatherCloud()</span></code></a> widens the search until it is satisfied.</p></li>
+</ul>
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.gfdm.gatherCloud">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.gfdm.</span></span><span class="sig-name descname"><span class="pre">gatherCloud</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minPoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxRadius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/gfdm.html#gatherCloud"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.gfdm.gatherCloud" title="Link to this definition"></a></dt>
+<dd><p>The neighbours of a grid point, widening a compass search until enough are available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> – The <a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid" title="edelweissfd.grids.structuredgrid.StructuredGrid"><code class="xref py py-class docutils literal notranslate"><span class="pre">StructuredGrid</span></code></a> the node belongs to.</p></li>
+<li><p><strong>node</strong> – The grid point to gather neighbours around.</p></li>
+<li><p><strong>minPoints</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The minimum cloud size to stop widening at. Five is the bare minimum a two dimensional
+quadratic model needs; eight (the full interior compass ring) is the default so that the
+least squares fit is over-determined rather than exact, which is what makes it robust to
+a single badly placed neighbour.</p></li>
+<li><p><strong>maxRadius</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The largest compass radius to try before giving up.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The neighbouring grid points, excluding the centre itself.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)">list</a>[Node]</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/builtins/exceptions.html#ValueError" title="(in Python v3.15)"><strong>ValueError</strong></a> – If <code class="docutils literal notranslate"><span class="pre">maxRadius</span></code> is reached without finding <code class="docutils literal notranslate"><span class="pre">minPoints</span></code> neighbours – only possible on
+a grid with fewer than <code class="docutils literal notranslate"><span class="pre">minPoints</span></code> points in total.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.operators.gfdm.gfdmWeights">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.gfdm.</span></span><span class="sig-name descname"><span class="pre">gfdmWeights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centre</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weightPower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">conditionLimit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100000000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/operators/gfdm.html#gfdmWeights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.operators.gfdm.gfdmWeights" title="Link to this definition"></a></dt>
+<dd><p>The weighted least squares gradient and Laplacian weights over a neighbour cloud.</p>
+<p>The returned weights act on the neighbours’ <em>values minus the centre’s own value</em> – the
+coefficient the centre itself would carry, so that a constant field gives an exactly
+vanishing derivative, is <code class="docutils literal notranslate"><span class="pre">-weights.sum(axis=-1)</span></code> and is added explicitly by the caller
+once it decides how to lay the centre out among its degrees of freedom.</p>
+<p>Works in any number of dimensions: one, as needed for a 1D bar, two, or three.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>centre</strong> – The coordinates of the point the derivatives are taken at, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p></li>
+<li><p><strong>neighbours</strong> – The coordinates of the cloud, shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">nDim)</span></code>.</p></li>
+<li><p><strong>weightPower</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The distance weighting exponent; larger values favour closer neighbours more strongly.</p></li>
+<li><p><strong>conditionLimit</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – Raise if the design matrix’s condition number exceeds this – the signature of a rank
+deficient or near degenerate cloud, which a silent solve would turn into a wildly wrong,
+not merely inaccurate, answer.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">(gradientWeights,</span> <span class="pre">laplacianWeights)</span></code>: shapes <code class="docutils literal notranslate"><span class="pre">(nDim,</span> <span class="pre">n)</span></code> and <code class="docutils literal notranslate"><span class="pre">(n,)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)">tuple</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.operators.gfdm.nDerivatives">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.operators.gfdm.</span></span><span class="sig-name descname"><span class="pre">nDerivatives</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></span><a class="headerlink" href="#edelweissfd.operators.gfdm.nDerivatives" title="Link to this definition"></a></dt>
+<dd><p>[ux, uy, uxx, uxy, uyy], in this order, is what <a class="reference internal" href="#edelweissfd.operators.gfdm.gfdmWeights" title="edelweissfd.operators.gfdm.gfdmWeights"><code class="xref py py-func docutils literal notranslate"><span class="pre">gfdmWeights()</span></code></a> returns per neighbour.</p>
+</dd></dl>
+
+</section>
 </section>
 
 

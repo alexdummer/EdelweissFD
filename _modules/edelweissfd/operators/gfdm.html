@@ -1,0 +1,302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edelweissfd.operators.gfdm &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">edelweissfd.operators.gfdm</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for edelweissfd.operators.gfdm</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1">#  _____    _      _              _         _____ _____ ____</span>
+<span class="c1"># | ____|__| | ___| |_      _____(_)___ ___|  ___|  ___|  _ \</span>
+<span class="c1"># |  _| / _` |/ _ \ \ \ /\ / / _ \ / __/ __| |_  | |_  | | | |</span>
+<span class="c1"># | |__| (_| |  __/ |\ V  V /  __/ \__ \__ \  _| |  _| | |_| |</span>
+<span class="c1"># |_____\__,_|\___|_| \_/\_/ \___|_|___/___/_|   |_|   |____/</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#  Unit of Strength of Materials and Structural Analysis</span>
+<span class="c1">#  University of Innsbruck,</span>
+<span class="c1">#  2017 - today</span>
+<span class="c1">#</span>
+<span class="c1">#  Alexander Dummer alexander.dummer@uibk.ac.at</span>
+<span class="c1">#</span>
+<span class="c1">#  This file is part of EdelweissFD.</span>
+<span class="c1">#</span>
+<span class="c1">#  This library is free software; you can redistribute it and/or</span>
+<span class="c1">#  modify it under the terms of the GNU Lesser General Public</span>
+<span class="c1">#  License as published by the Free Software Foundation; either</span>
+<span class="c1">#  version 2.1 of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  The full text of the license can be found in the file LICENSE.md at</span>
+<span class="c1">#  the top level directory of EdelweissFD.</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+
+<span class="sd">"""</span>
+<span class="sd">A Generalized Finite Difference (GFDM) nodal differentiation operator.</span>
+
+<span class="sd">The operators here (:func:`gatherCloud`, :func:`gfdmWeights`) work in any number of</span>
+<span class="sd">dimensions; the stencil built from them,</span>
+<span class="sd">:class:`~edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil`,</span>
+<span class="sd">currently only wires up one and two.</span>
+
+<span class="sd">The corner-sampled strain operator used by</span>
+<span class="sd">:class:`~edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil`</span>
+<span class="sd">is only first order accurate at the corner itself, and the price of second order accuracy</span>
+<span class="sd">there without hourglassing would be a fundamentally different (staggered) grid topology. GFDM</span>
+<span class="sd">offers a third way: at every grid node directly, fit a local quadratic Taylor polynomial through</span>
+<span class="sd">a cloud of neighbours by *weighted least squares* rather than reading a derivative off two or</span>
+<span class="sd">three points exactly. Consistency (correct derivatives in the limit) does not depend on the</span>
+<span class="sd">cloud being small, symmetric, or exactly matching a monomial count, which is what removes the</span>
+<span class="sd">corner operator's need to choose between accuracy and hourglass control in the first place: a</span>
+<span class="sd">single, uniform stencil at every node is both second order accurate (interior, verified down to</span>
+<span class="sd">machine precision on a cubic test field) and free of the checkerboard zero energy mode (verified</span>
+<span class="sd">by direct eigenvalue inspection of a small elastic patch under the panel's own boundary</span>
+<span class="sd">conditions). Both checks were done by hand during development and are not part of the test</span>
+<span class="sd">suite; :func:`gfdmWeights` reproducing a quadratic field exactly is.</span>
+
+<span class="sd">Two things a naive implementation gets wrong, both encountered and fixed while prototyping this:</span>
+
+<span class="sd">* Weights must be applied to *differences* from the centre's own value, not to the neighbours'</span>
+<span class="sd">  absolute values -- the constant term of the local Taylor model is the centre value itself, and</span>
+<span class="sd">  skipping the subtraction silently reintroduces an error that looks like a consistency failure</span>
+<span class="sd">  but is really just a wrong centre-of-expansion.</span>
+<span class="sd">* The neighbour cloud can be **rank deficient** for a chosen polynomial degree on a regular</span>
+<span class="sd">  lattice, invisibly -- a well counted but badly shaped cloud solves to a numerically-unstable,</span>
+<span class="sd">  wildly wrong answer rather than raising an error. :func:`gfdmWeights` checks the rank</span>
+<span class="sd">  explicitly and :func:`gatherCloud` widens the search until it is satisfied.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="c1">#: [ux, uy, uxx, uxy, uyy], in this order, is what :func:`gfdmWeights` returns per neighbour.</span>
+<span class="n">nDerivatives</span> <span class="o">=</span> <span class="mi">5</span>
+
+
+<div class="viewcode-block" id="gatherCloud">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.gfdm.gatherCloud">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gatherCloud</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">node</span><span class="p">,</span> <span class="n">minPoints</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span><span class="p">,</span> <span class="n">maxRadius</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The neighbours of a grid point, widening a compass search until enough are available.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    grid</span>
+<span class="sd">        The :class:`~edelweissfd.grids.structuredgrid.StructuredGrid` the node belongs to.</span>
+<span class="sd">    node</span>
+<span class="sd">        The grid point to gather neighbours around.</span>
+<span class="sd">    minPoints</span>
+<span class="sd">        The minimum cloud size to stop widening at. Five is the bare minimum a two dimensional</span>
+<span class="sd">        quadratic model needs; eight (the full interior compass ring) is the default so that the</span>
+<span class="sd">        least squares fit is over-determined rather than exact, which is what makes it robust to</span>
+<span class="sd">        a single badly placed neighbour.</span>
+<span class="sd">    maxRadius</span>
+<span class="sd">        The largest compass radius to try before giving up.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list[Node]</span>
+<span class="sd">        The neighbouring grid points, excluding the centre itself.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If ``maxRadius`` is reached without finding ``minPoints`` neighbours -- only possible on</span>
+<span class="sd">        a grid with fewer than ``minPoints`` points in total.</span>
+<span class="sd">    """</span>
+
+    <span class="n">centreIndex</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">gridIndexOf</span><span class="p">(</span><span class="n">node</span><span class="p">))</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">shape</span>
+
+    <span class="k">for</span> <span class="n">radius</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxRadius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">neighbours</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">offset</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="o">*</span><span class="p">([</span><span class="mi">2</span> <span class="o">*</span> <span class="n">radius</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">grid</span><span class="o">.</span><span class="n">nDim</span><span class="p">)):</span>
+            <span class="n">offset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span> <span class="o">-</span> <span class="n">radius</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">offset</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">offset</span><span class="p">))</span> <span class="o">&gt;</span> <span class="n">radius</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">index</span> <span class="o">=</span> <span class="n">centreIndex</span> <span class="o">+</span> <span class="n">offset</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">((</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">shape</span><span class="p">)):</span>
+                <span class="n">neighbours</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">_nodeGrid</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">index</span><span class="p">)])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">neighbours</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">minPoints</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">neighbours</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+        <span class="s2">"Could not find </span><span class="si">{:}</span><span class="s2"> neighbours of node </span><span class="si">{:}</span><span class="s2"> within a compass radius of </span><span class="si">{:}</span><span class="s2">."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">minPoints</span><span class="p">,</span> <span class="n">node</span><span class="o">.</span><span class="n">label</span><span class="p">,</span> <span class="n">maxRadius</span>
+        <span class="p">)</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_taylorBasisIndices</span><span class="p">(</span><span class="n">nDim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""The multi-indices of a degree-2 Taylor basis in ``nDim`` dimensions, excluding the</span>
+<span class="sd">    constant term: linear terms, pure second-derivative terms, and cross terms, in that order.</span>
+<span class="sd">    All three groups are needed for a *correct* fit even though only the first two are read back</span>
+<span class="sd">    out -- leaving the cross terms out biases the pure second-derivative (Laplacian) estimate."""</span>
+
+    <span class="n">linear</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">)]</span>
+    <span class="n">pureSquare</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">)]</span>
+    <span class="n">cross</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nDim</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">linear</span><span class="p">,</span> <span class="n">pureSquare</span><span class="p">,</span> <span class="n">cross</span>
+
+
+<div class="viewcode-block" id="gfdmWeights">
+<a class="viewcode-back" href="../../../documentation/operators.html#edelweissfd.operators.gfdm.gfdmWeights">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gfdmWeights</span><span class="p">(</span><span class="n">centre</span><span class="p">,</span> <span class="n">neighbours</span><span class="p">,</span> <span class="n">weightPower</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">conditionLimit</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""The weighted least squares gradient and Laplacian weights over a neighbour cloud.</span>
+
+<span class="sd">    The returned weights act on the neighbours' *values minus the centre's own value* -- the</span>
+<span class="sd">    coefficient the centre itself would carry, so that a constant field gives an exactly</span>
+<span class="sd">    vanishing derivative, is ``-weights.sum(axis=-1)`` and is added explicitly by the caller</span>
+<span class="sd">    once it decides how to lay the centre out among its degrees of freedom.</span>
+
+<span class="sd">    Works in any number of dimensions: one, as needed for a 1D bar, two, or three.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    centre</span>
+<span class="sd">        The coordinates of the point the derivatives are taken at, shape ``(nDim,)``.</span>
+<span class="sd">    neighbours</span>
+<span class="sd">        The coordinates of the cloud, shape ``(n, nDim)``.</span>
+<span class="sd">    weightPower</span>
+<span class="sd">        The distance weighting exponent; larger values favour closer neighbours more strongly.</span>
+<span class="sd">    conditionLimit</span>
+<span class="sd">        Raise if the design matrix's condition number exceeds this -- the signature of a rank</span>
+<span class="sd">        deficient or near degenerate cloud, which a silent solve would turn into a wildly wrong,</span>
+<span class="sd">        not merely inaccurate, answer.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        ``(gradientWeights, laplacianWeights)``: shapes ``(nDim, n)`` and ``(n,)``.</span>
+<span class="sd">    """</span>
+
+    <span class="n">centre</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">centre</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="n">neighbours</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">neighbours</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+    <span class="n">nDim</span> <span class="o">=</span> <span class="n">centre</span><span class="o">.</span><span class="n">size</span>
+
+    <span class="n">d</span> <span class="o">=</span> <span class="n">neighbours</span> <span class="o">-</span> <span class="n">centre</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="p">:]</span>
+
+    <span class="n">linear</span><span class="p">,</span> <span class="n">pureSquare</span><span class="p">,</span> <span class="n">cross</span> <span class="o">=</span> <span class="n">_taylorBasisIndices</span><span class="p">(</span><span class="n">nDim</span><span class="p">)</span>
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,)</span> <span class="ow">in</span> <span class="n">linear</span><span class="p">]</span>
+    <span class="n">columns</span> <span class="o">+=</span> <span class="p">[</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">d</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">**</span> <span class="mi">2</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">pureSquare</span><span class="p">]</span>
+    <span class="n">columns</span> <span class="o">+=</span> <span class="p">[</span><span class="n">d</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">d</span><span class="p">[:,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">cross</span><span class="p">]</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">columns</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">distance</span><span class="o">**</span><span class="n">weightPower</span><span class="p">)</span>
+
+    <span class="n">AtWA</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">W</span> <span class="o">@</span> <span class="n">A</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">AtWA</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">conditionLimit</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">"The GFDM neighbour cloud is too close to rank deficient (condition number </span><span class="si">{:.3e}</span><span class="s2">); "</span>
+            <span class="s2">"widen the cloud (gatherCloud's minPoints) or check for a degenerate lattice pattern."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">cond</span><span class="p">(</span><span class="n">AtWA</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">pseudo</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">AtWA</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">W</span><span class="p">)</span>  <span class="c1"># (nTerms, n)</span>
+
+    <span class="n">gradientWeights</span> <span class="o">=</span> <span class="n">pseudo</span><span class="p">[:</span><span class="n">nDim</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="n">laplacianWeights</span> <span class="o">=</span> <span class="n">pseudo</span><span class="p">[</span><span class="n">nDim</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nDim</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gradientWeights</span><span class="p">,</span> <span class="n">laplacianWeights</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

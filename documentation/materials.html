@@ -51,6 +51,12 @@
 <li class="toctree-l2"><a class="reference internal" href="operators.html">Finite difference operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="stencils.html">Stencils</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Materials</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.materials.provider">One material instance per stencil</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#why-a-material-cannot-simply-be-shared">Why a material cannot simply be shared</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.materials.provider.MaterialProvider"><code class="docutils literal notranslate"><span class="pre">MaterialProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.materials.provider.materialInstanceFrom"><code class="docutils literal notranslate"><span class="pre">materialInstanceFrom()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#small-strain-materials">Small strain materials</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#edelweissfe.materials.base.basehypoelasticmaterial.BaseHypoElasticMaterial"><code class="docutils literal notranslate"><span class="pre">BaseHypoElasticMaterial</span></code></a></li>
 </ul>
@@ -99,6 +105,72 @@
 <h1>Materials<a class="headerlink" href="#materials" title="Link to this heading"></a></h1>
 <p>EdelweissFD does not implement constitutive models. It consumes those of EdelweissFE, which
 are either implemented natively in Python or provided point-wise by Marmot.</p>
+<section id="module-edelweissfd.materials.provider">
+<span id="one-material-instance-per-stencil"></span><h2>One material instance per stencil<a class="headerlink" href="#module-edelweissfd.materials.provider" title="Link to this heading"></a></h2>
+<p>A description of a material, which mints one instance per stencil.</p>
+<section id="why-a-material-cannot-simply-be-shared">
+<h3>Why a material cannot simply be shared<a class="headerlink" href="#why-a-material-cannot-simply-be-shared" title="Link to this heading"></a></h3>
+<p>A point-wise material is not a pure function of its arguments. It carries the storage it operates
+on as mutable state: <code class="docutils literal notranslate"><span class="pre">assignCurrentStateVars</span></code> points it at the state variables of one particular
+material point, and the next evaluation reads and writes exactly those. A single instance can
+therefore only serve one material point at a time.</p>
+<p>That is fine within a stencil, which evaluates its material points one after another, and it is
+<em>not</em> fine across stencils, because the solvers hand chunks of entities to different threads (see
+<code class="docutils literal notranslate"><span class="pre">edelweissfe.solvers.base.parallelelementcomputation</span></code>). Two threads re-pointing the same material
+at their own state variables corrupt it. On a free threaded interpreter the failure is immediate
+and total – the Cython memoryview holding the state variables has its acquisition count
+decremented twice and aborts the process with <code class="docutils literal notranslate"><span class="pre">Fatal</span> <span class="pre">Python</span> <span class="pre">error:</span> <span class="pre">Acquisition</span> <span class="pre">count</span> <span class="pre">is</span> <span class="pre">-1</span></code> –
+and with the global interpreter lock in place the same race merely becomes unlikely and silent,
+which is worse: a material point can be evaluated against another one’s state variables.</p>
+<p>Handing out a fresh instance per stencil removes the sharing rather than guarding it, so the
+invariant holds no matter how the solver schedules its threads.</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.materials.provider.MaterialProvider">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.materials.provider.</span></span><span class="sig-name descname"><span class="pre">MaterialProvider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">materialClass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">arguments</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/materials/provider.html#MaterialProvider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.materials.provider.MaterialProvider" title="Link to this definition"></a></dt>
+<dd><p>A material class together with the arguments to construct it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>materialClass</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#type" title="(in Python v3.15)"><em>type</em></a>) – The material class to instantiate.</p></li>
+<li><p><strong>arguments</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#tuple" title="(in Python v3.15)"><em>tuple</em></a>) – The positional arguments its constructor takes.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.materials.provider.MaterialProvider.createMaterial">
+<span class="sig-name descname"><span class="pre">createMaterial</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/materials/provider.html#MaterialProvider.createMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.materials.provider.MaterialProvider.createMaterial" title="Link to this definition"></a></dt>
+<dd><p>Create a new material instance, owned by a single stencil.</p>
+<p>Array arguments are copied, so that no two instances end up holding a view of the same
+buffer. The Cython materials keep the property array as a memoryview attribute, and the
+point of this class is that instances share nothing at all.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The material instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.materials.provider.materialInstanceFrom">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.materials.provider.</span></span><span class="sig-name descname"><span class="pre">materialInstanceFrom</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">materialOrProvider</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/materials/provider.html#materialInstanceFrom"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.materials.provider.materialInstanceFrom" title="Link to this definition"></a></dt>
+<dd><p>Resolve either a provider or a ready made material into a material instance.</p>
+<p>A <a class="reference internal" href="#edelweissfd.materials.provider.MaterialProvider" title="edelweissfd.materials.provider.MaterialProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code></a> yields a fresh instance on every call, so each caller gets one of
+its own. Anything else is assumed to be a material already and is passed through – which is
+what the tangent tests do, where a single stencil is built and evaluated by hand.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>materialOrProvider</strong> – A <a class="reference internal" href="#edelweissfd.materials.provider.MaterialProvider" title="edelweissfd.materials.provider.MaterialProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MaterialProvider</span></code></a> or a material instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>The material instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="small-strain-materials">
 <h2>Small strain materials<a class="headerlink" href="#small-strain-materials" title="Link to this heading"></a></h2>
 <dl class="py class">

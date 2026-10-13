@@ -1,8 +1,16 @@
 Finite difference operators
 ===========================
 
-Relevant module ``edelweissfd.operators.differences``
+Cell-based differences
+----------------------
 
 .. automodule:: edelweissfd.operators.differences
+   :members:
+   :undoc-members:
+
+Generalized finite differences (GFDM)
+-------------------------------------
+
+.. automodule:: edelweissfd.operators.gfdm
    :members:
    :undoc-members:

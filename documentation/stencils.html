@@ -67,6 +67,18 @@
 <li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.useCompiledKernel"><code class="docutils literal notranslate"><span class="pre">useCompiledKernel</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.gradientplasticitystencil"><code class="docutils literal notranslate"><span class="pre">gradientplasticitystencil</span></code> - Gradient plasticity on cells</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil"><code class="docutils literal notranslate"><span class="pre">GradientPlasticityStencil</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.materialTimeReport"><code class="docutils literal notranslate"><span class="pre">materialTimeReport()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.profileMaterialTime"><code class="docutils literal notranslate"><span class="pre">profileMaterialTime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.stressStates"><code class="docutils literal notranslate"><span class="pre">stressStates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.useCompiledKernel"><code class="docutils literal notranslate"><span class="pre">useCompiledKernel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.gfdmgradientplasticitystencil"><code class="docutils literal notranslate"><span class="pre">gfdmgradientplasticitystencil</span></code> - Gradient plasticity with GFDM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil"><code class="docutils literal notranslate"><span class="pre">GFDMGradientPlasticityStencil</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#module-edelweissfd.stencils.numericaltangent">Verifying a tangent</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#edelweissfd.stencils.numericaltangent.NumericalTangentMixin"><code class="docutils literal notranslate"><span class="pre">NumericalTangentMixin</span></code></a></li>
 </ul>
@@ -473,7 +485,7 @@ a stencil owns exactly one material point, so the only valid value is zero.</p>
 The instance must belong to this stencil alone: it is re-pointed at the state
 variables of each material point during evaluation, so sharing it with another
 stencil is a data race as soon as the solver computes stencils on several threads.
-See <code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code>.</p>
+See <a class="reference internal" href="materials.html#module-edelweissfd.materials.provider" title="edelweissfd.materials.provider"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -575,7 +587,7 @@ which carry the reduced tangent.</p>
 <dt class="sig sig-object py" id="edelweissfd.stencils.displacementstencil.useCompiledKernel">
 <span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.displacementstencil.</span></span><span class="sig-name descname"><span class="pre">useCompiledKernel</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#edelweissfd.stencils.displacementstencil.useCompiledKernel" title="Link to this definition"></a></dt>
 <dd><p>Use the compiled kernel when it is available, see
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.stencils.gradientplasticitystencil</span></code> for the measurements that motivate it.
+<a class="reference internal" href="#module-edelweissfd.stencils.gradientplasticitystencil" title="edelweissfd.stencils.gradientplasticitystencil"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.stencils.gradientplasticitystencil</span></code></a> for the measurements that motivate it.
 Set <code class="docutils literal notranslate"><span class="pre">EDELWEISSFD_NO_COMPILED_KERNEL=1</span></code> in the environment to force the Python implementation.</p>
 </dd></dl>
 
@@ -731,7 +743,7 @@ a stencil owns exactly one material point, so the only valid value is zero.</p>
 <dd class="field-odd"><p><strong>material</strong> – A material with a single nonlocal variable, honoring
 <a class="reference internal" href="materials.html#module-edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial" title="edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.materials.base.basegradientenhancedhypoelasticmaterial</span></code></a>.
 The instance must belong to this stencil alone, see
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code>.</p>
+<a class="reference internal" href="materials.html#module-edelweissfd.materials.provider" title="edelweissfd.materials.provider"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -831,8 +843,554 @@ tangent check will flag the deviation. Prefer <code class="docutils literal notr
 <dt class="sig sig-object py" id="edelweissfd.stencils.gradientenhanceddisplacementstencil.useCompiledKernel">
 <span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientenhanceddisplacementstencil.</span></span><span class="sig-name descname"><span class="pre">useCompiledKernel</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#edelweissfd.stencils.gradientenhanceddisplacementstencil.useCompiledKernel" title="Link to this definition"></a></dt>
 <dd><p>Use the compiled kernel when it is available, see
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.stencils.gradientplasticitystencil</span></code> for the measurements that motivate it.
+<a class="reference internal" href="#module-edelweissfd.stencils.gradientplasticitystencil" title="edelweissfd.stencils.gradientplasticitystencil"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.stencils.gradientplasticitystencil</span></code></a> for the measurements that motivate it.
 Set <code class="docutils literal notranslate"><span class="pre">EDELWEISSFD_NO_COMPILED_KERNEL=1</span></code> in the environment to force the Python implementation.</p>
+</dd></dl>
+
+</section>
+<section id="module-edelweissfd.stencils.gradientplasticitystencil">
+<span id="gradientplasticitystencil-gradient-plasticity-on-cells"></span><h2><code class="docutils literal notranslate"><span class="pre">gradientplasticitystencil</span></code> - Gradient plasticity on cells<a class="headerlink" href="#module-edelweissfd.stencils.gradientplasticitystencil" title="Link to this heading"></a></h2>
+<p>The multifield finite difference stencil for gradient plasticity.</p>
+<p>Two fields live on every grid point: the <code class="docutils literal notranslate"><span class="pre">displacement</span></code> and the <code class="docutils literal notranslate"><span class="pre">plastic</span> <span class="pre">multiplier</span></code>
+<span class="math notranslate nohighlight">\(\lambda\)</span>. The equations solved are the balance of linear momentum and the yield
+condition, which for this material family depends on the Laplacian of the plastic multiplier,</p>
+<div class="math notranslate nohighlight">
+\[-\nabla \cdot \boldsymbol \sigma = \boldsymbol 0
+\qquad
+f\left( \boldsymbol \sigma,\, \lambda,\, \nabla^2 \lambda \right) = 0\]</div>
+<p>as implemented by Marmot’s <code class="docutils literal notranslate"><span class="pre">MarmotMaterialGradientPlasticityHypoElastic</span></code>; <code class="docutils literal notranslate"><span class="pre">GRADIENTVONMISES</span></code>
+is such a material.</p>
+<p><strong>No auxiliary field, no penalty.</strong> Marmot’s own <code class="docutils literal notranslate"><span class="pre">C0GradientPlasticityFiniteElement</span></code> carries
+a third field for <span class="math notranslate nohighlight">\(\nabla \lambda\)</span> and ties it to the plastic multiplier by a penalty,
+because a C0 shape function cannot deliver a second derivative. A finite difference operator
+has no such restriction: the Laplacian is simply the compact three point second difference per
+direction, see <a class="reference internal" href="grids.html#edelweissfd.grids.structuredgrid.StructuredGrid.laplacianAt" title="edelweissfd.grids.structuredgrid.StructuredGrid.laplacianAt"><code class="xref py py-meth docutils literal notranslate"><span class="pre">laplacianAt()</span></code></a>. That
+removes one field, the penalty parameter and the ill-conditioning it brings, and leaves a
+genuine two field problem.</p>
+<p>The price is that the molecule is wider than a single cell: the second difference at a corner
+reaches one grid point beyond it. The stencil therefore couples the corners of its cell plus
+the neighbours entering the Laplacian, and declares the <code class="docutils literal notranslate"><span class="pre">displacement</span></code> field only on the
+corners, since the outer grid points contribute through the plastic multiplier alone.</p>
+<p>At the boundary of the grid the missing neighbour is a ghost node, eliminated by the
+homogeneous Neumann condition <span class="math notranslate nohighlight">\(\partial \lambda / \partial n = 0\)</span>, i.e. no plastic
+flux through the boundary.</p>
+<p>Discretely, per material point of the cell, with <span class="math notranslate nohighlight">\(\boldsymbol B\)</span> the strain operator of
+the cell and <span class="math notranslate nohighlight">\(\boldsymbol L\)</span> the Laplacian coefficients over the molecule,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol P_u = \boldsymbol B^T \boldsymbol \sigma V,
+\qquad
+P_{\lambda, p} = f \, V\]</div>
+<p>where the yield condition is collocated at the material point, i.e. lumped onto the grid point
+it sits on.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientplasticitystencil.</span></span><span class="sig-name descname"><span class="pre">GradientPlasticityStencil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencilNumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stressState</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plane</span> <span class="pre">strain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">volumetricAveraging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourglassControl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'corner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourglassStiffness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hourglassCoefficient</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil" title="Link to this definition"></a></dt>
+<dd><p>A gradient plasticity stencil on a single grid cell.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stencilNumber</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – A unique number for this stencil.</p></li>
+<li><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(nDim,)</span></code>.</p></li>
+<li><p><strong>stressState</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – One of <code class="docutils literal notranslate"><span class="pre">3d</span></code>, <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">strain</span></code> or <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">stress</span></code>.</p></li>
+<li><p><strong>thickness</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – An out-of-plane thickness, only meaningful for the two dimensional stress states.</p></li>
+<li><p><strong>volumetricAveraging</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Average the volumetric part of the strain operator over the cell, the classical B-bar or
+mean dilatation treatment, see
+<a class="reference internal" href="operators.html#edelweissfd.operators.differences.volumetricallyAveragedStrainOperators" title="edelweissfd.operators.differences.volumetricallyAveragedStrainOperators"><code class="xref py py-func docutils literal notranslate"><span class="pre">volumetricallyAveragedStrainOperators()</span></code></a>. On by
+default: corner sampling constrains the volumetric strain once per corner, which
+over-constrains the cell as Poisson’s ratio approaches one half, and a shear band deforms
+at constant volume, so without it the band simply does not form. Turn it off only to
+reproduce that. Ignored when <code class="docutils literal notranslate"><span class="pre">hourglassControl</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;stabilized&quot;</span></code>, which does not lock
+in the first place.</p></li>
+<li><p><strong>hourglassControl</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – <code class="docutils literal notranslate"><span class="pre">&quot;corner&quot;</span></code> (default) samples the strain at every corner of the cell with a one-sided
+quotient, see <a class="reference internal" href="operators.html#edelweissfd.operators.differences.cellCornerGradientOperators" title="edelweissfd.operators.differences.cellCornerGradientOperators"><code class="xref py py-func docutils literal notranslate"><span class="pre">cellCornerGradientOperators()</span></code></a>.
+That resists the hourglass mode, but is only first order accurate at the corner itself –
+confirmed to be the accuracy bottleneck of the whole coupled solve, since the plastic
+multiplier’s Laplacian is a compact, essentially exact second order stencil. <code class="docutils literal notranslate"><span class="pre">&quot;stabilized&quot;</span></code>
+instead samples the strain once, at the cell centre, with <code class="xref py py-func docutils literal notranslate"><span class="pre">cellGradientOperator()</span></code>
+(second order, and does not lock volumetrically to begin with), and adds a Flanagan-Belytschko
+orthogonal hourglass stabilization stiffness, see
+<a class="reference internal" href="operators.html#edelweissfd.operators.differences.hourglassVector" title="edelweissfd.operators.differences.hourglassVector"><code class="xref py py-func docutils literal notranslate"><span class="pre">hourglassVector()</span></code></a>, to control the one zero energy
+mode single point sampling leaves open. Only implemented in two dimensions. Experimental:
+validated on small linear elastic patches (no near-zero eigenvalues under the panel’s own,
+weakly constrained boundary conditions, and an <span class="math notranslate nohighlight">\(O(h^2)\)</span> stabilization response on a
+smooth field), not yet exercised at the scale of the compiled kernel, which is bypassed
+whenever this is not <code class="docutils literal notranslate"><span class="pre">&quot;corner&quot;</span></code>.</p></li>
+<li><p><strong>hourglassStiffness</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – A representative elastic modulus the stabilization stiffness is scaled from, required when
+<code class="docutils literal notranslate"><span class="pre">hourglassControl</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;stabilized&quot;</span></code>. Fixed at construction, deliberately not the
+current (possibly heavily softened) material tangent – scaling down with the tangent would
+withdraw stabilization exactly where localisation makes it most needed.</p></li>
+<li><p><strong>hourglassCoefficient</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The dimensionless factor <span class="math notranslate nohighlight">\(a_{hg}\)</span> scaling the stabilization stiffness,
+<span class="math notranslate nohighlight">\(c = a_{hg} \, G \, V / L^2\)</span> with <span class="math notranslate nohighlight">\(G\)</span> the <code class="docutils literal notranslate"><span class="pre">hourglassStiffness</span></code>, <span class="math notranslate nohighlight">\(V\)</span>
+the cell volume and <span class="math notranslate nohighlight">\(L\)</span> the <a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.characteristicLength" title="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.characteristicLength"><code class="xref py py-attr docutils literal notranslate"><span class="pre">characteristicLength</span></code></a>. The classical range for
+artificial stiffness hourglass control is 0.03 to 0.1.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.acceptLastState">
+<span class="sig-name descname"><span class="pre">acceptLastState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.acceptLastState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.acceptLastState" title="Link to this definition"></a></dt>
+<dd><p>Accept the state computed in the last converged increment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.computeKernels">
+<span class="sig-name descname"><span class="pre">computeKernels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.computeKernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.computeKernels" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the internal flux and the tangent of this stencil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The tangent to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,</span> <span class="pre">nDof)</span></code>.</p></li>
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The internal flux to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,)</span></code>.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getCoordinatesAtCenter">
+<span class="sig-name descname"><span class="pre">getCoordinatesAtCenter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.getCoordinatesAtCenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getCoordinatesAtCenter" title="Link to this definition"></a></dt>
+<dd><p>The coordinates of the point this stencil is centred at.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getNumberOfQuadraturePoints">
+<span class="sig-name descname"><span class="pre">getNumberOfQuadraturePoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.getNumberOfQuadraturePoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getNumberOfQuadraturePoints" title="Link to this definition"></a></dt>
+<dd><p>A stencil owns exactly one material point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getResultArray">
+<span class="sig-name descname"><span class="pre">getResultArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadraturePoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getPersistentView</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.getResultArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getResultArray" title="Link to this definition"></a></dt>
+<dd><p>Get a result of this stencil.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quadraturePoint</span></code> argument exists only because
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/utils.html#edelweissfe.utils.elementresultcollector.ElementResultCollector" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementResultCollector</span></code></a> passes it;
+a stencil owns exactly one material point, so the only valid value is zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the result.</p></li>
+<li><p><strong>quadraturePoint</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Must be zero.</p></li>
+<li><p><strong>getPersistentView</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Whether a view or a copy should be returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.initializeStencil">
+<span class="sig-name descname"><span class="pre">initializeStencil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.initializeStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.initializeStencil" title="Link to this definition"></a></dt>
+<dd><p>Create the state variables and let the material initialize them.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.resetToLastValidState">
+<span class="sig-name descname"><span class="pre">resetToLastValidState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.resetToLastValidState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.resetToLastValidState" title="Link to this definition"></a></dt>
+<dd><p>Discard the current state and fall back to the last converged one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setCell">
+<span class="sig-name descname"><span class="pre">setCell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cellIndex</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.setCell"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setCell" title="Link to this definition"></a></dt>
+<dd><p>Attach the stencil to a cell, widening the molecule by the Laplacian’s reach.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> – The structured grid the cell belongs to.</p></li>
+<li><p><strong>cellIndex</strong> – The grid index of the cell’s lower left corner.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setMaterial">
+<span class="sig-name descname"><span class="pre">setMaterial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.setMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setMaterial" title="Link to this definition"></a></dt>
+<dd><p>Assign the material this stencil evaluates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>material</strong> – A material with a single yield surface, honoring
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial</span></code>.
+The instance must belong to this stencil alone, see
+<a class="reference internal" href="materials.html#module-edelweissfd.materials.provider" title="edelweissfd.materials.provider"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.materials.provider</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setNodes">
+<span class="sig-name descname"><span class="pre">setNodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#GradientPlasticityStencil.setNodes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setNodes" title="Link to this definition"></a></dt>
+<dd><p>Assign the molecule of this stencil, the cell corners first.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nodes</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><em>list</em></a><em>[</em><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><em>Node</em></a><em>]</em>) – The grid points, the first <a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nCorners" title="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nCorners"><code class="xref py py-attr docutils literal notranslate"><span class="pre">nCorners</span></code></a> of them being the cell corners in the
+order of <a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.cornerOffsets" title="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.cornerOffsets"><code class="xref py py-attr docutils literal notranslate"><span class="pre">cornerOffsets</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.characteristicLength">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">characteristicLength</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.characteristicLength" title="Link to this definition"></a></dt>
+<dd><p>The characteristic length of a material point.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.cornerOffsets">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cornerOffsets</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.cornerOffsets" title="Link to this definition"></a></dt>
+<dd><p>The corner offsets of the cell this stencil sits on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.fields">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fields</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><span class="pre">str</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.fields" title="Link to this definition"></a></dt>
+<dd><p>The list of fields per node which this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.hasMaterial">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hasMaterial</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.hasMaterial" title="Link to this definition"></a></dt>
+<dd><p>Whether a material has been assigned to this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.laplacianCoefficients">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">laplacianCoefficients</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><span class="pre">ndarray</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.laplacianCoefficients" title="Link to this definition"></a></dt>
+<dd><p>The Laplacian coefficients per material point over the molecule.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nCorners">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nCorners</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nCorners" title="Link to this definition"></a></dt>
+<dd><p>The number of corner grid points, i.e. those carrying the displacement field.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nDof">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nDof</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nDof" title="Link to this definition"></a></dt>
+<dd><p>The total number of degrees of freedom this entity has.
+Not that this information is redundent, as it results from the list of fields on nodes,
+but we keep this redundant information for the sake of performance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nMaterialPoints">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nMaterialPoints</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nMaterialPoints" title="Link to this definition"></a></dt>
+<dd><p>The number of material points this stencil owns.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nNodes" title="Link to this definition"></a></dt>
+<dd><p>The number of nodes this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.nodes" title="Link to this definition"></a></dt>
+<dd><p>The list of nodes this currently entity holds.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.stencilNumber">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stencilNumber</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.stencilNumber" title="Link to this definition"></a></dt>
+<dd><p>The unique number of this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.visualizationNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">visualizationNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/points.html#edelweissfe.points.node.Node" title="(in EdelweissFE)"><span class="pre">Node</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.visualizationNodes" title="Link to this definition"></a></dt>
+<dd><p>Only the corners of the cell, not the wider molecule of the Laplacian.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.materialTimeReport">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientplasticitystencil.</span></span><span class="sig-name descname"><span class="pre">materialTimeReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencils</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gradientplasticitystencil.html#materialTimeReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.materialTimeReport" title="Link to this definition"></a></dt>
+<dd><p>Sum the per stencil material and kernel timings collected under
+<a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.profileMaterialTime" title="edelweissfd.stencils.gradientplasticitystencil.profileMaterialTime"><code class="xref py py-data docutils literal notranslate"><span class="pre">profileMaterialTime</span></code></a>.</p>
+<p>Accumulated per stencil rather than globally on purpose: each stencil is evaluated by one
+thread only, so per stencil counters need no synchronisation, while a shared accumulator would
+lose updates on a free threaded interpreter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>stencils</strong> – The stencils to sum over.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The material and kernel times in seconds, the number of material evaluations, the
+microseconds per evaluation, the material share of the kernel time and the speedup the
+kernel could reach at most if all of the remaining time were removed.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#dict" title="(in Python v3.15)">dict</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.profileMaterialTime">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientplasticitystencil.</span></span><span class="sig-name descname"><span class="pre">profileMaterialTime</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.profileMaterialTime" title="Link to this definition"></a></dt>
+<dd><p>Accumulate how much of the kernel time is spent inside the material, per stencil.</p>
+<p>Off by default. The kernel is a few tens of microseconds and two clock reads cost about a
+tenth of one, so the overhead is small but there is no reason to pay it in production. It is
+worth having permanently available because the share decides whether compiling the kernel is
+worth anything at all: the attainable speedup is bounded by one over the material share, and
+that share is far higher in a real localising run than in a synthetic probe.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.stressStates">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientplasticitystencil.</span></span><span class="sig-name descname"><span class="pre">stressStates</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'3d':</span> <span class="pre">'computeStress',</span> <span class="pre">'plane</span> <span class="pre">strain':</span> <span class="pre">'computeStress',</span> <span class="pre">'plane</span> <span class="pre">stress':</span> <span class="pre">'computePlaneStress'}</span></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.stressStates" title="Link to this definition"></a></dt>
+<dd><p>The supported stress states, mapping to the material routine.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gradientplasticitystencil.useCompiledKernel">
+<span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gradientplasticitystencil.</span></span><span class="sig-name descname"><span class="pre">useCompiledKernel</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#edelweissfd.stencils.gradientplasticitystencil.useCompiledKernel" title="Link to this definition"></a></dt>
+<dd><p>Use the compiled kernel when it is available.</p>
+<p>The cell couples few degrees of freedom and its blocks are small – a six by six tangent,
+operators of six by twelve – so at those sizes a numpy call costs more in dispatch than in
+arithmetic. Measured on a real localising run, the Marmot material is only 18.4 percent of the
+kernel time and the rest is that overhead, which is what the compiled kernel removes.</p>
+<p>Set to False, or set <code class="docutils literal notranslate"><span class="pre">EDELWEISSFD_NO_COMPILED_KERNEL=1</span></code> in the environment, to force the
+Python implementation. The two are tested against each other in <code class="docutils literal notranslate"><span class="pre">tests/test_compiledkernel.py</span></code>
+and the whole suite is run both ways, so neither path is allowed to rot.</p>
+</dd></dl>
+
+</section>
+<section id="module-edelweissfd.stencils.gfdmgradientplasticitystencil">
+<span id="gfdmgradientplasticitystencil-gradient-plasticity-with-gfdm"></span><h2><code class="docutils literal notranslate"><span class="pre">gfdmgradientplasticitystencil</span></code> - Gradient plasticity with GFDM<a class="headerlink" href="#module-edelweissfd.stencils.gfdmgradientplasticitystencil" title="Link to this heading"></a></h2>
+<p>A Generalized Finite Difference (GFDM) gradient plasticity stencil, one per grid node.</p>
+<p><a class="reference internal" href="#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil" title="edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradientPlasticityStencil</span></code></a> owns one
+cell and samples its material once per corner, which is what needs a one-sided quotient to
+avoid the hourglass mode, and is why that quotient is only first order accurate. This stencil
+instead owns exactly one material point – the grid point itself – and builds both the strain
+operator and the plastic multiplier Laplacian from the <em>same</em> weighted-least-squares neighbour
+cloud, see <a class="reference internal" href="operators.html#module-edelweissfd.operators.gfdm" title="edelweissfd.operators.gfdm"><code class="xref py py-mod docutils literal notranslate"><span class="pre">edelweissfd.operators.gfdm</span></code></a>. There is no cell, no corner, and no hourglass mode
+to control in the first place: verified by direct eigenvalue inspection of a small elastic patch
+under the panel example’s own boundary conditions, and second order accurate in the interior,
+verified against a manufactured field down to machine precision. Both checks were done by hand
+during development and are not part of the test suite.</p>
+<p>The trade-off is a wider, denser molecule (each node couples to roughly eight neighbours rather
+than the four corners of one cell) and a boundary treatment that is only as accurate as a
+quadratic local model allows – first order for the Laplacian specifically, the same limitation
+<a class="reference internal" href="operators.html#edelweissfd.operators.gfdm.gfdmWeights" title="edelweissfd.operators.gfdm.gfdmWeights"><code class="xref py py-func docutils literal notranslate"><span class="pre">gfdmWeights()</span></code></a>’s quadratic model has anywhere the neighbour
+cloud is one-sided. A cubic local model recovers second order there too (verified separately)
+but needs a larger cloud than is implemented here; left for later.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">edelweissfd.stencils.gfdmgradientplasticitystencil.</span></span><span class="sig-name descname"><span class="pre">GFDMGradientPlasticityStencil</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stencilNumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spacings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stressState</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'plane</span> <span class="pre">strain'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">thickness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minCloudPoints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil" title="Link to this definition"></a></dt>
+<dd><p>A gradient plasticity stencil owning exactly one material point: the grid node itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stencilNumber</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – A unique number for this stencil.</p></li>
+<li><p><strong>spacings</strong> – The grid spacing per direction, shape <code class="docutils literal notranslate"><span class="pre">(1,)</span></code> or <code class="docutils literal notranslate"><span class="pre">(2,)</span></code>. Only one and two
+dimensions are implemented.</p></li>
+<li><p><strong>stressState</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – One of <code class="docutils literal notranslate"><span class="pre">3d</span></code>, <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">strain</span></code> or <code class="docutils literal notranslate"><span class="pre">plane</span> <span class="pre">stress</span></code>.</p></li>
+<li><p><strong>thickness</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – An out-of-plane thickness.</p></li>
+<li><p><strong>minCloudPoints</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – The minimum neighbour cloud size, see <a class="reference internal" href="operators.html#edelweissfd.operators.gfdm.gatherCloud" title="edelweissfd.operators.gfdm.gatherCloud"><code class="xref py py-func docutils literal notranslate"><span class="pre">gatherCloud()</span></code></a>.
+Defaults to a cloud roughly 1.6x the quadratic Taylor model’s unknown count – 8 for
+two dimensions (5 unknowns), 4 for one (2 unknowns: <span class="math notranslate nohighlight">\(u_x\)</span>, <span class="math notranslate nohighlight">\(u_{xx}\)</span>, no
+cross term). The one dimensional default matters concretely: at a domain boundary the
+cloud can only be gathered one-sided, and <a class="reference internal" href="operators.html#edelweissfd.operators.gfdm.gatherCloud" title="edelweissfd.operators.gfdm.gatherCloud"><code class="xref py py-func docutils literal notranslate"><span class="pre">gatherCloud()</span></code></a>
+caps how far it searches, so the two dimensional default of 8 is unreachable one-sided
+within that cap and would make every 1D boundary node fail to construct.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.acceptLastState">
+<span class="sig-name descname"><span class="pre">acceptLastState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.acceptLastState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.acceptLastState" title="Link to this definition"></a></dt>
+<dd><p>Accept the state computed in the last converged increment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.computeKernels">
+<span class="sig-name descname"><span class="pre">computeKernels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dU</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dT</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.computeKernels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.computeKernels" title="Link to this definition"></a></dt>
+<dd><p>Evaluate the internal flux and the tangent of this stencil.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The tangent to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,</span> <span class="pre">nDof)</span></code>.</p></li>
+<li><p><strong>P</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The internal flux to be defined, shape <code class="docutils literal notranslate"><span class="pre">(nDof,)</span></code>.</p></li>
+<li><p><strong>U</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current solution vector of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>dU</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a>) – The current increment of this stencil’s degrees of freedom.</p></li>
+<li><p><strong>time</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The total time at the end of the increment.</p></li>
+<li><p><strong>dT</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><em>float</em></a>) – The time increment.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.getCoordinatesAtCenter">
+<span class="sig-name descname"><span class="pre">getCoordinatesAtCenter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.getCoordinatesAtCenter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.getCoordinatesAtCenter" title="Link to this definition"></a></dt>
+<dd><p>The coordinates of the point this stencil is centred at.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.5)"><em>ndarray</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.getNumberOfQuadraturePoints">
+<span class="sig-name descname"><span class="pre">getNumberOfQuadraturePoints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.getNumberOfQuadraturePoints"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.getNumberOfQuadraturePoints" title="Link to this definition"></a></dt>
+<dd><p>A stencil owns exactly one material point.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)">int</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.getResultArray">
+<span class="sig-name descname"><span class="pre">getResultArray</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadraturePoint</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">getPersistentView</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.getResultArray"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.getResultArray" title="Link to this definition"></a></dt>
+<dd><p>Get a result of this stencil.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">quadraturePoint</span></code> argument exists only because
+<a class="reference external" href="https://edelweiss-numerics.github.io/EdelweissFE/documentation/utils.html#edelweissfe.utils.elementresultcollector.ElementResultCollector" title="(in EdelweissFE)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ElementResultCollector</span></code></a> passes it;
+a stencil owns exactly one material point, so the only valid value is zero.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#str" title="(in Python v3.15)"><em>str</em></a>) – The name of the result.</p></li>
+<li><p><strong>quadraturePoint</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><em>int</em></a>) – Must be zero.</p></li>
+<li><p><strong>getPersistentView</strong> (<a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><em>bool</em></a>) – Whether a view or a copy should be returned.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The result.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.initializeStencil">
+<span class="sig-name descname"><span class="pre">initializeStencil</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.initializeStencil"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.initializeStencil" title="Link to this definition"></a></dt>
+<dd><p>Prepare the stencil for computing, once its nodes and material are known.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.resetToLastValidState">
+<span class="sig-name descname"><span class="pre">resetToLastValidState</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.resetToLastValidState"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.resetToLastValidState" title="Link to this definition"></a></dt>
+<dd><p>Discard the current state and fall back to the last converged one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.setMaterial">
+<span class="sig-name descname"><span class="pre">setMaterial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">material</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.setMaterial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.setMaterial" title="Link to this definition"></a></dt>
+<dd><p>Assign the material this stencil evaluates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>material</strong> – The material instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.setNode">
+<span class="sig-name descname"><span class="pre">setNode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/edelweissfd/stencils/gfdmgradientplasticitystencil.html#GFDMGradientPlasticityStencil.setNode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.setNode" title="Link to this definition"></a></dt>
+<dd><p>Attach the stencil to a grid node, gathering its GFDM neighbour cloud.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>grid</strong> – The structured grid the node belongs to.</p></li>
+<li><p><strong>node</strong> – The grid point this stencil’s material point sits at.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.characteristicLength">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">characteristicLength</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#float" title="(in Python v3.15)"><span class="pre">float</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.characteristicLength" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.cornerOffsets">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">cornerOffsets</span></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.cornerOffsets" title="Link to this definition"></a></dt>
+<dd><p>The corner offsets of the cell this stencil sits on.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.fields">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fields</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.fields" title="Link to this definition"></a></dt>
+<dd><p>The list of fields per node which this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.hasMaterial">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">hasMaterial</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#bool" title="(in Python v3.15)"><span class="pre">bool</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.hasMaterial" title="Link to this definition"></a></dt>
+<dd><p>Whether a material has been assigned to this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nDof">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nDof</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nDof" title="Link to this definition"></a></dt>
+<dd><p>The total number of degrees of freedom this entity has.
+Not that this information is redundent, as it results from the list of fields on nodes,
+but we keep this redundant information for the sake of performance.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nMaterialPoints">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nMaterialPoints</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nMaterialPoints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nNodes" title="Link to this definition"></a></dt>
+<dd><p>The number of nodes this entity couples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.nodes" title="Link to this definition"></a></dt>
+<dd><p>The list of nodes this currently entity holds.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.stencilNumber">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">stencilNumber</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/functions.html#int" title="(in Python v3.15)"><span class="pre">int</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.stencilNumber" title="Link to this definition"></a></dt>
+<dd><p>The unique number of this stencil.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.visualizationNodes">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">visualizationNodes</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/builtins/stdtypes.html#list" title="(in Python v3.15)"><span class="pre">list</span></a></span><a class="headerlink" href="#edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil.visualizationNodes" title="Link to this definition"></a></dt>
+<dd><p>that is where this stencil’s material point sits.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Only the centre</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </section>

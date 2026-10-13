@@ -1,0 +1,1028 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edelweissfd.stencils.gradientplasticitystencil &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">edelweissfd.stencils.gradientplasticitystencil</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for edelweissfd.stencils.gradientplasticitystencil</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1">#  _____    _      _              _         _____ _____ ____</span>
+<span class="c1"># | ____|__| | ___| |_      _____(_)___ ___|  ___|  ___|  _ \</span>
+<span class="c1"># |  _| / _` |/ _ \ \ \ /\ / / _ \ / __/ __| |_  | |_  | | | |</span>
+<span class="c1"># | |__| (_| |  __/ |\ V  V /  __/ \__ \__ \  _| |  _| | |_| |</span>
+<span class="c1"># |_____\__,_|\___|_| \_/\_/ \___|_|___/___/_|   |_|   |____/</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#  Unit of Strength of Materials and Structural Analysis</span>
+<span class="c1">#  University of Innsbruck,</span>
+<span class="c1">#  2017 - today</span>
+<span class="c1">#</span>
+<span class="c1">#  Alexander Dummer alexander.dummer@uibk.ac.at</span>
+<span class="c1">#</span>
+<span class="c1">#  This file is part of EdelweissFD.</span>
+<span class="c1">#</span>
+<span class="c1">#  This library is free software; you can redistribute it and/or</span>
+<span class="c1">#  modify it under the terms of the GNU Lesser General Public</span>
+<span class="c1">#  License as published by the Free Software Foundation; either</span>
+<span class="c1">#  version 2.1 of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  The full text of the license can be found in the file LICENSE.md at</span>
+<span class="c1">#  the top level directory of EdelweissFD.</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+
+<span class="sd">"""</span>
+<span class="sd">The multifield finite difference stencil for gradient plasticity.</span>
+
+<span class="sd">Two fields live on every grid point: the ``displacement`` and the ``plastic multiplier``</span>
+<span class="sd">:math:`\\lambda`. The equations solved are the balance of linear momentum and the yield</span>
+<span class="sd">condition, which for this material family depends on the Laplacian of the plastic multiplier,</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    -\\nabla \\cdot \\boldsymbol \\sigma = \\boldsymbol 0</span>
+<span class="sd">    \\qquad</span>
+<span class="sd">    f\\left( \\boldsymbol \\sigma,\\, \\lambda,\\, \\nabla^2 \\lambda \\right) = 0</span>
+
+<span class="sd">as implemented by Marmot's ``MarmotMaterialGradientPlasticityHypoElastic``; ``GRADIENTVONMISES``</span>
+<span class="sd">is such a material.</span>
+
+<span class="sd">**No auxiliary field, no penalty.** Marmot's own ``C0GradientPlasticityFiniteElement`` carries</span>
+<span class="sd">a third field for :math:`\\nabla \\lambda` and ties it to the plastic multiplier by a penalty,</span>
+<span class="sd">because a C0 shape function cannot deliver a second derivative. A finite difference operator</span>
+<span class="sd">has no such restriction: the Laplacian is simply the compact three point second difference per</span>
+<span class="sd">direction, see :meth:`~edelweissfd.grids.structuredgrid.StructuredGrid.laplacianAt`. That</span>
+<span class="sd">removes one field, the penalty parameter and the ill-conditioning it brings, and leaves a</span>
+<span class="sd">genuine two field problem.</span>
+
+<span class="sd">The price is that the molecule is wider than a single cell: the second difference at a corner</span>
+<span class="sd">reaches one grid point beyond it. The stencil therefore couples the corners of its cell plus</span>
+<span class="sd">the neighbours entering the Laplacian, and declares the ``displacement`` field only on the</span>
+<span class="sd">corners, since the outer grid points contribute through the plastic multiplier alone.</span>
+
+<span class="sd">At the boundary of the grid the missing neighbour is a ghost node, eliminated by the</span>
+<span class="sd">homogeneous Neumann condition :math:`\\partial \\lambda / \\partial n = 0`, i.e. no plastic</span>
+<span class="sd">flux through the boundary.</span>
+
+<span class="sd">Discretely, per material point of the cell, with :math:`\\boldsymbol B` the strain operator of</span>
+<span class="sd">the cell and :math:`\\boldsymbol L` the Laplacian coefficients over the molecule,</span>
+
+<span class="sd">.. math::</span>
+<span class="sd">    \\boldsymbol P_u = \\boldsymbol B^T \\boldsymbol \\sigma V,</span>
+<span class="sd">    \\qquad</span>
+<span class="sd">    P_{\\lambda, p} = f \\, V</span>
+
+<span class="sd">where the yield condition is collocated at the material point, i.e. lumped onto the grid point</span>
+<span class="sd">it sits on.</span>
+<span class="sd">"""</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">time</span><span class="w"> </span><span class="kn">import</span> <span class="n">perf_counter_ns</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+        <span class="n">GradientPlasticityIncrement</span><span class="p">,</span>
+        <span class="n">GradientPlasticityResponse</span><span class="p">,</span>
+        <span class="n">GradientPlasticityTangents</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - depends on whether EdelweissFE ships the material family</span>
+    <span class="c1"># The gradient plasticity material family is not (yet) part of every EdelweissFE release, so</span>
+    <span class="c1"># this module stays importable without it; constructing a stencil then fails explicitly.</span>
+    <span class="n">GradientPlasticityIncrement</span> <span class="o">=</span> <span class="n">GradientPlasticityResponse</span> <span class="o">=</span> <span class="n">GradientPlasticityTangents</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfe.points.node</span><span class="w"> </span><span class="kn">import</span> <span class="n">Node</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.operators.differences</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">cellCornerGradientOperators</span><span class="p">,</span>
+    <span class="n">cellCornerOffsets</span><span class="p">,</span>
+    <span class="n">cellGradientOperator</span><span class="p">,</span>
+    <span class="n">cellStrainOperator</span><span class="p">,</span>
+    <span class="n">condensePlaneStressTangents</span><span class="p">,</span>
+    <span class="n">hourglassVector</span><span class="p">,</span>
+    <span class="n">nVoigtComponents</span><span class="p">,</span>
+    <span class="n">volumetricallyAveragedStrainOperators</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.stencils.base.basestencil</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseStencil</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.stencils.numericaltangent</span><span class="w"> </span><span class="kn">import</span> <span class="n">NumericalTangentMixin</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">edelweissfd.kernels.gradientplasticitykernel</span><span class="w"> </span><span class="kn">import</span> <span class="n">GradientPlasticityKernel</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>  <span class="c1"># pragma: no cover - depends on whether EdelweissFD built its extensions</span>
+    <span class="n">GradientPlasticityKernel</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1">#: Use the compiled kernel when it is available.</span>
+<span class="c1">#:</span>
+<span class="c1">#: The cell couples few degrees of freedom and its blocks are small -- a six by six tangent,</span>
+<span class="c1">#: operators of six by twelve -- so at those sizes a numpy call costs more in dispatch than in</span>
+<span class="c1">#: arithmetic. Measured on a real localising run, the Marmot material is only 18.4 percent of the</span>
+<span class="c1">#: kernel time and the rest is that overhead, which is what the compiled kernel removes.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Set to False, or set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment, to force the</span>
+<span class="c1">#: Python implementation. The two are tested against each other in ``tests/test_compiledkernel.py``</span>
+<span class="c1">#: and the whole suite is run both ways, so neither path is allowed to rot.</span>
+<span class="n">useCompiledKernel</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"EDELWEISSFD_NO_COMPILED_KERNEL"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"true"</span><span class="p">,</span> <span class="s2">"True"</span><span class="p">)</span>
+
+<span class="c1">#: Accumulate how much of the kernel time is spent inside the material, per stencil.</span>
+<span class="c1">#:</span>
+<span class="c1">#: Off by default. The kernel is a few tens of microseconds and two clock reads cost about a</span>
+<span class="c1">#: tenth of one, so the overhead is small but there is no reason to pay it in production. It is</span>
+<span class="c1">#: worth having permanently available because the share decides whether compiling the kernel is</span>
+<span class="c1">#: worth anything at all: the attainable speedup is bounded by one over the material share, and</span>
+<span class="c1">#: that share is far higher in a real localising run than in a synthetic probe.</span>
+<span class="n">profileMaterialTime</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="materialTimeReport">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.materialTimeReport">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">materialTimeReport</span><span class="p">(</span><span class="n">stencils</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Sum the per stencil material and kernel timings collected under</span>
+<span class="sd">    :data:`profileMaterialTime`.</span>
+
+<span class="sd">    Accumulated per stencil rather than globally on purpose: each stencil is evaluated by one</span>
+<span class="sd">    thread only, so per stencil counters need no synchronisation, while a shared accumulator would</span>
+<span class="sd">    lose updates on a free threaded interpreter.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stencils</span>
+<span class="sd">        The stencils to sum over.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        The material and kernel times in seconds, the number of material evaluations, the</span>
+<span class="sd">        microseconds per evaluation, the material share of the kernel time and the speedup the</span>
+<span class="sd">        kernel could reach at most if all of the remaining time were removed.</span>
+<span class="sd">    """</span>
+
+    <span class="n">materialSeconds</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">_materialTimeNs</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stencils</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-9</span>
+    <span class="n">kernelSeconds</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">_kernelTimeNs</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stencils</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1e-9</span>
+    <span class="n">calls</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">_materialCalls</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">stencils</span><span class="p">)</span>
+
+    <span class="n">share</span> <span class="o">=</span> <span class="n">materialSeconds</span> <span class="o">/</span> <span class="n">kernelSeconds</span> <span class="k">if</span> <span class="n">kernelSeconds</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">materialSeconds</span><span class="o">=</span><span class="n">materialSeconds</span><span class="p">,</span>
+        <span class="n">kernelSeconds</span><span class="o">=</span><span class="n">kernelSeconds</span><span class="p">,</span>
+        <span class="n">calls</span><span class="o">=</span><span class="n">calls</span><span class="p">,</span>
+        <span class="n">microsecondsPerCall</span><span class="o">=</span><span class="mf">1e6</span> <span class="o">*</span> <span class="n">materialSeconds</span> <span class="o">/</span> <span class="n">calls</span> <span class="k">if</span> <span class="n">calls</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span>
+        <span class="n">materialShare</span><span class="o">=</span><span class="n">share</span><span class="p">,</span>
+        <span class="n">ceiling</span><span class="o">=</span><span class="mf">1.0</span> <span class="o">/</span> <span class="n">share</span> <span class="k">if</span> <span class="n">share</span> <span class="o">&gt;</span> <span class="mf">0.0</span> <span class="k">else</span> <span class="nb">float</span><span class="p">(</span><span class="s2">"nan"</span><span class="p">),</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="c1">#: The supported stress states, mapping to the material routine.</span>
+<span class="n">stressStates</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">"3d"</span><span class="p">:</span> <span class="s2">"computeStress"</span><span class="p">,</span>
+    <span class="s2">"plane strain"</span><span class="p">:</span> <span class="s2">"computeStress"</span><span class="p">,</span>
+    <span class="s2">"plane stress"</span><span class="p">:</span> <span class="s2">"computePlaneStress"</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_condensePlaneStressTangents</span><span class="p">(</span><span class="n">stacks</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Apply :func:`~edelweissfd.operators.differences.condensePlaneStressTangents` to every</span>
+<span class="sd">    material point of the cell at once, in place -- see there for why this is needed at all."""</span>
+
+    <span class="n">Dcond</span><span class="p">,</span> <span class="n">dLambdaCond</span><span class="p">,</span> <span class="n">dLapCond</span><span class="p">,</span> <span class="n">dFdEcond</span><span class="p">,</span> <span class="n">dFdLambdaCond</span><span class="p">,</span> <span class="n">dFdLapCond</span> <span class="o">=</span> <span class="n">condensePlaneStressTangents</span><span class="p">(</span>
+        <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dStrain"</span><span class="p">],</span>
+        <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dLambda"</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dLaplacian"</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dStrain"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:],</span>
+        <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dLambda"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dLaplacian"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">)</span>
+
+    <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dStrain"</span><span class="p">][</span><span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="n">Dcond</span>
+    <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dLambda"</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dLambdaCond</span>
+    <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dLaplacian"</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dLapCond</span>
+    <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dStrain"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dFdEcond</span>
+    <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dLambda"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dFdLambdaCond</span>
+    <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dLaplacian"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">dFdLapCond</span>
+
+
+<div class="viewcode-block" id="GradientPlasticityStencil">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GradientPlasticityStencil</span><span class="p">(</span><span class="n">BaseStencil</span><span class="p">,</span> <span class="n">NumericalTangentMixin</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""A gradient plasticity stencil on a single grid cell.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    stencilNumber</span>
+<span class="sd">        A unique number for this stencil.</span>
+<span class="sd">    spacings</span>
+<span class="sd">        The grid spacing per direction, shape ``(nDim,)``.</span>
+<span class="sd">    stressState</span>
+<span class="sd">        One of ``3d``, ``plane strain`` or ``plane stress``.</span>
+<span class="sd">    thickness</span>
+<span class="sd">        An out-of-plane thickness, only meaningful for the two dimensional stress states.</span>
+<span class="sd">    volumetricAveraging</span>
+<span class="sd">        Average the volumetric part of the strain operator over the cell, the classical B-bar or</span>
+<span class="sd">        mean dilatation treatment, see</span>
+<span class="sd">        :func:`~edelweissfd.operators.differences.volumetricallyAveragedStrainOperators`. On by</span>
+<span class="sd">        default: corner sampling constrains the volumetric strain once per corner, which</span>
+<span class="sd">        over-constrains the cell as Poisson's ratio approaches one half, and a shear band deforms</span>
+<span class="sd">        at constant volume, so without it the band simply does not form. Turn it off only to</span>
+<span class="sd">        reproduce that. Ignored when ``hourglassControl`` is ``"stabilized"``, which does not lock</span>
+<span class="sd">        in the first place.</span>
+<span class="sd">    hourglassControl</span>
+<span class="sd">        ``"corner"`` (default) samples the strain at every corner of the cell with a one-sided</span>
+<span class="sd">        quotient, see :func:`~edelweissfd.operators.differences.cellCornerGradientOperators`.</span>
+<span class="sd">        That resists the hourglass mode, but is only first order accurate at the corner itself --</span>
+<span class="sd">        confirmed to be the accuracy bottleneck of the whole coupled solve, since the plastic</span>
+<span class="sd">        multiplier's Laplacian is a compact, essentially exact second order stencil. ``"stabilized"``</span>
+<span class="sd">        instead samples the strain once, at the cell centre, with :func:`cellGradientOperator`</span>
+<span class="sd">        (second order, and does not lock volumetrically to begin with), and adds a Flanagan-Belytschko</span>
+<span class="sd">        orthogonal hourglass stabilization stiffness, see</span>
+<span class="sd">        :func:`~edelweissfd.operators.differences.hourglassVector`, to control the one zero energy</span>
+<span class="sd">        mode single point sampling leaves open. Only implemented in two dimensions. Experimental:</span>
+<span class="sd">        validated on small linear elastic patches (no near-zero eigenvalues under the panel's own,</span>
+<span class="sd">        weakly constrained boundary conditions, and an :math:`O(h^2)` stabilization response on a</span>
+<span class="sd">        smooth field), not yet exercised at the scale of the compiled kernel, which is bypassed</span>
+<span class="sd">        whenever this is not ``"corner"``.</span>
+<span class="sd">    hourglassStiffness</span>
+<span class="sd">        A representative elastic modulus the stabilization stiffness is scaled from, required when</span>
+<span class="sd">        ``hourglassControl`` is ``"stabilized"``. Fixed at construction, deliberately not the</span>
+<span class="sd">        current (possibly heavily softened) material tangent -- scaling down with the tangent would</span>
+<span class="sd">        withdraw stabilization exactly where localisation makes it most needed.</span>
+<span class="sd">    hourglassCoefficient</span>
+<span class="sd">        The dimensionless factor :math:`a_{hg}` scaling the stabilization stiffness,</span>
+<span class="sd">        :math:`c = a_{hg} \\, G \\, V / L^2` with :math:`G` the ``hourglassStiffness``, :math:`V`</span>
+<span class="sd">        the cell volume and :math:`L` the :attr:`characteristicLength`. The classical range for</span>
+<span class="sd">        artificial stiffness hourglass control is 0.03 to 0.1.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">stencilNumber</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">spacings</span><span class="p">,</span>
+        <span class="n">stressState</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"plane strain"</span><span class="p">,</span>
+        <span class="n">thickness</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+        <span class="n">volumetricAveraging</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">hourglassControl</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"corner"</span><span class="p">,</span>
+        <span class="n">hourglassStiffness</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">hourglassCoefficient</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.05</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="n">stressState</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">stressStates</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">"Unknown stress state '</span><span class="si">{:}</span><span class="s2">'; available are </span><span class="si">{:}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stressState</span><span class="p">,</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">stressStates</span><span class="p">))</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hourglassControl</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"corner"</span><span class="p">,</span> <span class="s2">"stabilized"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Unknown hourglassControl '</span><span class="si">{:}</span><span class="s2">'; available are 'corner', 'stabilized'."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stencilNumber</span> <span class="o">=</span> <span class="n">stencilNumber</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stressState</span> <span class="o">=</span> <span class="n">stressState</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">spacings</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">stressState</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">"plane strain"</span><span class="p">,</span> <span class="s2">"plane stress"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A one dimensional grid needs the stress state '3d'."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">hourglassControl</span> <span class="o">==</span> <span class="s2">"stabilized"</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"hourglassControl='stabilized' is only implemented in two dimensions."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hourglassControl</span> <span class="o">=</span> <span class="n">hourglassControl</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_cornerOffsets</span> <span class="o">=</span> <span class="n">cellCornerOffsets</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cornerOffsets</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">cellVolume</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">cellVolume</span> <span class="o">*=</span> <span class="n">thickness</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_totalVolume</span> <span class="o">=</span> <span class="n">cellVolume</span>
+
+        <span class="k">if</span> <span class="n">hourglassControl</span> <span class="o">==</span> <span class="s2">"stabilized"</span><span class="p">:</span>
+            <span class="c1"># single point quadrature at the cell centre, repeated onto every corner so the</span>
+            <span class="c1"># material points still sit one per corner -- the yield condition still needs a grid</span>
+            <span class="c1"># point to be collocated on -- but all of them see the identical, second order</span>
+            <span class="c1"># accurate strain, sampled only once.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gradients</span> <span class="o">=</span> <span class="p">[</span><span class="n">cellGradientOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span><span class="p">)]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gradients</span> <span class="o">=</span> <span class="p">[</span><span class="n">cellGradientOperator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_gradients</span> <span class="o">=</span> <span class="n">cellCornerGradientOperators</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gradients</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialPointVolumes</span> <span class="o">=</span> <span class="p">[</span><span class="n">cellVolume</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strainOperators</span> <span class="o">=</span> <span class="p">[</span><span class="n">cellStrainOperator</span><span class="p">(</span><span class="n">gradient</span><span class="p">)</span> <span class="k">for</span> <span class="n">gradient</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradients</span><span class="p">]</span>
+
+        <span class="c1"># Without this the cell locks volumetrically as Poisson's ratio approaches one half, and a</span>
+        <span class="c1"># shear band -- which deforms at constant volume -- cannot form at all. On by default,</span>
+        <span class="c1"># because a gradient plasticity computation is localisation at nearly incompressible</span>
+        <span class="c1"># plastic flow, i.e. exactly the case that locks. Single point quadrature does not lock in</span>
+        <span class="c1"># the first place, so there is nothing to avearge there.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_volumetricAveraging</span> <span class="o">=</span> <span class="n">volumetricAveraging</span> <span class="ow">and</span> <span class="n">hourglassControl</span> <span class="o">==</span> <span class="s2">"corner"</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_volumetricAveraging</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_strainOperators</span> <span class="o">=</span> <span class="n">volumetricallyAveragedStrainOperators</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_strainOperators</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialPointVolumes</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hourglassStiffnessMatrix</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">hourglassControl</span> <span class="o">==</span> <span class="s2">"stabilized"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">hourglassStiffness</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"hourglassControl='stabilized' needs hourglassStiffness."</span><span class="p">)</span>
+
+            <span class="n">gamma</span> <span class="o">=</span> <span class="n">hourglassVector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span><span class="p">)</span>
+            <span class="n">stiffnessScale</span> <span class="o">=</span> <span class="n">hourglassCoefficient</span> <span class="o">*</span> <span class="n">hourglassStiffness</span> <span class="o">*</span> <span class="n">cellVolume</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">characteristicLength</span><span class="o">**</span><span class="mi">2</span>
+
+            <span class="n">nDisplacementDofs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span>
+            <span class="n">Khg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span><span class="p">):</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">component</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span><span class="p">)</span>
+                <span class="n">Khg</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">)]</span> <span class="o">+=</span> <span class="n">stiffnessScale</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hourglassStiffnessMatrix</span> <span class="o">=</span> <span class="n">Khg</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutineName</span> <span class="o">=</span> <span class="n">stressStates</span><span class="p">[</span><span class="n">stressState</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">GradientPlasticityResponse</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">"The gradient plasticity material family is not available in the installed EdelweissFE."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_response</span> <span class="o">=</span> <span class="n">GradientPlasticityResponse</span><span class="o">.</span><span class="n">createZero</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tangents</span> <span class="o">=</span> <span class="n">GradientPlasticityTangents</span><span class="o">.</span><span class="n">createZero</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_increment</span> <span class="o">=</span> <span class="n">GradientPlasticityIncrement</span><span class="o">.</span><span class="n">createZero</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_material</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># -- descriptive properties ---------------------------------------------------------</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stencilNumber</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stencilNumber</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nDof</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDof</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fields</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hasMaterial</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_material</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cornerOffsets</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The corner offsets of the cell this stencil sits on."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cornerOffsets</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nCorners</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The number of corner grid points, i.e. those carrying the displacement field."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nMaterialPoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The number of material points this stencil owns."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">visualizationNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">"""Only the corners of the cell, not the wider molecule of the Laplacian."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span><span class="p">]</span>
+
+    <span class="c1"># -- setup --------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="GradientPlasticityStencil.setCell">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setCell">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setCell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">,</span> <span class="n">cellIndex</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Attach the stencil to a cell, widening the molecule by the Laplacian's reach.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        grid</span>
+<span class="sd">            The structured grid the cell belongs to.</span>
+<span class="sd">        cellIndex</span>
+<span class="sd">            The grid index of the cell's lower left corner.</span>
+<span class="sd">        """</span>
+
+        <span class="n">corners</span> <span class="o">=</span> <span class="n">grid</span><span class="o">.</span><span class="n">cellCornerNodes</span><span class="p">(</span><span class="n">cellIndex</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cornerOffsets</span><span class="p">)</span>
+
+        <span class="c1"># one Laplacian per material point, i.e. per corner in two and three dimensions</span>
+        <span class="n">laplacians</span> <span class="o">=</span> <span class="p">[</span><span class="n">grid</span><span class="o">.</span><span class="n">laplacianAt</span><span class="p">(</span><span class="n">corners</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialPointNode</span><span class="p">(</span><span class="n">p</span><span class="p">)])</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">)]</span>
+
+        <span class="n">molecule</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">laplacian</span> <span class="ow">in</span> <span class="n">laplacians</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">laplacian</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">node</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">molecule</span><span class="p">:</span>
+                    <span class="n">molecule</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCoefficients</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">molecule</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">laplacian</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">laplacians</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">coefficient</span> <span class="ow">in</span> <span class="n">laplacian</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCoefficients</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">molecule</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">node</span><span class="p">)]</span> <span class="o">=</span> <span class="n">coefficient</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">setNodes</span><span class="p">(</span><span class="n">molecule</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_materialPointNode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">materialPoint</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The corner a material point sits on.</span>
+
+<span class="sd">        In one dimension the single material point sits at the centre of the cell; the</span>
+<span class="sd">        Laplacian is then centred at the lower corner, which keeps it a proper second</span>
+<span class="sd">        difference.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        materialPoint</span>
+<span class="sd">            The index of the material point.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">            The index of the corner.</span>
+<span class="sd">        """</span>
+
+        <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">materialPoint</span>
+
+<div class="viewcode-block" id="GradientPlasticityStencil.setNodes">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setNodes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setNodes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Node</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">"""Assign the molecule of this stencil, the cell corners first.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        nodes</span>
+<span class="sd">            The grid points, the first :attr:`nCorners` of them being the cell corners in the</span>
+<span class="sd">            order of :attr:`cornerOffsets`.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"This stencil needs at least the </span><span class="si">{:}</span><span class="s2"> corners of its cell."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">nodes</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"_laplacianCoefficients"</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Use setCell() so that the Laplacian molecule is built as well."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_centerCoordinates</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">([</span><span class="n">n</span><span class="o">.</span><span class="n">coordinates</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_createDofIndices</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_createDofIndices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create the local index arrays of the two fields.</span>
+
+<span class="sd">        The corners carry the displacement and the plastic multiplier, the outer grid points of</span>
+<span class="sd">        the molecule carry the plastic multiplier alone. Degrees of freedom are node-major and</span>
+<span class="sd">        field-minor, in the order the fields are listed per node.</span>
+<span class="sd">        """</span>
+
+        <span class="n">nDim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fields</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span><span class="s2">"displacement"</span><span class="p">,</span> <span class="s2">"plastic multiplier"</span><span class="p">]</span> <span class="k">if</span> <span class="n">node</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nCorners</span> <span class="k">else</span> <span class="p">[</span><span class="s2">"plastic multiplier"</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span><span class="p">))</span>
+        <span class="p">]</span>
+
+        <span class="n">displacementDofs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">multiplierDofs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">node</span><span class="p">,</span> <span class="n">fieldsOnNode</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fields</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">"displacement"</span> <span class="ow">in</span> <span class="n">fieldsOnNode</span><span class="p">:</span>
+                <span class="n">displacementDofs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">offset</span> <span class="o">+</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nDim</span><span class="p">))</span>
+                <span class="n">offset</span> <span class="o">+=</span> <span class="n">nDim</span>
+
+            <span class="n">multiplierDofs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+            <span class="n">offset</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nDof</span> <span class="o">=</span> <span class="n">offset</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">displacementDofs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">multiplierDofs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_displacementBlock</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_displacementMultiplierBlock</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDisplacementBlock</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierBlock</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="GradientPlasticityStencil.setMaterial">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.setMaterial">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setMaterial</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">material</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Assign the material this stencil evaluates.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        material</span>
+<span class="sd">            A material with a single yield surface, honoring</span>
+<span class="sd">            :mod:`edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial`.</span>
+<span class="sd">            The instance must belong to this stencil alone, see</span>
+<span class="sd">            :mod:`edelweissfd.materials.provider`.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">material</span><span class="o">.</span><span class="n">nYieldSurfaces</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"This stencil supports materials with a single yield surface only."</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_material</span> <span class="o">=</span> <span class="n">material</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutine</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">material</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutineName</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GradientPlasticityStencil.initializeStencil">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.initializeStencil">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">initializeStencil</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create the state variables and let the material initialize them."""</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nodes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The grid points of this stencil have not been assigned yet."</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hasMaterial</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No material has been assigned to this stencil."</span><span class="p">)</span>
+
+        <span class="c1"># stress, strain, the plastic multiplier and the yield function value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_nStateVarsOverhead</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">2</span>
+
+        <span class="n">nStateVarsPerPoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nStateVarsOverhead</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">getNumberOfRequiredStateVars</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stateVars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">,</span> <span class="n">nStateVarsPerPoint</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">,</span> <span class="n">nStateVarsPerPoint</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stresses</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="n">nVoigtComponents</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strains</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="n">nVoigtComponents</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multipliers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yieldFunctions</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialStateVars</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[</span><span class="n">p</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nStateVarsOverhead</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># the same storage seen as one block over all material points, so that the bookkeeping</span>
+        <span class="c1"># around the material evaluations is a handful of array operations rather than one per point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_previousStresses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="n">nVoigtComponents</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strainStates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[:,</span> <span class="n">nVoigtComponents</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierStates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[:,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yieldStates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[:,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">nVoigtComponents</span> <span class="o">+</span> <span class="mi">2</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">assignCurrentStateVars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialStateVars</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="p">,</span> <span class="s2">"initializeYourself"</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">initializeYourself</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">acceptLastState</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_allocateKernelBuffers</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_createCompiledKernel</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_createCompiledKernel</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""The compiled kernel for this cell, or ``None`` to fall back to Python.</span>
+
+<span class="sd">        Returns ``None`` when EdelweissFD was built without its compiled kernel extension, when</span>
+<span class="sd">        the compiled kernel has been switched off, when the material is not a Marmot one -- the</span>
+<span class="sd">        kernel reaches Marmot's C++ shim directly, so it cannot drive a material that only exists</span>
+<span class="sd">        in Python --, when hourglass stabilization is in use, which the compiled kernel does not</span>
+<span class="sd">        yet know about, or when the stress state is plane stress: Marmot's ``computePlaneStress``</span>
+<span class="sd">        returns an uncondensed tangent (verified directly against central differences of the</span>
+<span class="sd">        material response -- see :func:`_condensePlaneStressTangents`), and the compiled kernel</span>
+<span class="sd">        has no equivalent correction, so plane stress always falls back to the Python path, which</span>
+<span class="sd">        does.</span>
+<span class="sd">        """</span>
+
+        <span class="k">if</span> <span class="n">GradientPlasticityKernel</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">useCompiledKernel</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hourglassStiffnessMatrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutineName</span> <span class="o">==</span> <span class="s2">"computePlaneStress"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="p">,</span> <span class="s2">"materialName"</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="p">,</span> <span class="s2">"materialProperties"</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">GradientPlasticityKernel</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">materialName</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">materialProperties</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutineName</span> <span class="o">==</span> <span class="s2">"computePlaneStress"</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_strainOperatorStack</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_weightedTransposedStack</span><span class="p">,</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCoefficients</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialPointVolumeArray</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialPointNodes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stateVars</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_nStateVarsOverhead</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_allocateKernelBuffers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Allocate everything :meth:`computeKernels` needs, once, and stacked over material points.</span>
+
+<span class="sd">        The blocks involved are tiny -- a six by six tangent, operators of six by twelve -- so a</span>
+<span class="sd">        numpy call costs far more in dispatch than in arithmetic. Measured on a two dimensional</span>
+<span class="sd">        cell, the Marmot material evaluation is 4.2 of the 37 microseconds spent per material point</span>
+<span class="sd">        even when it is yielding; the remaining 89 percent is the overhead of some twenty small</span>
+<span class="sd">        numpy operations per point. Making each operation faster cannot help much, so the algebra is</span>
+<span class="sd">        instead done for all material points of the cell at once, in a handful of batched calls.</span>
+
+<span class="sd">        For that to cost nothing in copying, the material writes its results *directly* into the</span>
+<span class="sd">        stacked storage: the response and tangent objects handed to material point ``p`` have their</span>
+<span class="sd">        entries as views into row ``p`` of arrays shaped ``(nMaterialPoints, ...)``. A row of a C</span>
+<span class="sd">        contiguous array is itself C contiguous, which is what the Cython materials require.</span>
+<span class="sd">        """</span>
+
+        <span class="n">nMaterialPoints</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span>
+        <span class="n">nDisplacementDofs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="o">.</span><span class="n">size</span>
+        <span class="n">nMultiplierDofs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="o">.</span><span class="n">size</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_PDisplacement</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nDisplacementDofs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_PMultiplier</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nMultiplierDofs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_KUU</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_KUL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="n">nMultiplierDofs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_KLU</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMultiplierDofs</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_KLL</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMultiplierDofs</span><span class="p">,</span> <span class="n">nMultiplierDofs</span><span class="p">))</span>
+
+        <span class="c1"># the corner each material point sits on, and its volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialPointNodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialPointNode</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nMaterialPoints</span><span class="p">)],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+        <span class="n">volumes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialPointVolumes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialPointVolumeArray</span> <span class="o">=</span> <span class="n">volumes</span>
+
+        <span class="c1"># the strain operators stacked, and their transposes already scaled by the material point</span>
+        <span class="c1"># volume, since every place the transpose appears it is multiplied by that volume</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strainOperatorStack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strainOperators</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weightedTransposedStack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">B</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">volume</span> <span class="k">for</span> <span class="n">B</span><span class="p">,</span> <span class="n">volume</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strainOperators</span><span class="p">,</span> <span class="n">volumes</span><span class="p">)])</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weightedLaplacianStack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCoefficients</span> <span class="o">*</span> <span class="n">volumes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">])</span>
+
+        <span class="c1"># the stacked increment, response and tangent storage the materials write into</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dStrainStack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dLambdaStack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_laplaceDLambdaStack</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+        <span class="c1"># The stress is both an input and an output of a rate form material, and the yield value is</span>
+        <span class="c1"># an output, so the response points straight at the state variable slots that hold them.</span>
+        <span class="c1"># That removes the copies in and out entirely; the reset at the top of computeKernels</span>
+        <span class="c1"># restores the last converged stress, which is exactly what the material expects to read.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stressStack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_previousStresses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yieldStack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yieldStates</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tangentStacks</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">dStress_dStrain</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">)),</span>
+            <span class="n">dStress_dLambda</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">dStress_dLaplacian</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">dF_dStrain</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">)),</span>
+            <span class="n">dF_dLambda</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+            <span class="n">dF_dLaplacian</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)),</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_increments</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">GradientPlasticityIncrement</span><span class="p">(</span>
+                <span class="n">dStrain</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dStrainStack</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
+                <span class="n">dLambda</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dLambdaStack</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
+                <span class="n">laplaceDLambda</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_laplaceDLambdaStack</span><span class="p">[</span><span class="n">p</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_responses</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">GradientPlasticityResponse</span><span class="p">(</span><span class="n">stress</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stressStack</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">f</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_yieldStack</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tangentsPerPoint</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">GradientPlasticityTangents</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">stack</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">stack</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tangentStacks</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nMaterialPoints</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># scratch for the batched products</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weightedTimesTangent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="n">nVoigtComponents</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_displacementBlocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stressCouplings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCouplings</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_yieldRows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nMaterialPoints</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nDisplacementDofs</span><span class="p">))</span>
+
+        <span class="c1"># The four blocks live as views in the quadrants of one local matrix, in field grouped</span>
+        <span class="c1"># order, so that the whole cell contribution reaches the global matrix in a single indexed</span>
+        <span class="c1"># assignment. Four separate ones cost 12 microseconds against 4.3 for this one, because</span>
+        <span class="c1"># indexed assignment on the global array is expensive per call and nearly free per entry.</span>
+        <span class="n">nDof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDof</span>
+        <span class="n">nD</span> <span class="o">=</span> <span class="n">nDisplacementDofs</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nDof</span><span class="p">,</span> <span class="n">nDof</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localFlux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nDof</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKUU</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span><span class="p">[:</span><span class="n">nD</span><span class="p">,</span> <span class="p">:</span><span class="n">nD</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKUL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span><span class="p">[:</span><span class="n">nD</span><span class="p">,</span> <span class="n">nD</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKLU</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span><span class="p">[</span><span class="n">nD</span><span class="p">:,</span> <span class="p">:</span><span class="n">nD</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKLL</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span><span class="p">[</span><span class="n">nD</span><span class="p">:,</span> <span class="n">nD</span><span class="p">:]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localPDisplacement</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localFlux</span><span class="p">[:</span><span class="n">nD</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localPMultiplier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localFlux</span><span class="p">[</span><span class="n">nD</span><span class="p">:]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localOrder</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localBlock</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_localOrder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localOrder</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialTimeNs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_kernelTimeNs</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_materialCalls</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">characteristicLength</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The characteristic length of a material point."""</span>
+
+        <span class="n">subdivision</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="mi">2</span>
+
+        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spacings</span> <span class="o">/</span> <span class="n">subdivision</span><span class="p">)</span> <span class="o">**</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nDim</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">laplacianCoefficients</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""The Laplacian coefficients per material point over the molecule."""</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCoefficients</span>
+
+    <span class="c1"># -- evaluation ---------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="GradientPlasticityStencil.computeKernels">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.computeKernels">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">computeKernels</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">K</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">P</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">U</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">dU</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">time</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+        <span class="n">dT</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">profiling</span> <span class="o">=</span> <span class="n">profileMaterialTime</span>
+
+        <span class="k">if</span> <span class="n">profiling</span><span class="p">:</span>
+            <span class="n">kernelStart</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kernel</span><span class="o">.</span><span class="n">computeKernels</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="n">U</span><span class="p">,</span> <span class="n">dU</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">dT</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">profiling</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_kernelTimeNs</span> <span class="o">+=</span> <span class="n">perf_counter_ns</span><span class="p">()</span> <span class="o">-</span> <span class="n">kernelStart</span>
+
+            <span class="k">return</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVars</span>
+
+        <span class="n">displacementIncrements</span> <span class="o">=</span> <span class="n">dU</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">]</span>
+
+        <span class="n">multipliers</span> <span class="o">=</span> <span class="n">U</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">]</span>
+        <span class="n">multiplierIncrements</span> <span class="o">=</span> <span class="n">dU</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_multiplierDofs</span><span class="p">]</span>
+
+        <span class="n">matmul</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span>
+        <span class="n">einsum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span>
+
+        <span class="n">centres</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialPointNodes</span>
+        <span class="n">volumes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialPointVolumeArray</span>
+
+        <span class="n">B</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strainOperatorStack</span>
+        <span class="n">BTv</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weightedTransposedStack</span>
+        <span class="n">laplacians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCoefficients</span>
+        <span class="n">weightedLaplacians</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weightedLaplacianStack</span>
+
+        <span class="n">dStrains</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dStrainStack</span>
+        <span class="n">stresses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stressStack</span>
+        <span class="n">yieldValues</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yieldStack</span>
+
+        <span class="n">stacks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tangentStacks</span>
+
+        <span class="c1"># -- the increment, for every material point at once ------------------------------</span>
+        <span class="n">matmul</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">displacementIncrements</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">dStrains</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dLambdaStack</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">multiplierIncrements</span><span class="p">[</span><span class="n">centres</span><span class="p">]</span>
+        <span class="n">matmul</span><span class="p">(</span><span class="n">laplacians</span><span class="p">,</span> <span class="n">multiplierIncrements</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_laplaceDLambdaStack</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># the stress the material reads is the one of the last increment, already in place</span>
+        <span class="k">for</span> <span class="n">stack</span> <span class="ow">in</span> <span class="n">stacks</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">stack</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="c1"># -- the material evaluations, which are sequential because each owns its state ----</span>
+        <span class="n">assignCurrentStateVars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">assignCurrentStateVars</span>
+        <span class="n">materialRoutine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutine</span>
+        <span class="n">materialStateVars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialStateVars</span>
+        <span class="n">responses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_responses</span>
+        <span class="n">tangentsPerPoint</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tangentsPerPoint</span>
+        <span class="n">increments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_increments</span>
+
+        <span class="k">if</span> <span class="n">profiling</span><span class="p">:</span>
+            <span class="n">materialStart</span> <span class="o">=</span> <span class="n">perf_counter_ns</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span><span class="p">):</span>
+            <span class="n">assignCurrentStateVars</span><span class="p">(</span><span class="n">materialStateVars</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+            <span class="n">materialRoutine</span><span class="p">(</span><span class="n">responses</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">tangentsPerPoint</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">increments</span><span class="p">[</span><span class="n">p</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">dT</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">profiling</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_materialTimeNs</span> <span class="o">+=</span> <span class="n">perf_counter_ns</span><span class="p">()</span> <span class="o">-</span> <span class="n">materialStart</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_materialCalls</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_materialRoutineName</span> <span class="o">==</span> <span class="s2">"computePlaneStress"</span><span class="p">:</span>
+            <span class="n">_condensePlaneStressTangents</span><span class="p">(</span><span class="n">stacks</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_strainStates</span> <span class="o">+=</span> <span class="n">dStrains</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_multiplierStates</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">multipliers</span><span class="p">[</span><span class="n">centres</span><span class="p">]</span>
+
+        <span class="c1"># -- the assembly, again for every material point at once --------------------------</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localFlux</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="mf">0.0</span><span class="p">)</span>
+
+        <span class="n">einsum</span><span class="p">(</span><span class="s2">"pij,pj-&gt;i"</span><span class="p">,</span> <span class="n">BTv</span><span class="p">,</span> <span class="n">stresses</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_localPDisplacement</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localPMultiplier</span><span class="p">[</span><span class="n">centres</span><span class="p">]</span> <span class="o">+=</span> <span class="n">yieldValues</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">volumes</span>
+
+        <span class="n">matmul</span><span class="p">(</span><span class="n">BTv</span><span class="p">,</span> <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dStrain"</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_weightedTimesTangent</span><span class="p">)</span>
+        <span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_weightedTimesTangent</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementBlocks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_displacementBlocks</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_localKUU</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hourglassStiffnessMatrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># a fixed, linear elastic-like spring resisting the hourglass mode, referenced to the</span>
+            <span class="c1"># total displacement -- tangent-consistent by construction, since it does not depend</span>
+            <span class="c1"># on the material's (possibly heavily softened) state at all</span>
+            <span class="n">Khg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hourglassStiffnessMatrix</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_localKUU</span> <span class="o">+=</span> <span class="n">Khg</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_localPDisplacement</span> <span class="o">+=</span> <span class="n">Khg</span> <span class="o">@</span> <span class="n">U</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_displacementDofs</span><span class="p">]</span>
+
+        <span class="c1"># The plastic multiplier enters the stress through its Laplacian over the whole molecule,</span>
+        <span class="c1"># and directly at the grid point the material point sits on. Summing the outer products of</span>
+        <span class="c1"># the two stacked factors is one plain matrix product, which beats a three operand einsum</span>
+        <span class="c1"># by better than three times.</span>
+        <span class="n">matmul</span><span class="p">(</span><span class="n">BTv</span><span class="p">,</span> <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dLaplacian"</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCouplings</span><span class="p">)</span>
+        <span class="n">matmul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_laplacianCouplings</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">laplacians</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_localKUL</span><span class="p">)</span>
+
+        <span class="n">matmul</span><span class="p">(</span><span class="n">BTv</span><span class="p">,</span> <span class="n">stacks</span><span class="p">[</span><span class="s2">"dStress_dLambda"</span><span class="p">],</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stressCouplings</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKUL</span><span class="p">[:,</span> <span class="n">centres</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stressCouplings</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">T</span>
+
+        <span class="n">matmul</span><span class="p">(</span><span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dStrain"</span><span class="p">],</span> <span class="n">B</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_yieldRows</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKLU</span><span class="p">[</span><span class="n">centres</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yieldRows</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">volumes</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKLL</span><span class="p">[</span><span class="n">centres</span><span class="p">,</span> <span class="p">:]</span> <span class="o">+=</span> <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dLaplacian"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">][:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">weightedLaplacians</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_localKLL</span><span class="p">[</span><span class="n">centres</span><span class="p">,</span> <span class="n">centres</span><span class="p">]</span> <span class="o">+=</span> <span class="n">stacks</span><span class="p">[</span><span class="s2">"dF_dLambda"</span><span class="p">][:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">volumes</span>
+
+        <span class="n">P</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_localOrder</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localFlux</span>
+        <span class="n">K</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_localBlock</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_localTangent</span>
+
+        <span class="k">if</span> <span class="n">profiling</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_kernelTimeNs</span> <span class="o">+=</span> <span class="n">perf_counter_ns</span><span class="p">()</span> <span class="o">-</span> <span class="n">kernelStart</span></div>
+
+
+<div class="viewcode-block" id="GradientPlasticityStencil.acceptLastState">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.acceptLastState">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">acceptLastState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stateVars</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span></div>
+
+
+<div class="viewcode-block" id="GradientPlasticityStencil.resetToLastValidState">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.resetToLastValidState">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">resetToLastValidState</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stateVarsTemp</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateVars</span></div>
+
+
+    <span class="c1"># -- results ------------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="GradientPlasticityStencil.getResultArray">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getResultArray">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getResultArray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">quadraturePoint</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">getPersistentView</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">"stress"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stresses</span><span class="p">[</span><span class="n">quadraturePoint</span><span class="p">],</span> <span class="n">copy</span><span class="o">=</span><span class="ow">not</span> <span class="n">getPersistentView</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">"strain"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_strains</span><span class="p">[</span><span class="n">quadraturePoint</span><span class="p">],</span> <span class="n">copy</span><span class="o">=</span><span class="ow">not</span> <span class="n">getPersistentView</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">"plastic multiplier"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_multipliers</span><span class="p">[</span><span class="n">quadraturePoint</span><span class="p">],</span> <span class="n">copy</span><span class="o">=</span><span class="ow">not</span> <span class="n">getPersistentView</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">"yield function"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_yieldFunctions</span><span class="p">[</span><span class="n">quadraturePoint</span><span class="p">],</span> <span class="n">copy</span><span class="o">=</span><span class="ow">not</span> <span class="n">getPersistentView</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">assignCurrentStateVars</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_materialStateVars</span><span class="p">[</span><span class="n">quadraturePoint</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_material</span><span class="o">.</span><span class="n">getResult</span><span class="p">(</span><span class="n">result</span><span class="p">),</span> <span class="n">copy</span><span class="o">=</span><span class="ow">not</span> <span class="n">getPersistentView</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GradientPlasticityStencil.getNumberOfQuadraturePoints">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getNumberOfQuadraturePoints">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getNumberOfQuadraturePoints</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nMaterialPoints</span></div>
+
+
+<div class="viewcode-block" id="GradientPlasticityStencil.getCoordinatesAtCenter">
+<a class="viewcode-back" href="../../../documentation/stencils.html#edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil.getCoordinatesAtCenter">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getCoordinatesAtCenter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_centerCoordinates</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,221 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>edelweissfd.materials.provider &mdash; EdelweissFD v26.11 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=cfdaff8d" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=57c4c7c7"></script>
+      <script src="../../../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            EdelweissFD
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../documentation/index.html">Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">EdelweissFD</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">edelweissfd.materials.provider</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for edelweissfd.materials.provider</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="c1">#</span>
+<span class="c1">#  _____    _      _              _         _____ ____</span>
+<span class="c1"># | ____|__| | ___| |_      _____(_)___ ___|  ___|  _ \</span>
+<span class="c1"># |  _| / _` |/ _ \ \ \ /\ / / _ \ / __/ __| |_  | | | |</span>
+<span class="c1"># | |__| (_| |  __/ |\ V  V /  __/ \__ \__ \  _| | |_| |</span>
+<span class="c1"># |_____\__,_|\___|_| \_/\_/ \___|_|___/___/_|   |____/</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1">#  Unit of Strength of Materials and Structural Analysis</span>
+<span class="c1">#  University of Innsbruck,</span>
+<span class="c1">#  2024 - today</span>
+<span class="c1">#</span>
+<span class="c1">#  This file is part of EdelweissFD.</span>
+<span class="c1">#</span>
+<span class="c1">#  This library is free software; you can redistribute it and/or</span>
+<span class="c1">#  modify it under the terms of the GNU Lesser General Public</span>
+<span class="c1">#  License as published by the Free Software Foundation; either</span>
+<span class="c1">#  version 2.1 of the License, or (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#  The full text of the license can be found in the file LICENSE.md at</span>
+<span class="c1">#  the top level directory of EdelweissFD.</span>
+<span class="c1">#  ---------------------------------------------------------------------</span>
+<span class="sd">"""A description of a material, which mints one instance per stencil.</span>
+
+<span class="sd">Why a material cannot simply be shared</span>
+<span class="sd">--------------------------------------</span>
+
+<span class="sd">A point-wise material is not a pure function of its arguments. It carries the storage it operates</span>
+<span class="sd">on as mutable state: ``assignCurrentStateVars`` points it at the state variables of one particular</span>
+<span class="sd">material point, and the next evaluation reads and writes exactly those. A single instance can</span>
+<span class="sd">therefore only serve one material point at a time.</span>
+
+<span class="sd">That is fine within a stencil, which evaluates its material points one after another, and it is</span>
+<span class="sd">*not* fine across stencils, because the solvers hand chunks of entities to different threads (see</span>
+<span class="sd">``edelweissfe.solvers.base.parallelelementcomputation``). Two threads re-pointing the same material</span>
+<span class="sd">at their own state variables corrupt it. On a free threaded interpreter the failure is immediate</span>
+<span class="sd">and total -- the Cython memoryview holding the state variables has its acquisition count</span>
+<span class="sd">decremented twice and aborts the process with ``Fatal Python error: Acquisition count is -1`` --</span>
+<span class="sd">and with the global interpreter lock in place the same race merely becomes unlikely and silent,</span>
+<span class="sd">which is worse: a material point can be evaluated against another one's state variables.</span>
+
+<span class="sd">Handing out a fresh instance per stencil removes the sharing rather than guarding it, so the</span>
+<span class="sd">invariant holds no matter how the solver schedules its threads.</span>
+<span class="sd">"""</span>
+
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<div class="viewcode-block" id="MaterialProvider">
+<a class="viewcode-back" href="../../../documentation/materials.html#edelweissfd.materials.provider.MaterialProvider">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MaterialProvider</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""A material class together with the arguments to construct it.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    materialClass</span>
+<span class="sd">        The material class to instantiate.</span>
+<span class="sd">    arguments</span>
+<span class="sd">        The positional arguments its constructor takes.</span>
+<span class="sd">    """</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">materialClass</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">arguments</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">materialClass</span> <span class="o">=</span> <span class="n">materialClass</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MaterialProvider.createMaterial">
+<a class="viewcode-back" href="../../../documentation/materials.html#edelweissfd.materials.provider.MaterialProvider.createMaterial">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">createMaterial</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Create a new material instance, owned by a single stencil.</span>
+
+<span class="sd">        Array arguments are copied, so that no two instances end up holding a view of the same</span>
+<span class="sd">        buffer. The Cython materials keep the property array as a memoryview attribute, and the</span>
+<span class="sd">        point of this class is that instances share nothing at all.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The material instance.</span>
+<span class="sd">        """</span>
+
+        <span class="n">arguments</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+            <span class="n">argument</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">argument</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">argument</span> <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arguments</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">materialClass</span><span class="p">(</span><span class="o">*</span><span class="n">arguments</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">"MaterialProvider(</span><span class="si">{:}</span><span class="s2">)"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">materialClass</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="materialInstanceFrom">
+<a class="viewcode-back" href="../../../documentation/materials.html#edelweissfd.materials.provider.materialInstanceFrom">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">materialInstanceFrom</span><span class="p">(</span><span class="n">materialOrProvider</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Resolve either a provider or a ready made material into a material instance.</span>
+
+<span class="sd">    A :class:`MaterialProvider` yields a fresh instance on every call, so each caller gets one of</span>
+<span class="sd">    its own. Anything else is assumed to be a material already and is passed through -- which is</span>
+<span class="sd">    what the tangent tests do, where a single stencil is built and evaluated by hand.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    materialOrProvider</span>
+<span class="sd">        A :class:`MaterialProvider` or a material instance.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    The material instance.</span>
+<span class="sd">    """</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">materialOrProvider</span><span class="p">,</span> <span class="n">MaterialProvider</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">materialOrProvider</span><span class="o">.</span><span class="n">createMaterial</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">materialOrProvider</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2026, Alexander Dummer.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
