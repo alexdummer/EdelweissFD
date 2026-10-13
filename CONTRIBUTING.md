@@ -27,7 +27,7 @@ By participating in this project, you agree to uphold a respectful, inclusive en
 EdelweissFD requires **Python >= 3.14** and targets the free-threaded ("nogil") CPython build (`python-freethreading`).
 
 ### Prerequisites
-[EdelweissFE](https://github.com/EdelweissFE/EdelweissFE) (including its compiled Marmot material interfaces, if Marmot support is needed) must already be installed. EdelweissFD's own compiled cell kernels need the same Marmot install and Eigen headers (`EIGEN_INCLUDE_DIR`); every stencil falls back to pure Python if a kernel fails to build, so this is optional.
+[EdelweissFE](https://github.com/Edelweiss-Numerics/EdelweissFE) (including its compiled Marmot material interfaces, if Marmot support is needed) must already be installed. EdelweissFD's own compiled cell kernels need the same Marmot install and Eigen headers (`EIGEN_INCLUDE_DIR`); every stencil falls back to pure Python if a kernel fails to build, so this is optional.
 
 ### Installation
 ```bash
@@ -132,7 +132,7 @@ We follow the GitHub flow: **fork → branch → PR → review → merge**.
 4. **Open a PR**: Target the correct branch (`master` for bug fixes, `next_v<YY>.<MM>` for features), provide a clear title following Conventional Commits, and describe your changes.
 
 ### Synchronizing with EdelweissFE & Marmot
-If your changes depend on features or fixes in [EdelweissFE](https://github.com/EdelweissFE/EdelweissFE) or [Marmot](https://github.com/MAteRialMOdelingToolbox/Marmot/), ensure the sibling branches are named identically. CI automatically resolves and checks out matching branches during test workflows.
+If your changes depend on features or fixes in [EdelweissFE](https://github.com/Edelweiss-Numerics/EdelweissFE) or [Marmot](https://github.com/MAteRialMOdelingToolbox/Marmot/), ensure the sibling branches are named identically. CI automatically resolves and checks out matching branches during test workflows.
 
 ### PR Checklist
 - [ ] PR targets the correct branch (`master` for bugfixes, `next_v<YY>.<MM>` for features/enhancements).

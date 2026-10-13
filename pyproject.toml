@@ -13,7 +13,7 @@ authors = [
 ]
 license = "LGPL-2.1"
 license-files = ["LICENSE.md"]
-urls = { Homepage = "https://github.com/EdelweissFE/EdelweissFD" }
+urls = { Homepage = "https://github.com/alexdummer/EdelweissFD", Documentation = "https://alexdummer.github.io/EdelweissFD" }
 requires-python = ">=3.14"
 dependencies = [
     "EdelweissFE",

@@ -5,7 +5,7 @@ This file provides guidance to AI Agents when working with code in this reposito
 ## What this is
 
 EdelweissFD is a light-weight finite difference framework for **multifield** (coupled physics)
-problems. It is the finite difference sibling of [EdelweissFE](https://github.com/EdelweissFE/EdelweissFE)
+problems. It is the finite difference sibling of [EdelweissFE](https://github.com/Edelweiss-Numerics/EdelweissFE)
 and reuses its complete solution machinery (Newton-Raphson/arc-length solvers, DOF management, sparse
 assembly, linear solvers, time stepping, boundary conditions, field output); constitutive models come from
 [Marmot](https://github.com/MAteRialMOdelingToolbox/Marmot). What EdelweissFD adds is the discretization
