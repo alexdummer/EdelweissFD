@@ -16,7 +16,7 @@ license-files = ["LICENSE.md"]
 urls = { Homepage = "https://github.com/alexdummer/EdelweissFD", Documentation = "https://alexdummer.github.io/EdelweissFD" }
 requires-python = ">=3.14"
 dependencies = [
-    "EdelweissFE",
+    "EdelweissFE ~= 26.11",
     "numpy",
     "scipy",
 ]
@@ -24,6 +24,7 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest"]
 doc = ["sphinx", "sphinx-rtd-theme", "numpydoc"]
+examples = ["matplotlib"]
 
 [tool.setuptools]
 include-package-data = true
