@@ -34,4 +34,4 @@ pre-commit run --all-files
 ## 5. Maintenance & PR Targeting
 - [ ] **Agent Guidance**: Update `AGENTS.md` and `.agents/skills/` if workflows or conventions evolve.
 - [ ] **Conventional Commits**: `<type>(<scope>): <summary>` format (e.g. `feat(stencils): add ...`, `fix(operators): ...`).
-- [ ] **PR Target**: Match the target branch conventions of the repository (`master` for bug fixes, `next_v<YY>.<MM>` for features).
+- [ ] **PR Target**: Match the target branch conventions of the repository (every PR targets `master`).

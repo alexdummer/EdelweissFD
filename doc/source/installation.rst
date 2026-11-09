@@ -18,7 +18,7 @@ point-wise material interfaces EdelweissFE declares.
        cmake --build build -j
        cmake --install build
 
-2. `EdelweissFE <https://github.com/Edelweiss-Numerics/EdelweissFE>`_ (branch ``next_v26.11``),
+2. `EdelweissFE <https://github.com/Edelweiss-Numerics/EdelweissFE>`_ (release ``v26.11``, or branch ``master`` for development),
    providing everything but the discretization. Its point-wise Marmot material interfaces need
    the Eigen headers, so point ``EIGEN_INCLUDE_DIR`` at them if they are not in
    ``$CONDA_PREFIX/include/eigen3``, and ``MARMOT_INSTALL_DIR`` at Marmot if it is not installed

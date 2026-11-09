@@ -1,12 +1,12 @@
 name: Documentation
 
 # Builds and deploys the Sphinx HTML documentation for EdelweissFD.
-# Automatically builds on push to main/master and on pull requests.
-# When pushed to the default branch (main/master), publishes the HTML build to the gh-pages branch.
+# Automatically builds on push to master and on pull requests.
+# When pushed to master, the default branch, publishes the HTML build to the gh-pages branch.
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ master ]
   pull_request:
 
 permissions:
@@ -44,7 +44,7 @@ jobs:
           path: ./docs
 
       - name: Deploy to GitHub Pages
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
