@@ -200,7 +200,7 @@ When adding new functionality:
 - **Material Ownership (Thread Safety)**: A material point carries its state variables as mutable state. Never share a single material instance across multiple stencils. Use `MaterialProvider` (`edelweissfd/materials/provider.py`) to instantiate an isolated material per stencil.
 - **Compiled Kernel Fallback**: When delegating to EdelweissFD's own compiled Cython kernels (`edelweissfd/kernels/`), always provide an exact pure-Python fallback path. If a configuration or stress state is unsupported by the compiled kernel, return `None` from `_createCompiledKernel()` to gracefully fall back to Python.
 - **Voigt Notation**: All stress and strain vectors follow **Marmot's** Voigt order `(11, 22, 33, 12, 13, 23)` with engineering shear strain $\gamma_{ij} = 2\varepsilon_{ij}$ (deliberately distinct from `edelweissfe.utils.voigtnotation`).
-- **DOF Ordering & Flux Sign**: DOFs are ordered **node-major, field-minor**. Internal flux $P$ is positive sense ($R = -P + P_{\text{ext}}$), and tangent is $K = \partial P/\partial U$.
+- **DOF Ordering & Flux Sign**: DOFs are ordered **node-major, field-minor**. Internal flux $P$ is positive sense ($R = -P + P_{\text{ext}}$), and tangent is $K = \partial P/\partial U$. A body force (`computeBodyForce`) adds the *negative* of the external load to $P$.
 
 ---
 

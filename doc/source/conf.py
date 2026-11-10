@@ -6,7 +6,7 @@
 project = "EdelweissFD"
 copyright = "2026, Alexander Dummer"
 author = "Alexander Dummer"
-release = "v26.11"
+release = "v27.05"
 
 extensions = [
     "sphinx.ext.autodoc",

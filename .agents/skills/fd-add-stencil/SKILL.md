@@ -14,7 +14,7 @@ A stencil is a `BaseNodeCouplingEntity` (`edelweissfe.nodecouplingentity.base.no
 ## 1. Core Mathematical & Solvers Conventions
 
 1. **DOF Ordering**: Ordered **node-major, field-minor** (e.g. for displacement in 2D: $u_{x0}, u_{y0}, u_{x1}, u_{y1}, \dots$; for coupled fields: $u_{x0}, u_{y0}, p_0, \dots$).
-2. **Residual & Flux Sign**: $P$ is the internal flux in **positive** sense. Solvers form residual $R = -P + P_{\text{ext}}$, so the tangent is $K = \frac{\partial P}{\partial U}$.
+2. **Residual & Flux Sign**: $P$ is the internal flux in **positive** sense. Solvers form residual $R = -P + P_{\text{ext}}$, so the tangent is $K = \frac{\partial P}{\partial U}$. A body force (`computeBodyForce`) adds the **negative** of the external load to $P$.
 3. **Sparse Tangent View**: $K$ arrives as a 2D column-major (Fortran-order) slice `(nDof, nDof)` into the global sparse matrix block. It is **not** zeroed by the stencil between iterations — the solver zeroes the global matrix.
 4. **Single Material Point Ownership**: A stencil owns exactly **one** material point. `getNumberOfQuadraturePoints()` returns `1`, and `getResultArray(result, quadraturePoint=0)` only accepts `quadraturePoint=0`.
 5. **Voigt Order**: All stress/strain tensors use **Marmot's** Voigt convention: `(11, 22, 33, 12, 13, 23)` with engineering shear strains ($\gamma_{ij} = 2\varepsilon_{ij}$).

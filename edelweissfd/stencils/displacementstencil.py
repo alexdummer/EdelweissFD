@@ -417,7 +417,8 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
         time: float,
         dT: float,
     ):
-        """Distribute a force per unit volume onto the corner grid points.
+        """Distribute a force per unit volume onto the corner grid points, as a residual
+        contribution, i.e. with a negative sign.
 
         Each corner owns an equal share of the cell volume, so the equivalent grid point
         forces are the load times that share. For a uniform load this is exactly what a
@@ -428,7 +429,7 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
 
         shareOfVolume = self._totalVolume / self._nNodes
 
-        P += np.tile(load, self._nNodes) * shareOfVolume
+        P -= np.tile(load, self._nNodes) * shareOfVolume
 
     def acceptLastState(self):
         self._stateVars[:, :] = self._stateVarsTemp
