@@ -3,6 +3,6 @@
 recursive-include edelweissfd *.pyx
 graft tests
 graft examples
-include CONTRIBUTING.md
+include CONTRIBUTING.md CHANGELOG.md
 global-exclude *.py[cod] *.so __pycache__
 global-exclude edelweissfd/kernels/*.cpp edelweissfd/kernels/*.html
