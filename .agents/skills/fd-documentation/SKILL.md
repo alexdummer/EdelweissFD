@@ -25,7 +25,7 @@ doc/
         ├── grids.rst           # Grid generators & node set topology
         ├── materials.rst       # MaterialProvider & Marmot integration
         ├── models.rst          # FDModel container
-        ├── operators.rst       # Difference & GFDM operators
+        ├── operators.rst       # Finite difference operators
         └── stencils.rst        # Finite difference stencils
 ```
 

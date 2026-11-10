@@ -28,8 +28,7 @@ jobs:
         shell: bash -leo pipefail {0}
         run: |
           # setup.py of EdelweissFE tolerates failing extensions on purpose, so a missing
-          # material interface would otherwise only surface as silently skipped tests. The
-          # gradient plasticity one is not required: it is not part of every EdelweissFE release.
+          # material interface would otherwise only surface as silently skipped tests.
           python - <<'PY'
           import sys
 
@@ -59,17 +58,13 @@ jobs:
         run: |
           # setup.py tolerates failing extensions on purpose (every stencil falls back to
           # Python when its kernel is missing), so a missing one would otherwise only surface
-          # as silently reduced coverage of the compiled path. The gradient plasticity kernel is
-          # only required if EdelweissFE provides the material it calls into.
+          # as silently reduced coverage of the compiled path.
           python - <<'PY'
           import sys
-
-          from edelweissfe.utils.misc import checkSuccessfulExtension
 
           from edelweissfd.stencils import (
               displacementstencil,
               gradientenhanceddisplacementstencil,
-              gradientplasticitystencil,
           )
 
           required = [
@@ -79,11 +74,6 @@ jobs:
                   gradientenhanceddisplacementstencil.GradientEnhancedDisplacementKernel,
               ),
           ]
-
-          if checkSuccessfulExtension("edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic"):
-              required.append(
-                  ("edelweissfd.kernels.gradientplasticitykernel", gradientplasticitystencil.GradientPlasticityKernel)
-              )
 
           missing = [name for name, kernel in required if kernel is None]
 
@@ -113,5 +103,3 @@ jobs:
           python examples/TensionBar1D/run.py
           python examples/SimpleBeam2D/run.py
           python examples/AT2PhaseFieldBar/run.py
-          # CompressedPanel2D needs the gradient plasticity material family, which is not part of
-          # EdelweissFE and Marmot next_v26.11; tests/test_widthconvergence.py covers it when present.

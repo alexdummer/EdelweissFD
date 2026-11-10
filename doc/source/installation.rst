@@ -36,12 +36,6 @@ point-wise material interfaces EdelweissFE declares.
    The list has to contain ``edelweissfe.materials.marmot.marmothypoelastic`` and
    ``edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic``.
 
-   The gradient plasticity material family (``marmotgradientplasticityhypoelastic``), which
-   :class:`~edelweissfd.stencils.gradientplasticitystencil.GradientPlasticityStencil` and
-   :class:`~edelweissfd.stencils.gfdmgradientplasticitystencil.GFDMGradientPlasticityStencil`
-   need, is not yet part of EdelweissFE and Marmot ``next_v26.11``. Without it, these two stencils
-   raise on construction, their compiled kernel is not built, and their tests are skipped.
-
 EdelweissFD
 -----------
 
@@ -65,9 +59,8 @@ Tests
 
     pytest
 
-Tests requiring the compiled Marmot material interfaces are marked ``marmot``, and those
-requiring the gradient plasticity material family additionally ``gradientplasticity``; both are
-skipped automatically if the respective interfaces are unavailable:
+Tests requiring the compiled Marmot material interfaces are marked ``marmot`` and are skipped
+automatically if those interfaces are unavailable:
 
 .. code-block:: bash
 

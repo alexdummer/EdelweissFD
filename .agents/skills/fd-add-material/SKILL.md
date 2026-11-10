@@ -35,7 +35,7 @@ provider = MaterialProvider(LinearElastic, [20000.0, 0.2])
 material = sim.createMaterial("LinearElastic", [20000.0, 0.2])
 ```
 
-When passing `material` to `sim.assignStencils(StencilClass, grid, material=material)` or `sim.assignNodalStencils(...)`, the simulation automatically wraps callables / providers and instantiates an isolated material per stencil.
+When passing `material` to `sim.assignStencils(StencilClass, grid, material=material)`, the simulation automatically wraps callables / providers and instantiates an isolated material per stencil.
 
 ---
 

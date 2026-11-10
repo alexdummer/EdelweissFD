@@ -15,7 +15,7 @@ Universal guide for adding, modifying, or extending subsystems in EdelweissFD.
 
 | Task | Skill |
 | :--- | :--- |
-| Finite difference stencils (cell-based & GFDM) | [`fd-add-stencil`](../fd-add-stencil/SKILL.md) |
+| Finite difference stencils | [`fd-add-stencil`](../fd-add-stencil/SKILL.md) |
 | Material models & MaterialProvider | [`fd-add-material`](../fd-add-material/SKILL.md) |
 | Pytest suites, tangents & references | [`fd-create-test`](../fd-create-test/SKILL.md) |
 | Sphinx documentation & API docs | [`fd-documentation`](../fd-documentation/SKILL.md) |
@@ -28,7 +28,7 @@ Universal guide for adding, modifying, or extending subsystems in EdelweissFD.
 | Subsystem | Directory | Description |
 | :--- | :--- | :--- |
 | Stencils | `edelweissfd/stencils/` | Cell-based and nodal finite difference stencils (`BaseStencil`) |
-| Operators | `edelweissfd/operators/` | Finite difference operators (`differences.py`, `gfdm.py`) |
+| Operators | `edelweissfd/operators/` | Finite difference operators (`differences.py`) |
 | Grids | `edelweissfd/grids/` | Structured grid representations and node set topologies (`StructuredGrid`) |
 | Drivers | `edelweissfd/drivers/` | High-level simulation and step scripting drivers (`FDSimulation`, `FDStep`) |
 | Models | `edelweissfd/models/` | Model containers extending EdelweissFE model tree (`FDModel`) |

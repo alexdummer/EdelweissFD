@@ -79,8 +79,8 @@ try:
 except ImportError:  # pragma: no cover - depends on whether EdelweissFD built its extensions
     DisplacementKernel = None
 
-#: Use the compiled kernel when it is available, see
-#: :mod:`edelweissfd.stencils.gradientplasticitystencil` for the measurements that motivate it.
+#: Use the compiled kernel when it is available: the blocks of a cell are so small that a numpy
+#: call costs more in dispatch than in arithmetic, which is the overhead the kernel removes.
 #: Set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment to force the Python implementation.
 useCompiledKernel = os.environ.get("EDELWEISSFD_NO_COMPILED_KERNEL", "") not in ("1", "true", "True")
 
@@ -161,10 +161,9 @@ class DisplacementStencil(BaseStencil, NumericalTangentMixin):
 
         self._strainOperators = [cellStrainOperator(gradient) for gradient in self._gradients]
 
-        # Off by default here, unlike in the gradient plasticity stencil: it changes the answer for
-        # any inhomogeneous deformation, and the benchmarks of this stencil were established
-        # without it. Turn it on for nearly incompressible problems -- a Poisson's ratio close to
-        # one half, or well developed J2 plastic flow, which is itself incompressible.
+        # Off by default: it changes the answer for any inhomogeneous deformation, and the benchmarks of this stencil
+        # were established without it. Turn it on for nearly incompressible problems -- a Poisson's ratio close to one
+        # half, or well developed J2 plastic flow, which is itself incompressible.
         self._volumetricAveraging = volumetricAveraging
 
         if volumetricAveraging:
