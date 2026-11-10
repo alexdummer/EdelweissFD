@@ -15,7 +15,7 @@ By participating in this project, you agree to uphold a respectful, inclusive en
 - Report bugs and propose enhancements via GitHub Issues.
 - Improve documentation, docstrings, and Python example scripts (`examples/`).
 - Add pytest test cases, improve coverage, or benchmark stencils.
-- Implement new finite difference stencils (cell-based or GFDM), differential operators, or grid generators.
+- Implement new finite difference stencils, differential operators, or grid generators.
 - Optimize performance-critical routines or compiled Cython kernel fallbacks.
 
 > **Pull requests are welcome!** See [Pull Requests](#pull-requests).
@@ -90,7 +90,7 @@ All commits **must** follow the [Conventional Commits](https://www.conventionalc
 
 ### Examples
 ```
-feat(stencils): add Generalized Finite Difference (GFDM) gradient plasticity stencil
+feat(stencils): add a gradient-enhanced displacement stencil
 fix(operators): correct cell corner gradient operator weights in 3D
 perf(stencils): optimize compiled kernel memoryview access
 docs(drivers): document indirect arc-length control on FDStep
@@ -158,8 +158,8 @@ pytest
 pytest -m "not marmot"
 
 # Run a single test file or specific test
-pytest tests/test_gradientplasticity.py
-pytest tests/test_gradientplasticity.py::test_name
+pytest tests/test_tensionbar.py
+pytest tests/test_tensionbar.py::test_name
 
 # Force the pure-Python kernel fallback path
 EDELWEISSFD_NO_COMPILED_KERNEL=1 pytest

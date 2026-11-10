@@ -45,23 +45,14 @@ operators, stencils, and a Python scripting driver.
 - **Cell-based stencils**, which evaluate the material at the cell corners with compact
   one-sided differences, so they don't decouple even/odd grid points or produce hourglass modes:
   - `DisplacementStencil`: balance of linear momentum, in uniaxial stress, plane strain,
-    plane stress and 3D.
+    plane stress and 3D, with optional B-bar volumetric averaging against locking.
   - `GradientEnhancedDisplacementStencil`: displacement plus a nonlocal field, for example
     AT2 phase field fracture.
-  - `GradientPlasticityStencil`: displacement plus the plastic multiplier, with its Laplacian
-    discretized directly instead of through an auxiliary field and a penalty. Optional B-bar
-    volumetric averaging and Flanagan-Belytschko hourglass stabilization.
-- **A nodal GFDM stencil**, `GFDMGradientPlasticityStencil`, built on weighted least squares
-  neighbour clouds.
 - **Optional compiled Cython kernels** for the cell-based stencils. If a kernel isn't built,
   the stencil falls back to an equivalent pure-Python implementation
   (`EDELWEISSFD_NO_COMPILED_KERNEL=1` forces the fallback).
 - **Free-threaded Python**: every stencil owns its material instance, so EdelweissFE's
   parallel solvers can run stencils on several threads.
-
-The two gradient plasticity stencils need EdelweissFE's point-wise gradient plasticity
-material family, which isn't yet part of EdelweissFE and Marmot `next_v26.11`. Without it they
-raise on construction, and their tests are skipped.
 
 ## Installation
 
@@ -134,11 +125,7 @@ Further tests check the parts that have no EdelweissFE counterpart:
 | EdelweissFD test | what it checks |
 | --- | --- |
 | `test_compiledkernel.py` | compiled and pure-Python kernels agree to round-off, for every compiled stencil |
-| `test_gradientplasticity.py`, `test_fischerburmeistersmoothing.py` | the gradient plasticity stencil and the scaling of its complementarity smoothing |
-| `test_gfdm.py` | GFDM neighbour clouds, weights, rank checks and the nodal stencil |
-| `test_laplacian.py` | the grid Laplacian, including its Neumann boundary treatment |
-| `test_volumetricaveraging.py`, `test_hourglassstabilization.py` | B-bar averaging against locking, the hourglass vector |
-| `test_widthconvergence.py` | the localization width convergence diagnostic of `examples/CompressedPanel2D` |
+| `test_volumetricaveraging.py` | B-bar averaging against locking |
 | `test_materialownership.py` | every stencil owns its material instance |
 | `test_outputmanagers.py` | output managers added via `FDSimulation.addOutputManager` |
 

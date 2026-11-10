@@ -4,8 +4,7 @@
 Tests which need a Marmot material are marked ``marmot`` and are skipped automatically if
 the point-wise Marmot material interfaces of EdelweissFE were not compiled, mirroring the
 split of the EdelweissFE regression suite into ``testfiles/edelweiss-only`` and
-``testfiles/marmot``. Tests which need the gradient plasticity material are additionally marked
-``gradientplasticity`` and are skipped if EdelweissFE does not provide it.
+``testfiles/marmot``.
 """
 
 import numpy as np
@@ -17,26 +16,15 @@ marmotMaterialsAvailable = checkSuccessfulExtension(
     "edelweissfe.materials.marmot.marmothypoelastic"
 ) and checkSuccessfulExtension("edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic")
 
-#: Whether the point-wise gradient plasticity material of EdelweissFE is available. It is not part
-#: of every EdelweissFE (and Marmot) release, so it is checked separately from the others.
-gradientPlasticityAvailable = checkSuccessfulExtension(
-    "edelweissfe.materials.marmot.marmotgradientplasticityhypoelastic"
-)
-
 
 def pytest_collection_modifyitems(config, items):
     """Skip the Marmot dependent tests if the extensions are missing."""
 
     skipMarmot = pytest.mark.skip(reason="the point-wise Marmot material interfaces of EdelweissFE are not compiled")
-    skipGradientPlasticity = pytest.mark.skip(
-        reason="the point-wise gradient plasticity material of EdelweissFE is not available"
-    )
 
     for item in items:
         if "marmot" in item.keywords and not marmotMaterialsAvailable:
             item.add_marker(skipMarmot)
-        if "gradientplasticity" in item.keywords and not gradientPlasticityAvailable:
-            item.add_marker(skipGradientPlasticity)
 
 
 @pytest.fixture

@@ -40,8 +40,8 @@ The test suite is driven by `pytest`:
 ```bash
 pytest                                          # full suite
 pytest -m "not marmot"                          # tier needing no compiled Marmot extensions
-pytest tests/test_gradientplasticity.py         # a single file
-pytest tests/test_gradientplasticity.py::test_name   # a single test
+pytest tests/test_tensionbar.py                 # a single file
+pytest tests/test_tensionbar.py::test_name      # a single test
 EDELWEISSFD_NO_COMPILED_KERNEL=1 pytest         # force the pure-Python kernel fallback path
 
 python examples/TensionBar1D/run.py             # run an example script directly
@@ -76,7 +76,7 @@ Agents should follow the corresponding `SKILL.md` when tasked with:
 
 | Skill | Description | Entry Point |
 | :--- | :--- | :--- |
-| **fd-add-stencil** | Implementing, registering, testing, and documenting finite difference stencils (cell-based and GFDM) | [SKILL.md](.agents/skills/fd-add-stencil/SKILL.md) |
+| **fd-add-stencil** | Implementing, registering, testing, and documenting finite difference stencils | [SKILL.md](.agents/skills/fd-add-stencil/SKILL.md) |
 | **fd-add-material** | Material configuration, point-wise ownership, free-threading safety & `MaterialProvider` | [SKILL.md](.agents/skills/fd-add-material/SKILL.md) |
 | **fd-add-module** | Universal workflow and lifecycle for adding/extending any subsystem in EdelweissFD | [SKILL.md](.agents/skills/fd-add-module/SKILL.md) |
 | **fd-create-test** | Creating pytest suites, tangent checks, reconstructed EdelweissFE tests & references | [SKILL.md](.agents/skills/fd-create-test/SKILL.md) |
@@ -108,7 +108,7 @@ EdelweissFE side and should be reused directly.
 ### The Scripting Driver
 
 `edelweissfd/drivers/pythonscriptedsimulation.py::FDSimulation` builds objects programmatically:
-`createStructuredGrid`, `createMaterial`, `assignStencils`/`assignNodalStencils`, `createSolver`,
+`createStructuredGrid`, `createMaterial`, `assignStencils`, `createSolver`,
 `createStep`, `addNodeFieldOutput`, then `run()`. `FDStep` wraps `addDirichlet`, `addNodeForces`,
 `addNeumann`, `addBodyForce`, and `addIndirectControl` (arc-length control).
 
@@ -132,20 +132,12 @@ means implementing `computeKernels(K, P, U, dU, time, dT)` plus descriptive prop
   stencil between iterations — the solver zeroes the whole value array itself.
 - A stencil owns exactly **one** material point (`getNumberOfQuadraturePoints() == 1`).
 
-Two families of stencils exist:
-- **Cell-based** (`DisplacementStencil`, `GradientEnhancedDisplacementStencil`, `GradientPlasticityStencil`):
-  The material is evaluated once per cell corner using compact one-sided differences (`cellCornerGradientOperators`)
-  rather than wide node-centred quotients, preventing even/odd grid point decoupling and hourglass modes.
-  `GradientPlasticityStencil` widens its molecule for the plastic multiplier Laplacian (`grid.laplacianAt`), and
-  supports optional Flanagan-Belytschko `hourglassControl="stabilized"` mode.
-- **Nodal** (`GFDMGradientPlasticityStencil`): A Generalized Finite Difference (GFDM) scheme assigned via
-  `assignNodalStencils`. Fits a weighted-least-squares local Taylor model over a neighbour cloud
-  (`edelweissfd/operators/gfdm.py`: `gatherCloud`, `gfdmWeights`) with condition-number singularity checks.
+All stencils are **cell-based** (`DisplacementStencil`, `GradientEnhancedDisplacementStencil`): the material
+is evaluated once per cell corner using compact one-sided differences (`cellCornerGradientOperators`) rather than
+wide node-centred quotients, preventing even/odd grid point decoupling and hourglass modes.
 
-The two gradient plasticity stencils need EdelweissFE's point-wise gradient plasticity material family
-(`edelweissfe.materials.base.basegradientplasticityhypoelasticmaterial` and its Marmot wrapper), which is not
-yet part of EdelweissFE/Marmot `next_v26.11`. Without it they stay importable but raise on construction, and
-their tests (marked `gradientplasticity`) are skipped.
+The gradient plasticity stencils (cell-based and GFDM) are not part of v26.11, since their material family is not
+part of EdelweissFE/Marmot v26.11; they live on the `feat/gradient-plasticity` branch.
 
 `FDModel` (`edelweissfd/models/fdmodel.py`) is an `FEModel` subclass that holds `grids`; stencils live in
 `elements` (aliased as `.stencils`), which is what the solvers iterate over.
@@ -161,10 +153,10 @@ a fresh instance per stencil; never pass the same material instance to more than
 ### Compiled Kernel Fallback
 
 Cell-based stencils can delegate their inner loop to EdelweissFD's own compiled Cython kernel
-(`edelweissfd/kernels/`, e.g. `GradientPlasticityKernel`) when available, falling back to an
+(`edelweissfd/kernels/`, e.g. `DisplacementKernel`) when available, falling back to an
 equivalent pure-Python `computeKernels` otherwise. A stencil configuration unsupported by the
-compiled kernel (e.g. `hourglassControl="stabilized"`) must make `_createCompiledKernel` return
-`None` to force the Python path.
+compiled kernel (e.g. a native Python material, which the Marmot-backed kernel cannot call) must
+make `_createCompiledKernel` return `None` to force the Python path.
 
 ### Voigt Convention
 

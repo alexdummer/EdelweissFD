@@ -28,8 +28,8 @@
 Compiles the optional cell kernels of the finite difference stencils.
 
 EdelweissFD is pure Python otherwise: the kernels exist only because a few stencils are small
-and evaluated often enough that a numpy call per cell costs more in dispatch than in arithmetic,
-see the individual kernel modules for the measurements that motivate each one. Every stencil
+and evaluated often enough that a numpy call per cell costs more in dispatch than in arithmetic.
+Every stencil
 falls back to an equivalent pure-Python ``computeKernels`` when its kernel is not built, so a
 failed or skipped extension only costs speed and never a missing feature.
 """
@@ -106,7 +106,6 @@ if edelweissfe_marmot_materials_dir is not None:
     for kernel_source, material_declarations in [
         ("displacementkernel.pyx", "_marmotmaterials.pxd"),
         ("gradientenhanceddisplacementkernel.pyx", "_gradientenhanced.pxd"),
-        ("gradientplasticitykernel.pyx", "_gradientplasticity.pxd"),
     ]:
         if not isfile(join(edelweissfe_marmot_materials_dir, material_declarations)):
             print(f"[SKIP] {kernel_source}: the installed EdelweissFE does not provide {material_declarations}")

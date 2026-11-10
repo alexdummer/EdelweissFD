@@ -17,10 +17,10 @@ The test suite validates finite difference discretizations by reconstructing cor
 | :--- | :--- | :--- |
 | **Reconstructed FE Tests** | `test_tensionbar.py`, `test_fixeddisplacement.py`, `test_simplebeam.py`, `test_vonmisesplasticity.py`, `test_threedimensional.py`, `test_planestress.py`, `test_at2phasefieldbar.py` | Full simulation tests comparing FD solutions against closed-form or EdelweissFE FE reference solutions. |
 | **Tangent Verification** | `test_tangents.py` | Compares analytic $K = \partial P/\partial U$ against central finite-difference perturbations of $P$. |
-| **Operator Tests** | `test_operators.py`, `test_laplacian.py`, `test_gfdm.py` | Direct mathematical accuracy tests for differential operators. |
+| **Operator Tests** | `test_operators.py` | Direct mathematical accuracy tests for differential operators. |
 | **Kernel Parity** | `test_compiledkernel.py` | Asserts compiled Cython kernel and pure-Python fallback agree to round-off ($< 10^{-11}$). |
 | **Material Ownership** | `test_materialownership.py` | Asserts thread-safe isolation of material instances across stencils. |
-| **Convergence & Mechanics** | `test_widthconvergence.py`, `test_hourglassstabilization.py`, `test_volumetricaveraging.py`, `test_fischerburmeistersmoothing.py` | Tests for localization, mesh independence, stabilization, and smoothing. |
+| **Locking** | `test_volumetricaveraging.py` | B-bar volumetric averaging against volumetric locking. |
 
 ---
 
@@ -34,8 +34,8 @@ pytest
 pytest -m "not marmot"
 
 # Run a specific test file or test function
-pytest tests/test_gradientplasticity.py
-pytest tests/test_gradientplasticity.py::test_name
+pytest tests/test_tensionbar.py
+pytest tests/test_tensionbar.py::test_name
 
 # Force the pure-Python fallback path across all stencils
 EDELWEISSFD_NO_COMPILED_KERNEL=1 pytest

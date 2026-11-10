@@ -87,8 +87,8 @@ try:
 except ImportError:  # pragma: no cover - depends on whether EdelweissFD built its extensions
     GradientEnhancedDisplacementKernel = None
 
-#: Use the compiled kernel when it is available, see
-#: :mod:`edelweissfd.stencils.gradientplasticitystencil` for the measurements that motivate it.
+#: Use the compiled kernel when it is available: the blocks of a cell are so small that a numpy
+#: call costs more in dispatch than in arithmetic, which is the overhead the kernel removes.
 #: Set ``EDELWEISSFD_NO_COMPILED_KERNEL=1`` in the environment to force the Python implementation.
 useCompiledKernel = os.environ.get("EDELWEISSFD_NO_COMPILED_KERNEL", "") not in ("1", "true", "True")
 

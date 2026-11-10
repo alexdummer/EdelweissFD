@@ -1,8 +1,8 @@
 ---
 name: fd-add-stencil
 description: >-
-  Procedure for implementing, registering, testing, and documenting a new finite difference stencil (cell-based or nodal/GFDM) in EdelweissFD.
-  Use when creating continuum, gradient-enhanced, or multi-field stencils, adding compiled kernel acceleration, or implementing GFDM stencils.
+  Procedure for implementing, registering, testing, and documenting a new finite difference stencil in EdelweissFD.
+  Use when creating continuum, gradient-enhanced, or multi-field stencils, or adding compiled kernel acceleration.
 ---
 
 # Implementing a Finite Difference Stencil in EdelweissFD
@@ -21,17 +21,11 @@ A stencil is a `BaseNodeCouplingEntity` (`edelweissfe.nodecouplingentity.base.no
 
 ---
 
-## 2. Stencil Architecture: Cell-Based vs. Nodal (GFDM)
+## 2. Stencil Architecture: Cell-Based Stencils
 
-### A. Cell-Based Stencils (`DisplacementStencil`, `GradientEnhancedDisplacementStencil`, `GradientPlasticityStencil`)
+### Cell-Based Stencils (`DisplacementStencil`, `GradientEnhancedDisplacementStencil`)
 - **Corner Sampling**: Materials are evaluated at cell corners using compact one-sided differences (`cellCornerGradientOperators`), avoiding even/odd decoupling and checkerboard/hourglass modes.
-- **Molecule Widening**: First-derivative stencils couple exactly the $2^d$ corner nodes of the cell via `setCell(grid, cellIndex)`. Stencils needing second derivatives (e.g. Laplacian in `GradientPlasticityStencil`) widen their molecule via `grid.laplacianAt` during `setCell`.
-- **Hourglass Control**: Optional Flanagan-Belytschko stabilization (`hourglassControl="stabilized"`) for 2D cell-centred formulations.
-
-### B. Nodal Stencils (`GFDMGradientPlasticityStencil`)
-- **Generalized Finite Differences**: One stencil per grid node (no cell mesh). Fitted via weighted least-squares local Taylor expansion over a star/cloud of neighbouring nodes (`gatherCloud`, `gfdmWeights`).
-- **Singularity Protection**: `gfdmWeights` validates the condition number of the moment matrix $A^T W A$ to protect against rank-deficient neighbour clouds.
-- **Assignment**: Assigned using `sim.assignNodalStencils(...)` instead of `sim.assignStencils(...)`.
+- **Molecule**: Stencils couple exactly the $2^d$ corner nodes of the cell via `setCell(grid, cellIndex)`. A stencil needing more than the corners (e.g. a second derivative) overrides `setCell` to widen its molecule.
 
 ---
 
@@ -122,7 +116,7 @@ class MyNewStencil(BaseStencil):
 
 ## 4. Compiled Kernel Acceleration & Fallback
 
-When a fast Cython kernel is available in `EdelweissFE` (e.g. `GradientPlasticityKernel`):
+When a compiled Cython kernel of EdelweissFD is available (e.g. `DisplacementKernel` in `edelweissfd/kernels/`):
 1. **Delegation**: If `useCompiledKernel=True` and available, delegate `computeKernels` to the compiled kernel.
 2. **Fallback**: Always provide the full pure-Python evaluation path when `EDELWEISSFD_NO_COMPILED_KERNEL=1` or compiled kernel is unavailable.
 3. **Unsupported Modes**: If a feature or stress state is unsupported by the compiled kernel, `_createCompiledKernel()` must return `None` to gracefully force the Python fallback path without failing.
