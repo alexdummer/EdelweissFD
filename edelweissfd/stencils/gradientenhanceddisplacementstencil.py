@@ -470,13 +470,14 @@ class GradientEnhancedDisplacementStencil(BaseStencil, NumericalTangentMixin):
         dT: float,
     ):
         """Distribute a force per unit volume onto the displacement degrees of freedom of the
-        corner grid points. The nonlocal field is not loaded."""
+        corner grid points, as a residual contribution, i.e. with a negative sign. The nonlocal
+        field is not loaded."""
 
         load = np.asarray(load, dtype=float)[: self._nDim]
 
         shareOfVolume = self._totalVolume / self._nNodes
 
-        P[self._displacementDofs] += np.tile(load, self._nNodes) * shareOfVolume
+        P[self._displacementDofs] -= np.tile(load, self._nNodes) * shareOfVolume
 
     def acceptLastState(self):
         self._stateVars[:, :] = self._stateVarsTemp

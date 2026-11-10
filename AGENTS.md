@@ -17,7 +17,7 @@ Requires Python >= 3.14 and targets the free-threaded ("nogil") CPython build (`
 
 ## Setup & Installation
 
-EdelweissFE `v26.11` (including its compiled Marmot material interfaces, built against Marmot `v26.11`) must already be installed; for development, use the `master` branches of both. Then:
+EdelweissFE `master` (including its compiled Marmot material interfaces, built against Marmot `master`) must already be installed; EdelweissFD's `v26.11` release needs the `v26.11` releases of both instead. Then:
 
 ```bash
 pip install -e .
@@ -128,6 +128,8 @@ means implementing `computeKernels(K, P, U, dU, time, dT)` plus descriptive prop
 
 - DOFs are ordered **node-major, field-minor**.
 - `P` is the internal flux in *positive* sense; solvers form $R = -P + P_{\text{ext}}$, so $K = \partial P/\partial U$.
+  A body force (`computeBodyForce`) is a residual contribution as well, so it adds the *negative* of the external
+  load to `P` (EdelweissFE's convention since 27.05).
 - `K` arrives as a 2D column-major view into the global sparse matrix block and is **not** zeroed by the
   stencil between iterations — the solver zeroes the whole value array itself.
 - A stencil owns exactly **one** material point (`getNumberOfQuadraturePoints() == 1`).

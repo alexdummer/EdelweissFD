@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "EdelweissFD"
-version = "26.11"
+version = "27.05"
 description = "EdelweissFD: A light-weight finite difference framework for multifield problems, built on EdelweissFE."
 readme = "README.md"
 authors = [
@@ -16,7 +16,7 @@ license-files = ["LICENSE.md"]
 urls = { Homepage = "https://github.com/alexdummer/EdelweissFD", Documentation = "https://alexdummer.github.io/EdelweissFD" }
 requires-python = ">=3.14"
 dependencies = [
-    "EdelweissFE ~= 26.11",
+    "EdelweissFE ~= 27.05",
     "numpy",
     "scipy",
 ]

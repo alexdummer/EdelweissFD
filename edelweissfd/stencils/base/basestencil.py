@@ -148,18 +148,20 @@ class BaseStencil(BaseNodeCouplingEntity, VIJEntityBase):
         time: float,
         dT: float,
     ):
-        """Evaluate the external flux due to a body force, i.e. a force per unit volume.
+        """Add the residual contribution of a body force, i.e. a force per unit volume.
 
-        The signature is the one the solvers of EdelweissFE call, and the contribution is
-        added to the *external* flux vector.
+        The signature is the one the body loads of EdelweissFE call. Like every entity's, the
+        contribution is to the residual, so it is the *negative* of the external load
+        :math:`-\\boldsymbol{f}_\\mathrm{ext}`, and its tangent ``dP/dU``.
 
         Parameters
         ----------
         P
-            The external flux to be augmented, shape ``(nDof,)``.
+            The residual contribution to augment, :math:`-\\boldsymbol{f}_\\mathrm{ext}`,
+            shape ``(nDof,)``.
         K
-            The tangent to be augmented; a body force which does not depend on the solution
-            contributes nothing.
+            The tangent ``dP/dU`` to augment; a body force which does not depend on the
+            solution contributes nothing.
         load
             The force per unit volume, one entry per spatial direction.
         U

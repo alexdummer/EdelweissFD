@@ -65,7 +65,7 @@ raise on construction, and their tests are skipped.
 
 ## Installation
 
-EdelweissFE `v26.11` (including its compiled Marmot material interfaces, built against Marmot `v26.11`) must be installed first. For development against the latest state, use the `master` branches of both.
+EdelweissFE (including its compiled Marmot material interfaces, built against Marmot) must be installed first: the `master` branches of both for EdelweissFD's `master`, or the `v26.11` releases of both for EdelweissFD `v26.11`.
 
 ```bash
 pip install -e .
