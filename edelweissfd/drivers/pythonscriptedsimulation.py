@@ -933,11 +933,6 @@ class FDSimulation:
         jobInfo = self.jobInfo
         jobInfo["computationTime"] = 0.0
 
-        # the entries every solver and output manager expects on a node field
-        for nodeField in model.nodeFields.values():
-            nodeField.createFieldValueEntry("U")
-            nodeField.createFieldValueEntry("P")
-
         model._linkFieldVariableObjects(model.nodeSets["all"])
 
         fieldOutputController = self._createFieldOutputController()
