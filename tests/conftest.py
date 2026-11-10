@@ -16,6 +16,7 @@ marmotMaterialsAvailable = checkSuccessfulExtension(
     "edelweissfe.materials.marmot.marmothypoelastic"
 ) and checkSuccessfulExtension("edelweissfe.materials.marmot.marmotgradientenhancedhypoelastic")
 
+
 def pytest_collection_modifyitems(config, items):
     """Skip the Marmot dependent tests if the extensions are missing."""
 
